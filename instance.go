@@ -41,8 +41,8 @@ type ApplicationInfo struct {
 
 // InstanceCreateInfo contains instance creation information
 type InstanceCreateInfo struct {
-	ApplicationInfo      *ApplicationInfo
-	EnabledLayerNames    []string
+	ApplicationInfo       *ApplicationInfo
+	EnabledLayerNames     []string
 	EnabledExtensionNames []string
 }
 
@@ -236,7 +236,7 @@ func stringSliceToCharArray(strs []string) **C.char {
 	if len(strs) == 0 {
 		return nil
 	}
-	
+
 	cArray := C.makeCharArray(C.int(len(strs)))
 	for i, str := range strs {
 		cStr := C.CString(str)
@@ -268,20 +268,20 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 		cAppInfo.pNext = nil
 		cAppInfo.pApplicationName = nil
 		cAppInfo.pEngineName = nil
-		
+
 		if createInfo.ApplicationInfo.ApplicationName != "" {
 			appNamePtr = C.CString(createInfo.ApplicationInfo.ApplicationName)
 			cAppInfo.pApplicationName = appNamePtr
 		}
 		cAppInfo.applicationVersion = C.uint32_t(createInfo.ApplicationInfo.ApplicationVersion)
-		
+
 		if createInfo.ApplicationInfo.EngineName != "" {
 			engineNamePtr = C.CString(createInfo.ApplicationInfo.EngineName)
 			cAppInfo.pEngineName = engineNamePtr
 		}
 		cAppInfo.engineVersion = C.uint32_t(createInfo.ApplicationInfo.EngineVersion)
 		cAppInfo.apiVersion = C.uint32_t(createInfo.ApplicationInfo.APIVersion)
-		
+
 		cCreateInfo.pApplicationInfo = cAppInfo
 	}
 

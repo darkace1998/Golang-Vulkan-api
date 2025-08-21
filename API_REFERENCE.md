@@ -140,6 +140,11 @@ This document provides a comprehensive reference for all available functions in 
 ### Pipeline Commands
 - `CmdBindPipeline(commandBuffer CommandBuffer, pipelineBindPoint PipelineBindPoint, pipeline Pipeline)` - Bind pipeline
 
+### Compute Commands
+- `CmdDispatch(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32)` - Dispatch compute work groups
+- `CmdDispatchIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize)` - Dispatch compute work with parameters from buffer
+- `CmdBindDescriptorSets(commandBuffer CommandBuffer, pipelineBindPoint PipelineBindPoint, layout PipelineLayout, firstSet uint32, descriptorSets []DescriptorSet, dynamicOffsets []uint32)` - Bind descriptor sets
+
 ### State Commands
 - `CmdSetViewport(commandBuffer CommandBuffer, firstViewport uint32, viewports []Viewport)` - Set viewport
 - `CmdSetScissor(commandBuffer CommandBuffer, firstScissor uint32, scissors []Rect2D)` - Set scissor
@@ -157,6 +162,12 @@ This document provides a comprehensive reference for all available functions in 
 
 ### Synchronization Commands
 - `CmdPipelineBarrier(commandBuffer CommandBuffer, srcStageMask, dstStageMask PipelineStageFlags, dependencyFlags uint32)` - Insert pipeline barrier
+
+## Compute Pipeline Management
+
+### Compute Pipeline Creation
+- `CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error)` - Create compute pipelines
+- `DestroyPipeline(device Device, pipeline Pipeline)` - Destroy pipeline (graphics or compute)
 
 ## Utility Functions
 
@@ -179,6 +190,14 @@ This document provides a comprehensive reference for all available functions in 
 
 ### Queue Flags
 - `QueueGraphicsBit`, `QueueComputeBit`, `QueueTransferBit`, `QueueSparseBindingBit`
+
+### Pipeline Bind Points
+- `PipelineBindPointGraphics`, `PipelineBindPointCompute`
+
+### Shader Stages
+- `ShaderStageVertexBit`, `ShaderStageFragmentBit`, `ShaderStageComputeBit`
+- `ShaderStageTessellationControlBit`, `ShaderStageTessellationEvaluationBit`
+- `ShaderStageGeometryBit`, `ShaderStageAllGraphics`, `ShaderStageAll`
 
 ### Buffer Usage Flags
 - `BufferUsageTransferSrcBit`, `BufferUsageTransferDstBit`
@@ -204,7 +223,14 @@ This document provides a comprehensive reference for all available functions in 
 ### Pipeline Stages
 - `PipelineStageTopOfPipeBit`, `PipelineStageBottomOfPipeBit`
 - `PipelineStageVertexShaderBit`, `PipelineStageFragmentShaderBit`
-- `PipelineStageColorAttachmentOutputBit`, `PipelineStageTransferBit`
+- `PipelineStageComputeShaderBit`, `PipelineStageTransferBit`
+- `PipelineStageColorAttachmentOutputBit`
+
+### Descriptor Types
+- `DescriptorTypeSampler`, `DescriptorTypeCombinedImageSampler`
+- `DescriptorTypeUniformBuffer`, `DescriptorTypeStorageBuffer`
+- `DescriptorTypeUniformBufferDynamic`, `DescriptorTypeStorageBufferDynamic`
+- `DescriptorTypeSampledImage`, `DescriptorTypeStorageImage`
 
 ### Access Flags
 - `AccessShaderReadBit`, `AccessShaderWriteBit`

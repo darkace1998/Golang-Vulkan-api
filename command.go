@@ -17,9 +17,9 @@ type CommandPoolCreateInfo struct {
 type CommandPoolCreateFlags uint32
 
 const (
-	CommandPoolCreateTransientBit            CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
-	CommandPoolCreateResetCommandBufferBit   CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
-	CommandPoolCreateProtectedBit            CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_PROTECTED_BIT
+	CommandPoolCreateTransientBit          CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT
+	CommandPoolCreateResetCommandBufferBit CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+	CommandPoolCreateProtectedBit          CommandPoolCreateFlags = C.VK_COMMAND_POOL_CREATE_PROTECTED_BIT
 )
 
 // CommandBufferAllocateInfo contains command buffer allocation information
@@ -53,10 +53,10 @@ const (
 
 // SubmitInfo contains queue submit information
 type SubmitInfo struct {
-	WaitSemaphores    []Semaphore
-	WaitDstStageMask  []PipelineStageFlags
-	CommandBuffers    []CommandBuffer
-	SignalSemaphores  []Semaphore
+	WaitSemaphores   []Semaphore
+	WaitDstStageMask []PipelineStageFlags
+	CommandBuffers   []CommandBuffer
+	SignalSemaphores []Semaphore
 }
 
 // PipelineStageFlags represents pipeline stage flags
@@ -193,7 +193,7 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 	}
 
 	cSubmitInfos := make([]C.VkSubmitInfo, len(submitInfos))
-	
+
 	// We need to keep slices alive during the call
 	var allWaitSemaphores [][]C.VkSemaphore
 	var allWaitStages [][]C.VkPipelineStageFlags

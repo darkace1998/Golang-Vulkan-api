@@ -142,7 +142,7 @@ func CmdBindVertexBuffers(commandBuffer CommandBuffer, firstBinding uint32, buff
 
 	cBuffers := make([]C.VkBuffer, len(buffers))
 	cOffsets := make([]C.VkDeviceSize, len(offsets))
-	
+
 	for i, buffer := range buffers {
 		cBuffers[i] = C.VkBuffer(buffer)
 		cOffsets[i] = C.VkDeviceSize(offsets[i])
@@ -200,4 +200,52 @@ type BufferCopy struct {
 // CmdPipelineBarrier inserts a pipeline barrier
 func CmdPipelineBarrier(commandBuffer CommandBuffer, srcStageMask, dstStageMask PipelineStageFlags, dependencyFlags uint32) {
 	C.vkCmdPipelineBarrier(C.VkCommandBuffer(commandBuffer), C.VkPipelineStageFlags(srcStageMask), C.VkPipelineStageFlags(dstStageMask), C.VkDependencyFlags(dependencyFlags), 0, nil, 0, nil, 0, nil)
+}
+
+// Compute dispatch commands
+
+// CmdDispatch dispatches compute work
+func CmdDispatch(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32) {
+	C.vkCmdDispatch(C.VkCommandBuffer(commandBuffer), C.uint32_t(groupCountX), C.uint32_t(groupCountY), C.uint32_t(groupCountZ))
+}
+
+// CmdDispatchIndirect dispatches compute work with parameters from a buffer
+func CmdDispatchIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize) {
+	C.vkCmdDispatchIndirect(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset))
+}
+
+// CmdBindDescriptorSets binds descriptor sets to a command buffer
+func CmdBindDescriptorSets(commandBuffer CommandBuffer, pipelineBindPoint PipelineBindPoint, layout PipelineLayout, firstSet uint32, descriptorSets []DescriptorSet, dynamicOffsets []uint32) {
+	if len(descriptorSets) == 0 {
+		return
+	}
+
+	cDescriptorSets := make([]C.VkDescriptorSet, len(descriptorSets))
+	for i, set := range descriptorSets {
+		cDescriptorSets[i] = C.VkDescriptorSet(set)
+	}
+
+	var cDynamicOffsets []C.uint32_t
+	if len(dynamicOffsets) > 0 {
+		cDynamicOffsets = make([]C.uint32_t, len(dynamicOffsets))
+		for i, offset := range dynamicOffsets {
+			cDynamicOffsets[i] = C.uint32_t(offset)
+		}
+	}
+
+	var pDynamicOffsets *C.uint32_t = nil
+	if len(cDynamicOffsets) > 0 {
+		pDynamicOffsets = &cDynamicOffsets[0]
+	}
+
+	C.vkCmdBindDescriptorSets(
+		C.VkCommandBuffer(commandBuffer),
+		C.VkPipelineBindPoint(pipelineBindPoint),
+		C.VkPipelineLayout(layout),
+		C.uint32_t(firstSet),
+		C.uint32_t(len(cDescriptorSets)),
+		&cDescriptorSets[0],
+		C.uint32_t(len(cDynamicOffsets)),
+		pDynamicOffsets,
+	)
 }

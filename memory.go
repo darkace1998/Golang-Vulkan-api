@@ -82,64 +82,64 @@ const (
 type Format int32
 
 const (
-	FormatUndefined                Format = C.VK_FORMAT_UNDEFINED
-	FormatR4G4UnormPack8           Format = C.VK_FORMAT_R4G4_UNORM_PACK8
-	FormatR4G4B4A4UnormPack16      Format = C.VK_FORMAT_R4G4B4A4_UNORM_PACK16
-	FormatB4G4R4A4UnormPack16      Format = C.VK_FORMAT_B4G4R4A4_UNORM_PACK16
-	FormatR5G6B5UnormPack16        Format = C.VK_FORMAT_R5G6B5_UNORM_PACK16
-	FormatB5G6R5UnormPack16        Format = C.VK_FORMAT_B5G6R5_UNORM_PACK16
-	FormatR5G5B5A1UnormPack16      Format = C.VK_FORMAT_R5G5B5A1_UNORM_PACK16
-	FormatB5G5R5A1UnormPack16      Format = C.VK_FORMAT_B5G5R5A1_UNORM_PACK16
-	FormatA1R5G5B5UnormPack16      Format = C.VK_FORMAT_A1R5G5B5_UNORM_PACK16
-	FormatR8Unorm                  Format = C.VK_FORMAT_R8_UNORM
-	FormatR8Snorm                  Format = C.VK_FORMAT_R8_SNORM
-	FormatR8Uscaled                Format = C.VK_FORMAT_R8_USCALED
-	FormatR8Sscaled                Format = C.VK_FORMAT_R8_SSCALED
-	FormatR8Uint                   Format = C.VK_FORMAT_R8_UINT
-	FormatR8Sint                   Format = C.VK_FORMAT_R8_SINT
-	FormatR8Srgb                   Format = C.VK_FORMAT_R8_SRGB
-	FormatR8G8Unorm                Format = C.VK_FORMAT_R8G8_UNORM
-	FormatR8G8Snorm                Format = C.VK_FORMAT_R8G8_SNORM
-	FormatR8G8Uscaled              Format = C.VK_FORMAT_R8G8_USCALED
-	FormatR8G8Sscaled              Format = C.VK_FORMAT_R8G8_SSCALED
-	FormatR8G8Uint                 Format = C.VK_FORMAT_R8G8_UINT
-	FormatR8G8Sint                 Format = C.VK_FORMAT_R8G8_SINT
-	FormatR8G8Srgb                 Format = C.VK_FORMAT_R8G8_SRGB
-	FormatR8G8B8Unorm              Format = C.VK_FORMAT_R8G8B8_UNORM
-	FormatR8G8B8Snorm              Format = C.VK_FORMAT_R8G8B8_SNORM
-	FormatR8G8B8Uscaled            Format = C.VK_FORMAT_R8G8B8_USCALED
-	FormatR8G8B8Sscaled            Format = C.VK_FORMAT_R8G8B8_SSCALED
-	FormatR8G8B8Uint               Format = C.VK_FORMAT_R8G8B8_UINT
-	FormatR8G8B8Sint               Format = C.VK_FORMAT_R8G8B8_SINT
-	FormatR8G8B8Srgb               Format = C.VK_FORMAT_R8G8B8_SRGB
-	FormatB8G8R8Unorm              Format = C.VK_FORMAT_B8G8R8_UNORM
-	FormatB8G8R8Snorm              Format = C.VK_FORMAT_B8G8R8_SNORM
-	FormatB8G8R8Uscaled            Format = C.VK_FORMAT_B8G8R8_USCALED
-	FormatB8G8R8Sscaled            Format = C.VK_FORMAT_B8G8R8_SSCALED
-	FormatB8G8R8Uint               Format = C.VK_FORMAT_B8G8R8_UINT
-	FormatB8G8R8Sint               Format = C.VK_FORMAT_B8G8R8_SINT
-	FormatB8G8R8Srgb               Format = C.VK_FORMAT_B8G8R8_SRGB
-	FormatR8G8B8A8Unorm            Format = C.VK_FORMAT_R8G8B8A8_UNORM
-	FormatR8G8B8A8Snorm            Format = C.VK_FORMAT_R8G8B8A8_SNORM
-	FormatR8G8B8A8Uscaled          Format = C.VK_FORMAT_R8G8B8A8_USCALED
-	FormatR8G8B8A8Sscaled          Format = C.VK_FORMAT_R8G8B8A8_SSCALED
-	FormatR8G8B8A8Uint             Format = C.VK_FORMAT_R8G8B8A8_UINT
-	FormatR8G8B8A8Sint             Format = C.VK_FORMAT_R8G8B8A8_SINT
-	FormatR8G8B8A8Srgb             Format = C.VK_FORMAT_R8G8B8A8_SRGB
-	FormatB8G8R8A8Unorm            Format = C.VK_FORMAT_B8G8R8A8_UNORM
-	FormatB8G8R8A8Snorm            Format = C.VK_FORMAT_B8G8R8A8_SNORM
-	FormatB8G8R8A8Uscaled          Format = C.VK_FORMAT_B8G8R8A8_USCALED
-	FormatB8G8R8A8Sscaled          Format = C.VK_FORMAT_B8G8R8A8_SSCALED
-	FormatB8G8R8A8Uint             Format = C.VK_FORMAT_B8G8R8A8_UINT
-	FormatB8G8R8A8Sint             Format = C.VK_FORMAT_B8G8R8A8_SINT
-	FormatB8G8R8A8Srgb             Format = C.VK_FORMAT_B8G8R8A8_SRGB
-	FormatD16Unorm                 Format = C.VK_FORMAT_D16_UNORM
-	FormatX8D24UnormPack32         Format = C.VK_FORMAT_X8_D24_UNORM_PACK32
-	FormatD32Sfloat                Format = C.VK_FORMAT_D32_SFLOAT
-	FormatS8Uint                   Format = C.VK_FORMAT_S8_UINT
-	FormatD16UnormS8Uint           Format = C.VK_FORMAT_D16_UNORM_S8_UINT
-	FormatD24UnormS8Uint           Format = C.VK_FORMAT_D24_UNORM_S8_UINT
-	FormatD32SfloatS8Uint          Format = C.VK_FORMAT_D32_SFLOAT_S8_UINT
+	FormatUndefined           Format = C.VK_FORMAT_UNDEFINED
+	FormatR4G4UnormPack8      Format = C.VK_FORMAT_R4G4_UNORM_PACK8
+	FormatR4G4B4A4UnormPack16 Format = C.VK_FORMAT_R4G4B4A4_UNORM_PACK16
+	FormatB4G4R4A4UnormPack16 Format = C.VK_FORMAT_B4G4R4A4_UNORM_PACK16
+	FormatR5G6B5UnormPack16   Format = C.VK_FORMAT_R5G6B5_UNORM_PACK16
+	FormatB5G6R5UnormPack16   Format = C.VK_FORMAT_B5G6R5_UNORM_PACK16
+	FormatR5G5B5A1UnormPack16 Format = C.VK_FORMAT_R5G5B5A1_UNORM_PACK16
+	FormatB5G5R5A1UnormPack16 Format = C.VK_FORMAT_B5G5R5A1_UNORM_PACK16
+	FormatA1R5G5B5UnormPack16 Format = C.VK_FORMAT_A1R5G5B5_UNORM_PACK16
+	FormatR8Unorm             Format = C.VK_FORMAT_R8_UNORM
+	FormatR8Snorm             Format = C.VK_FORMAT_R8_SNORM
+	FormatR8Uscaled           Format = C.VK_FORMAT_R8_USCALED
+	FormatR8Sscaled           Format = C.VK_FORMAT_R8_SSCALED
+	FormatR8Uint              Format = C.VK_FORMAT_R8_UINT
+	FormatR8Sint              Format = C.VK_FORMAT_R8_SINT
+	FormatR8Srgb              Format = C.VK_FORMAT_R8_SRGB
+	FormatR8G8Unorm           Format = C.VK_FORMAT_R8G8_UNORM
+	FormatR8G8Snorm           Format = C.VK_FORMAT_R8G8_SNORM
+	FormatR8G8Uscaled         Format = C.VK_FORMAT_R8G8_USCALED
+	FormatR8G8Sscaled         Format = C.VK_FORMAT_R8G8_SSCALED
+	FormatR8G8Uint            Format = C.VK_FORMAT_R8G8_UINT
+	FormatR8G8Sint            Format = C.VK_FORMAT_R8G8_SINT
+	FormatR8G8Srgb            Format = C.VK_FORMAT_R8G8_SRGB
+	FormatR8G8B8Unorm         Format = C.VK_FORMAT_R8G8B8_UNORM
+	FormatR8G8B8Snorm         Format = C.VK_FORMAT_R8G8B8_SNORM
+	FormatR8G8B8Uscaled       Format = C.VK_FORMAT_R8G8B8_USCALED
+	FormatR8G8B8Sscaled       Format = C.VK_FORMAT_R8G8B8_SSCALED
+	FormatR8G8B8Uint          Format = C.VK_FORMAT_R8G8B8_UINT
+	FormatR8G8B8Sint          Format = C.VK_FORMAT_R8G8B8_SINT
+	FormatR8G8B8Srgb          Format = C.VK_FORMAT_R8G8B8_SRGB
+	FormatB8G8R8Unorm         Format = C.VK_FORMAT_B8G8R8_UNORM
+	FormatB8G8R8Snorm         Format = C.VK_FORMAT_B8G8R8_SNORM
+	FormatB8G8R8Uscaled       Format = C.VK_FORMAT_B8G8R8_USCALED
+	FormatB8G8R8Sscaled       Format = C.VK_FORMAT_B8G8R8_SSCALED
+	FormatB8G8R8Uint          Format = C.VK_FORMAT_B8G8R8_UINT
+	FormatB8G8R8Sint          Format = C.VK_FORMAT_B8G8R8_SINT
+	FormatB8G8R8Srgb          Format = C.VK_FORMAT_B8G8R8_SRGB
+	FormatR8G8B8A8Unorm       Format = C.VK_FORMAT_R8G8B8A8_UNORM
+	FormatR8G8B8A8Snorm       Format = C.VK_FORMAT_R8G8B8A8_SNORM
+	FormatR8G8B8A8Uscaled     Format = C.VK_FORMAT_R8G8B8A8_USCALED
+	FormatR8G8B8A8Sscaled     Format = C.VK_FORMAT_R8G8B8A8_SSCALED
+	FormatR8G8B8A8Uint        Format = C.VK_FORMAT_R8G8B8A8_UINT
+	FormatR8G8B8A8Sint        Format = C.VK_FORMAT_R8G8B8A8_SINT
+	FormatR8G8B8A8Srgb        Format = C.VK_FORMAT_R8G8B8A8_SRGB
+	FormatB8G8R8A8Unorm       Format = C.VK_FORMAT_B8G8R8A8_UNORM
+	FormatB8G8R8A8Snorm       Format = C.VK_FORMAT_B8G8R8A8_SNORM
+	FormatB8G8R8A8Uscaled     Format = C.VK_FORMAT_B8G8R8A8_USCALED
+	FormatB8G8R8A8Sscaled     Format = C.VK_FORMAT_B8G8R8A8_SSCALED
+	FormatB8G8R8A8Uint        Format = C.VK_FORMAT_B8G8R8A8_UINT
+	FormatB8G8R8A8Sint        Format = C.VK_FORMAT_B8G8R8A8_SINT
+	FormatB8G8R8A8Srgb        Format = C.VK_FORMAT_B8G8R8A8_SRGB
+	FormatD16Unorm            Format = C.VK_FORMAT_D16_UNORM
+	FormatX8D24UnormPack32    Format = C.VK_FORMAT_X8_D24_UNORM_PACK32
+	FormatD32Sfloat           Format = C.VK_FORMAT_D32_SFLOAT
+	FormatS8Uint              Format = C.VK_FORMAT_S8_UINT
+	FormatD16UnormS8Uint      Format = C.VK_FORMAT_D16_UNORM_S8_UINT
+	FormatD24UnormS8Uint      Format = C.VK_FORMAT_D24_UNORM_S8_UINT
+	FormatD32SfloatS8Uint     Format = C.VK_FORMAT_D32_SFLOAT_S8_UINT
 )
 
 // ImageTiling represents image tiling modes
@@ -168,16 +168,16 @@ const (
 type ImageLayout int32
 
 const (
-	ImageLayoutUndefined                        ImageLayout = C.VK_IMAGE_LAYOUT_UNDEFINED
-	ImageLayoutGeneral                          ImageLayout = C.VK_IMAGE_LAYOUT_GENERAL
-	ImageLayoutColorAttachmentOptimal           ImageLayout = C.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	ImageLayoutDepthStencilAttachmentOptimal    ImageLayout = C.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-	ImageLayoutDepthStencilReadOnlyOptimal      ImageLayout = C.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-	ImageLayoutShaderReadOnlyOptimal            ImageLayout = C.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-	ImageLayoutTransferSrcOptimal               ImageLayout = C.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-	ImageLayoutTransferDstOptimal               ImageLayout = C.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
-	ImageLayoutPreinitialized                   ImageLayout = C.VK_IMAGE_LAYOUT_PREINITIALIZED
-	ImageLayoutPresentSrcKHR                    ImageLayout = C.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+	ImageLayoutUndefined                     ImageLayout = C.VK_IMAGE_LAYOUT_UNDEFINED
+	ImageLayoutGeneral                       ImageLayout = C.VK_IMAGE_LAYOUT_GENERAL
+	ImageLayoutColorAttachmentOptimal        ImageLayout = C.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	ImageLayoutDepthStencilAttachmentOptimal ImageLayout = C.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+	ImageLayoutDepthStencilReadOnlyOptimal   ImageLayout = C.VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+	ImageLayoutShaderReadOnlyOptimal         ImageLayout = C.VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	ImageLayoutTransferSrcOptimal            ImageLayout = C.VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+	ImageLayoutTransferDstOptimal            ImageLayout = C.VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
+	ImageLayoutPreinitialized                ImageLayout = C.VK_IMAGE_LAYOUT_PREINITIALIZED
+	ImageLayoutPresentSrcKHR                 ImageLayout = C.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 )
 
 // CreateBuffer creates a buffer
@@ -210,7 +210,7 @@ func DestroyBuffer(device Device, buffer Buffer) {
 func GetBufferMemoryRequirements(device Device, buffer Buffer) MemoryRequirements {
 	var cReqs C.VkMemoryRequirements
 	C.vkGetBufferMemoryRequirements(C.VkDevice(device), C.VkBuffer(buffer), &cReqs)
-	
+
 	return MemoryRequirements{
 		Size:           DeviceSize(cReqs.size),
 		Alignment:      DeviceSize(cReqs.alignment),
@@ -303,7 +303,7 @@ func DestroyImage(device Device, image Image) {
 func GetImageMemoryRequirements(device Device, image Image) MemoryRequirements {
 	var cReqs C.VkMemoryRequirements
 	C.vkGetImageMemoryRequirements(C.VkDevice(device), C.VkImage(image), &cReqs)
-	
+
 	return MemoryRequirements{
 		Size:           DeviceSize(cReqs.size),
 		Alignment:      DeviceSize(cReqs.alignment),

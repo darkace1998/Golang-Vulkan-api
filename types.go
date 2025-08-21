@@ -48,44 +48,44 @@ type Result int32
 
 // Vulkan result codes
 const (
-	Success                                    Result = C.VK_SUCCESS
-	NotReady                                   Result = C.VK_NOT_READY
-	Timeout                                    Result = C.VK_TIMEOUT
-	EventSet                                   Result = C.VK_EVENT_SET
-	EventReset                                 Result = C.VK_EVENT_RESET
-	Incomplete                                 Result = C.VK_INCOMPLETE
-	ErrorOutOfHostMemory                       Result = C.VK_ERROR_OUT_OF_HOST_MEMORY
-	ErrorOutOfDeviceMemory                     Result = C.VK_ERROR_OUT_OF_DEVICE_MEMORY
-	ErrorInitializationFailed                  Result = C.VK_ERROR_INITIALIZATION_FAILED
-	ErrorDeviceLost                            Result = C.VK_ERROR_DEVICE_LOST
-	ErrorMemoryMapFailed                       Result = C.VK_ERROR_MEMORY_MAP_FAILED
-	ErrorLayerNotPresent                       Result = C.VK_ERROR_LAYER_NOT_PRESENT
-	ErrorExtensionNotPresent                   Result = C.VK_ERROR_EXTENSION_NOT_PRESENT
-	ErrorFeatureNotPresent                     Result = C.VK_ERROR_FEATURE_NOT_PRESENT
-	ErrorIncompatibleDriver                    Result = C.VK_ERROR_INCOMPATIBLE_DRIVER
-	ErrorTooManyObjects                        Result = C.VK_ERROR_TOO_MANY_OBJECTS
-	ErrorFormatNotSupported                    Result = C.VK_ERROR_FORMAT_NOT_SUPPORTED
-	ErrorFragmentedPool                        Result = C.VK_ERROR_FRAGMENTED_POOL
-	ErrorUnknown                               Result = C.VK_ERROR_UNKNOWN
-	ErrorOutOfPoolMemory                       Result = C.VK_ERROR_OUT_OF_POOL_MEMORY
-	ErrorInvalidExternalHandle                 Result = C.VK_ERROR_INVALID_EXTERNAL_HANDLE
-	ErrorFragmentation                         Result = C.VK_ERROR_FRAGMENTATION
-	ErrorInvalidOpaqueCaptureAddress           Result = C.VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS
-	ErrorSurfaceLostKHR                        Result = C.VK_ERROR_SURFACE_LOST_KHR
-	ErrorNativeWindowInUseKHR                  Result = C.VK_ERROR_NATIVE_WINDOW_IN_USE_KHR
-	SuboptimalKHR                              Result = C.VK_SUBOPTIMAL_KHR
-	ErrorOutOfDateKHR                          Result = C.VK_ERROR_OUT_OF_DATE_KHR
-	ErrorIncompatibleDisplayKHR                Result = C.VK_ERROR_INCOMPATIBLE_DISPLAY_KHR
-	ErrorValidationFailedEXT                   Result = C.VK_ERROR_VALIDATION_FAILED_EXT
-	ErrorInvalidShaderNV                       Result = C.VK_ERROR_INVALID_SHADER_NV
+	Success                                     Result = C.VK_SUCCESS
+	NotReady                                    Result = C.VK_NOT_READY
+	Timeout                                     Result = C.VK_TIMEOUT
+	EventSet                                    Result = C.VK_EVENT_SET
+	EventReset                                  Result = C.VK_EVENT_RESET
+	Incomplete                                  Result = C.VK_INCOMPLETE
+	ErrorOutOfHostMemory                        Result = C.VK_ERROR_OUT_OF_HOST_MEMORY
+	ErrorOutOfDeviceMemory                      Result = C.VK_ERROR_OUT_OF_DEVICE_MEMORY
+	ErrorInitializationFailed                   Result = C.VK_ERROR_INITIALIZATION_FAILED
+	ErrorDeviceLost                             Result = C.VK_ERROR_DEVICE_LOST
+	ErrorMemoryMapFailed                        Result = C.VK_ERROR_MEMORY_MAP_FAILED
+	ErrorLayerNotPresent                        Result = C.VK_ERROR_LAYER_NOT_PRESENT
+	ErrorExtensionNotPresent                    Result = C.VK_ERROR_EXTENSION_NOT_PRESENT
+	ErrorFeatureNotPresent                      Result = C.VK_ERROR_FEATURE_NOT_PRESENT
+	ErrorIncompatibleDriver                     Result = C.VK_ERROR_INCOMPATIBLE_DRIVER
+	ErrorTooManyObjects                         Result = C.VK_ERROR_TOO_MANY_OBJECTS
+	ErrorFormatNotSupported                     Result = C.VK_ERROR_FORMAT_NOT_SUPPORTED
+	ErrorFragmentedPool                         Result = C.VK_ERROR_FRAGMENTED_POOL
+	ErrorUnknown                                Result = C.VK_ERROR_UNKNOWN
+	ErrorOutOfPoolMemory                        Result = C.VK_ERROR_OUT_OF_POOL_MEMORY
+	ErrorInvalidExternalHandle                  Result = C.VK_ERROR_INVALID_EXTERNAL_HANDLE
+	ErrorFragmentation                          Result = C.VK_ERROR_FRAGMENTATION
+	ErrorInvalidOpaqueCaptureAddress            Result = C.VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS
+	ErrorSurfaceLostKHR                         Result = C.VK_ERROR_SURFACE_LOST_KHR
+	ErrorNativeWindowInUseKHR                   Result = C.VK_ERROR_NATIVE_WINDOW_IN_USE_KHR
+	SuboptimalKHR                               Result = C.VK_SUBOPTIMAL_KHR
+	ErrorOutOfDateKHR                           Result = C.VK_ERROR_OUT_OF_DATE_KHR
+	ErrorIncompatibleDisplayKHR                 Result = C.VK_ERROR_INCOMPATIBLE_DISPLAY_KHR
+	ErrorValidationFailedEXT                    Result = C.VK_ERROR_VALIDATION_FAILED_EXT
+	ErrorInvalidShaderNV                        Result = C.VK_ERROR_INVALID_SHADER_NV
 	ErrorInvalidDrmFormatModifierPlaneLayoutEXT Result = C.VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT
-	ErrorNotPermittedEXT                       Result = C.VK_ERROR_NOT_PERMITTED_EXT
-	ErrorFullScreenExclusiveModeLostEXT        Result = C.VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT
-	ThreadIdleKHR                              Result = C.VK_THREAD_IDLE_KHR
-	ThreadDoneKHR                              Result = C.VK_THREAD_DONE_KHR
-	OperationDeferredKHR                       Result = C.VK_OPERATION_DEFERRED_KHR
-	OperationNotDeferredKHR                    Result = C.VK_OPERATION_NOT_DEFERRED_KHR
-	PipelineCompileRequiredEXT                 Result = C.VK_PIPELINE_COMPILE_REQUIRED_EXT
+	ErrorNotPermittedEXT                        Result = C.VK_ERROR_NOT_PERMITTED_EXT
+	ErrorFullScreenExclusiveModeLostEXT         Result = C.VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT
+	ThreadIdleKHR                               Result = C.VK_THREAD_IDLE_KHR
+	ThreadDoneKHR                               Result = C.VK_THREAD_DONE_KHR
+	OperationDeferredKHR                        Result = C.VK_OPERATION_DEFERRED_KHR
+	OperationNotDeferredKHR                     Result = C.VK_OPERATION_NOT_DEFERRED_KHR
+	PipelineCompileRequiredEXT                  Result = C.VK_PIPELINE_COMPILE_REQUIRED_EXT
 )
 
 // Error returns the error message for the result
@@ -227,49 +227,49 @@ const (
 
 // Handle types
 type (
-	Instance               unsafe.Pointer
-	PhysicalDevice         unsafe.Pointer
-	Device                 unsafe.Pointer
-	Queue                  unsafe.Pointer
-	Semaphore              unsafe.Pointer
-	CommandBuffer          unsafe.Pointer
-	Fence                  unsafe.Pointer
-	DeviceMemory           unsafe.Pointer
-	Buffer                 unsafe.Pointer
-	Image                  unsafe.Pointer
-	Event                  unsafe.Pointer
-	QueryPool              unsafe.Pointer
-	BufferView             unsafe.Pointer
-	ImageView              unsafe.Pointer
-	ShaderModule           unsafe.Pointer
-	PipelineCache          unsafe.Pointer
-	PipelineLayout         unsafe.Pointer
-	RenderPass             unsafe.Pointer
-	Pipeline               unsafe.Pointer
-	DescriptorSetLayout    unsafe.Pointer
-	Sampler                unsafe.Pointer
-	DescriptorPool         unsafe.Pointer
-	DescriptorSet          unsafe.Pointer
-	Framebuffer            unsafe.Pointer
-	CommandPool            unsafe.Pointer
-	Surface                unsafe.Pointer
-	Swapchain              unsafe.Pointer
-	Display                unsafe.Pointer
-	DisplayMode            unsafe.Pointer
+	Instance                 unsafe.Pointer
+	PhysicalDevice           unsafe.Pointer
+	Device                   unsafe.Pointer
+	Queue                    unsafe.Pointer
+	Semaphore                unsafe.Pointer
+	CommandBuffer            unsafe.Pointer
+	Fence                    unsafe.Pointer
+	DeviceMemory             unsafe.Pointer
+	Buffer                   unsafe.Pointer
+	Image                    unsafe.Pointer
+	Event                    unsafe.Pointer
+	QueryPool                unsafe.Pointer
+	BufferView               unsafe.Pointer
+	ImageView                unsafe.Pointer
+	ShaderModule             unsafe.Pointer
+	PipelineCache            unsafe.Pointer
+	PipelineLayout           unsafe.Pointer
+	RenderPass               unsafe.Pointer
+	Pipeline                 unsafe.Pointer
+	DescriptorSetLayout      unsafe.Pointer
+	Sampler                  unsafe.Pointer
+	DescriptorPool           unsafe.Pointer
+	DescriptorSet            unsafe.Pointer
+	Framebuffer              unsafe.Pointer
+	CommandPool              unsafe.Pointer
+	Surface                  unsafe.Pointer
+	Swapchain                unsafe.Pointer
+	Display                  unsafe.Pointer
+	DisplayMode              unsafe.Pointer
 	DescriptorUpdateTemplate unsafe.Pointer
-	SamplerYcbcrConversion unsafe.Pointer
-	ValidationCache        unsafe.Pointer
-	AccelerationStructure  unsafe.Pointer
+	SamplerYcbcrConversion   unsafe.Pointer
+	ValidationCache          unsafe.Pointer
+	AccelerationStructure    unsafe.Pointer
 	PerformanceConfiguration unsafe.Pointer
-	DeferredOperation      unsafe.Pointer
-	PrivateDataSlot        unsafe.Pointer
-	VideoSession           unsafe.Pointer
-	VideoSessionParameters unsafe.Pointer
-	CuModule               unsafe.Pointer
-	CuFunction             unsafe.Pointer
-	OpticalFlowSession     unsafe.Pointer
-	MicromapEXT            unsafe.Pointer
-	ShaderEXT              unsafe.Pointer
+	DeferredOperation        unsafe.Pointer
+	PrivateDataSlot          unsafe.Pointer
+	VideoSession             unsafe.Pointer
+	VideoSessionParameters   unsafe.Pointer
+	CuModule                 unsafe.Pointer
+	CuFunction               unsafe.Pointer
+	OpticalFlowSession       unsafe.Pointer
+	MicromapEXT              unsafe.Pointer
+	ShaderEXT                unsafe.Pointer
 )
 
 // Null handle constants
@@ -279,21 +279,21 @@ var (
 
 // Constants
 const (
-	MaxMemoryTypes          = C.VK_MAX_MEMORY_TYPES
-	MaxMemoryHeaps          = C.VK_MAX_MEMORY_HEAPS
+	MaxMemoryTypes            = C.VK_MAX_MEMORY_TYPES
+	MaxMemoryHeaps            = C.VK_MAX_MEMORY_HEAPS
 	MaxPhysicalDeviceNameSize = C.VK_MAX_PHYSICAL_DEVICE_NAME_SIZE
-	MaxExtensionNameSize    = C.VK_MAX_EXTENSION_NAME_SIZE
-	MaxDescriptionSize      = C.VK_MAX_DESCRIPTION_SIZE
-	UuidSize                = C.VK_UUID_SIZE
-	LuidSize                = C.VK_LUID_SIZE
-	MaxDriverNameSize       = C.VK_MAX_DRIVER_NAME_SIZE
-	MaxDriverInfoSize       = C.VK_MAX_DRIVER_INFO_SIZE
-	AttachmentUnused        = C.VK_ATTACHMENT_UNUSED
-	SubpassExternal         = C.VK_SUBPASS_EXTERNAL
-	QueueFamilyIgnored      = C.VK_QUEUE_FAMILY_IGNORED
-	QueueFamilyExternal     = C.VK_QUEUE_FAMILY_EXTERNAL
-	QueueFamilyForeignEXT   = C.VK_QUEUE_FAMILY_FOREIGN_EXT
-	RemainingMipLevels      = C.VK_REMAINING_MIP_LEVELS
-	RemainingArrayLayers    = C.VK_REMAINING_ARRAY_LAYERS
-	WholeSize               = uint64(C.VK_WHOLE_SIZE)
+	MaxExtensionNameSize      = C.VK_MAX_EXTENSION_NAME_SIZE
+	MaxDescriptionSize        = C.VK_MAX_DESCRIPTION_SIZE
+	UuidSize                  = C.VK_UUID_SIZE
+	LuidSize                  = C.VK_LUID_SIZE
+	MaxDriverNameSize         = C.VK_MAX_DRIVER_NAME_SIZE
+	MaxDriverInfoSize         = C.VK_MAX_DRIVER_INFO_SIZE
+	AttachmentUnused          = C.VK_ATTACHMENT_UNUSED
+	SubpassExternal           = C.VK_SUBPASS_EXTERNAL
+	QueueFamilyIgnored        = C.VK_QUEUE_FAMILY_IGNORED
+	QueueFamilyExternal       = C.VK_QUEUE_FAMILY_EXTERNAL
+	QueueFamilyForeignEXT     = C.VK_QUEUE_FAMILY_FOREIGN_EXT
+	RemainingMipLevels        = C.VK_REMAINING_MIP_LEVELS
+	RemainingArrayLayers      = C.VK_REMAINING_ARRAY_LAYERS
+	WholeSize                 = uint64(C.VK_WHOLE_SIZE)
 )

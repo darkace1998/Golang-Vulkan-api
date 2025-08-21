@@ -122,7 +122,7 @@ const (
 type MemoryHeapFlags uint32
 
 const (
-	MemoryHeapDeviceLocalBit  MemoryHeapFlags = C.VK_MEMORY_HEAP_DEVICE_LOCAL_BIT
+	MemoryHeapDeviceLocalBit   MemoryHeapFlags = C.VK_MEMORY_HEAP_DEVICE_LOCAL_BIT
 	MemoryHeapMultiInstanceBit MemoryHeapFlags = C.VK_MEMORY_HEAP_MULTI_INSTANCE_BIT
 )
 
@@ -139,14 +139,14 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	if len(createInfo.QueueCreateInfos) > 0 {
 		cQueueCreateInfos = make([]C.VkDeviceQueueCreateInfo, len(createInfo.QueueCreateInfos))
 		cPriorities = make([][]C.float, len(createInfo.QueueCreateInfos))
-		
+
 		for i, qci := range createInfo.QueueCreateInfos {
 			cQueueCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
 			cQueueCreateInfos[i].pNext = nil
 			cQueueCreateInfos[i].flags = 0
 			cQueueCreateInfos[i].queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
 			cQueueCreateInfos[i].queueCount = C.uint32_t(len(qci.QueuePriorities))
-			
+
 			if len(qci.QueuePriorities) > 0 {
 				cPriorities[i] = make([]C.float, len(qci.QueuePriorities))
 				for j, priority := range qci.QueuePriorities {

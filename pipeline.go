@@ -85,12 +85,12 @@ const (
 
 // SubpassDescription describes a subpass
 type SubpassDescription struct {
-	PipelineBindPoint    PipelineBindPoint
-	InputAttachments     []AttachmentReference
-	ColorAttachments     []AttachmentReference
-	ResolveAttachments   []AttachmentReference
+	PipelineBindPoint      PipelineBindPoint
+	InputAttachments       []AttachmentReference
+	ColorAttachments       []AttachmentReference
+	ResolveAttachments     []AttachmentReference
 	DepthStencilAttachment *AttachmentReference
-	PreserveAttachments  []uint32
+	PreserveAttachments    []uint32
 }
 
 // PipelineBindPoint represents pipeline bind points
@@ -251,6 +251,70 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 // DestroyRenderPass destroys a render pass
 func DestroyRenderPass(device Device, renderPass RenderPass) {
 	C.vkDestroyRenderPass(C.VkDevice(device), C.VkRenderPass(renderPass), nil)
+}
+
+// ComputePipelineCreateInfo contains compute pipeline creation information
+type ComputePipelineCreateInfo struct {
+	Stage  PipelineShaderStageCreateInfo
+	Layout PipelineLayout
+}
+
+// CreateComputePipelines creates compute pipelines
+func CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error) {
+	if len(createInfos) == 0 {
+		return nil, nil
+	}
+
+	cCreateInfos := make([]C.VkComputePipelineCreateInfo, len(createInfos))
+	cPipelines := make([]C.VkPipeline, len(createInfos))
+
+	for i, info := range createInfos {
+		cCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO
+		cCreateInfos[i].pNext = nil
+		cCreateInfos[i].flags = 0
+
+		// Set up shader stage
+		cCreateInfos[i].stage.sType = C.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+		cCreateInfos[i].stage.pNext = nil
+		cCreateInfos[i].stage.flags = 0
+		cCreateInfos[i].stage.stage = C.VkShaderStageFlagBits(info.Stage.Stage)
+		cCreateInfos[i].stage._module = C.VkShaderModule(info.Stage.Module)
+
+		// Convert name to C string
+		cName := C.CString(info.Stage.Name)
+		defer C.free(unsafe.Pointer(cName))
+		cCreateInfos[i].stage.pName = cName
+		cCreateInfos[i].stage.pSpecializationInfo = nil
+
+		cCreateInfos[i].layout = C.VkPipelineLayout(info.Layout)
+		cCreateInfos[i].basePipelineHandle = C.VkPipeline(nil)
+		cCreateInfos[i].basePipelineIndex = -1
+	}
+
+	result := Result(C.vkCreateComputePipelines(
+		C.VkDevice(device),
+		C.VkPipelineCache(pipelineCache),
+		C.uint32_t(len(cCreateInfos)),
+		&cCreateInfos[0],
+		nil,
+		&cPipelines[0],
+	))
+
+	if result != Success {
+		return nil, result
+	}
+
+	pipelines := make([]Pipeline, len(cPipelines))
+	for i, pipeline := range cPipelines {
+		pipelines[i] = Pipeline(pipeline)
+	}
+
+	return pipelines, nil
+}
+
+// DestroyPipeline destroys a pipeline
+func DestroyPipeline(device Device, pipeline Pipeline) {
+	C.vkDestroyPipeline(C.VkDevice(device), C.VkPipeline(pipeline), nil)
 }
 
 // Additional utility functions for common operations

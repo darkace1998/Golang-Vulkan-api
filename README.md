@@ -16,6 +16,9 @@ This library provides a complete, type-safe Go interface to the Vulkan API, supp
 - ✅ **Device Management**: Physical and logical device enumeration and creation
 - ✅ **Buffer/Image Operations**: Complete buffer and image management
 - ✅ **Queue Operations**: Graphics, compute, and transfer queue support
+- ✅ **Compute Shaders**: Complete compute pipeline support for AI/ML workloads
+- ✅ **Storage Buffers**: Large dataset handling for compute operations
+- ✅ **Dispatch Commands**: Efficient compute work group dispatching
 - ✅ **Cross-Platform**: Works on Linux, Windows, and macOS (where Vulkan is supported)
 
 ## Requirements
@@ -101,6 +104,12 @@ func main() {
 - Command buffer allocation and recording
 - Queue submission and synchronization
 
+### Compute Pipeline
+- Compute shader support for AI/ML workloads
+- Storage buffer management for large datasets
+- Dispatch commands for parallel processing
+- Pipeline barriers for compute synchronization
+
 ### Synchronization
 - Semaphores for GPU-GPU synchronization
 - Fences for CPU-GPU synchronization
@@ -110,8 +119,10 @@ func main() {
 
 See the `examples/` directory for complete working examples:
 
-- `basic_test.go`: Comprehensive test of all core functionality
-- More examples coming soon...
+- `basic_example.go`: Basic Vulkan setup and device enumeration
+- `compute_example.go`: **Compute shader example for AI/ML workloads**
+- `type_example.go`: Type system and constant validation
+- `simple_example.go`: Minimal Vulkan instance creation
 
 ## API Reference
 
@@ -198,6 +209,44 @@ memory, err := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
 })
 
 err = vulkan.BindBufferMemory(device, buffer, memory, 0)
+```
+
+### Compute Pipeline for AI/ML Workloads
+
+```go
+// Create compute shader module (from compiled SPIR-V bytecode)
+shaderModule, err := vulkan.CreateShaderModule(device, &vulkan.ShaderModuleCreateInfo{
+    CodeSize: uint32(len(shaderCode) * 4),
+    Code:     shaderCode, // SPIR-V bytecode
+})
+
+// Create descriptor set layout for storage buffers
+descriptorSetLayout, err := vulkan.CreateDescriptorSetLayout(device, &vulkan.DescriptorSetLayoutCreateInfo{
+    Bindings: []vulkan.DescriptorSetLayoutBinding{
+        {
+            Binding:         0,
+            DescriptorType:  vulkan.DescriptorTypeStorageBuffer,
+            DescriptorCount: 1,
+            StageFlags:      vulkan.ShaderStageComputeBit,
+        },
+    },
+})
+
+// Create compute pipeline
+computePipelines, err := vulkan.CreateComputePipelines(device, nil, []vulkan.ComputePipelineCreateInfo{
+    {
+        Stage: vulkan.PipelineShaderStageCreateInfo{
+            Stage:  vulkan.ShaderStageComputeBit,
+            Module: shaderModule,
+            Name:   "main",
+        },
+        Layout: pipelineLayout,
+    },
+})
+
+// Record and dispatch compute work
+vulkan.CmdBindPipeline(commandBuffer, vulkan.PipelineBindPointCompute, computePipelines[0])
+vulkan.CmdDispatch(commandBuffer, workGroupsX, workGroupsY, workGroupsZ)
 ```
 
 ## Building

@@ -66,11 +66,11 @@ const (
 type SamplerAddressMode int32
 
 const (
-	SamplerAddressModeRepeat               SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_REPEAT
-	SamplerAddressModeMirroredRepeat       SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT
-	SamplerAddressModeClampToEdge          SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
-	SamplerAddressModeClampToBorder        SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER
-	SamplerAddressModeMirrorClampToEdge    SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
+	SamplerAddressModeRepeat            SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_REPEAT
+	SamplerAddressModeMirroredRepeat    SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT
+	SamplerAddressModeClampToEdge       SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
+	SamplerAddressModeClampToBorder     SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER
+	SamplerAddressModeMirrorClampToEdge SamplerAddressMode = C.VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE
 )
 
 // DescriptorSetLayoutCreateInfo contains descriptor set layout creation information
@@ -90,17 +90,17 @@ type DescriptorSetLayoutBinding struct {
 type DescriptorType int32
 
 const (
-	DescriptorTypeSampler                DescriptorType = C.VK_DESCRIPTOR_TYPE_SAMPLER
-	DescriptorTypeCombinedImageSampler   DescriptorType = C.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
-	DescriptorTypeSampledImage           DescriptorType = C.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
-	DescriptorTypeStorageImage           DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
-	DescriptorTypeUniformTexelBuffer     DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
-	DescriptorTypeStorageTexelBuffer     DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
-	DescriptorTypeUniformBuffer          DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-	DescriptorTypeStorageBuffer          DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-	DescriptorTypeUniformBufferDynamic   DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
-	DescriptorTypeStorageBufferDynamic   DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
-	DescriptorTypeInputAttachment        DescriptorType = C.VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
+	DescriptorTypeSampler              DescriptorType = C.VK_DESCRIPTOR_TYPE_SAMPLER
+	DescriptorTypeCombinedImageSampler DescriptorType = C.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+	DescriptorTypeSampledImage         DescriptorType = C.VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE
+	DescriptorTypeStorageImage         DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
+	DescriptorTypeUniformTexelBuffer   DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER
+	DescriptorTypeStorageTexelBuffer   DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
+	DescriptorTypeUniformBuffer        DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+	DescriptorTypeStorageBuffer        DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+	DescriptorTypeUniformBufferDynamic DescriptorType = C.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC
+	DescriptorTypeStorageBufferDynamic DescriptorType = C.VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+	DescriptorTypeInputAttachment      DescriptorType = C.VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
 )
 
 // DescriptorPoolCreateInfo contains descriptor pool creation information
@@ -124,13 +124,13 @@ func CreateImageView(device Device, createInfo *ImageViewCreateInfo) (ImageView,
 	cCreateInfo.image = C.VkImage(createInfo.Image)
 	cCreateInfo.viewType = C.VkImageViewType(createInfo.ViewType)
 	cCreateInfo.format = C.VkFormat(createInfo.Format)
-	
+
 	// Component mapping (identity)
 	cCreateInfo.components.r = C.VK_COMPONENT_SWIZZLE_IDENTITY
 	cCreateInfo.components.g = C.VK_COMPONENT_SWIZZLE_IDENTITY
 	cCreateInfo.components.b = C.VK_COMPONENT_SWIZZLE_IDENTITY
 	cCreateInfo.components.a = C.VK_COMPONENT_SWIZZLE_IDENTITY
-	
+
 	// Subresource range
 	cCreateInfo.subresourceRange.aspectMask = C.VkImageAspectFlags(createInfo.SubresourceRange.AspectMask)
 	cCreateInfo.subresourceRange.baseMipLevel = C.uint32_t(createInfo.SubresourceRange.BaseMipLevel)
