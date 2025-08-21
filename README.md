@@ -1,14 +1,19 @@
 # Golang-Vulkan-api
 
-A comprehensive Go binding for the Vulkan 1.4 graphics and compute API.
+A comprehensive Go binding for the Vulkan 1.3+ graphics and compute API with **complete Vulkan 1.3 feature support**.
 
 ## Overview
 
-This library provides a complete, type-safe Go interface to the Vulkan API, supporting Vulkan versions 1.0 through 1.4. It's designed to be used as a library for other Go projects that need low-level graphics and compute functionality.
+This library provides a complete, type-safe Go interface to the Vulkan API, supporting Vulkan versions 1.0 through 1.3. It's designed to be used as a library for other Go projects that need low-level graphics and compute functionality.
 
 ## Features
 
-- ✅ **Complete Vulkan 1.4 Support**: All essential Vulkan functions and types
+- ✅ **Complete Vulkan 1.3 Support**: All essential Vulkan 1.3 functions and types
+- ✅ **Dynamic Rendering**: Modern renderpass-free rendering (VK_KHR_dynamic_rendering)
+- ✅ **Synchronization2**: Enhanced timeline semaphores and submission (VK_KHR_synchronization2)
+- ✅ **Extended Dynamic State**: More pipeline state that can be set dynamically
+- ✅ **Private Data**: Associate private data with Vulkan objects
+- ✅ **Maintenance4**: Enhanced buffer/image memory requirements without object creation
 - ✅ **Type Safety**: Go-idiomatic types with proper error handling
 - ✅ **Memory Management**: Safe memory allocation and management functions
 - ✅ **Command Buffers**: Full command buffer recording and submission
@@ -20,6 +25,87 @@ This library provides a complete, type-safe Go interface to the Vulkan API, supp
 - ✅ **Storage Buffers**: Large dataset handling for compute operations
 - ✅ **Dispatch Commands**: Efficient compute work group dispatching
 - ✅ **Cross-Platform**: Works on Linux, Windows, and macOS (where Vulkan is supported)
+
+## Vulkan 1.3 Features ⭐ NEW
+
+### Dynamic Rendering
+Replace traditional render passes with flexible dynamic rendering:
+```go
+renderingInfo := &vulkan.RenderingInfo{
+    RenderArea: vulkan.Rect2D{
+        Offset: vulkan.Offset2D{X: 0, Y: 0}, 
+        Extent: vulkan.Extent2D{Width: 800, Height: 600},
+    },
+    LayerCount: 1,
+    ColorAttachments: []vulkan.RenderingAttachmentInfo{
+        {
+            ImageView:   colorImageView,
+            ImageLayout: vulkan.ImageLayoutColorAttachmentOptimal,
+            LoadOp:      vulkan.AttachmentLoadOpClear,
+            StoreOp:     vulkan.AttachmentStoreOpStore,
+        },
+    },
+}
+
+vulkan.CmdBeginRendering(commandBuffer, renderingInfo)
+// Draw commands here
+vulkan.CmdEndRendering(commandBuffer)
+```
+
+### Synchronization2 (Enhanced Timeline Semaphores)
+Modern submission with enhanced synchronization:
+```go
+submitInfo := []vulkan.SubmitInfo2{
+    {
+        CommandBufferInfos: []vulkan.CommandBufferSubmitInfo{
+            {CommandBuffer: commandBuffer, DeviceMask: 0},
+        },
+        WaitSemaphoreInfos: []vulkan.SemaphoreSubmitInfo{
+            {
+                Semaphore: waitSemaphore,
+                Value:     waitValue,
+                StageMask: vulkan.PipelineStage2FragmentShader,
+            },
+        },
+    },
+}
+
+err := vulkan.QueueSubmit2(queue, submitInfo, fence)
+```
+
+### Extended Dynamic State
+Set more pipeline state dynamically:
+```go
+vulkan.CmdSetCullMode(commandBuffer, vulkan.CullModeBack)
+vulkan.CmdSetFrontFace(commandBuffer, vulkan.FrontFaceCounterClockwise)
+vulkan.CmdSetPrimitiveTopology(commandBuffer, vulkan.PrimitiveTopologyTriangleList)
+vulkan.CmdSetDepthTestEnable(commandBuffer, true)
+vulkan.CmdSetDepthCompareOp(commandBuffer, vulkan.CompareOpLess)
+```
+
+### Private Data
+Associate application data with Vulkan objects:
+```go
+slot, err := vulkan.CreatePrivateDataSlot(device, &vulkan.PrivateDataSlotCreateInfo{})
+err = vulkan.SetPrivateData(device, vulkan.ObjectTypeBuffer, uint64(buffer), slot, myData)
+retrievedData := vulkan.GetPrivateData(device, vulkan.ObjectTypeBuffer, uint64(buffer), slot)
+```
+
+### Maintenance4
+Get memory requirements without creating objects:
+```go
+memReqs := vulkan.GetDeviceBufferMemoryRequirements(device, &vulkan.BufferCreateInfo{
+    Size:  1024 * 1024, // 1MB buffer
+    Usage: vulkan.BufferUsageStorageBufferBit,
+})
+
+imageMemReqs := vulkan.GetDeviceImageMemoryRequirements(device, &vulkan.ImageCreateInfo{
+    ImageType: vulkan.ImageType2D,
+    Format:    vulkan.FormatR8G8B8A8Unorm,
+    Extent:    vulkan.Extent3D{Width: 512, Height: 512, Depth: 1},
+    Usage:     vulkan.ImageUsageColorAttachmentBit,
+})
+```
 
 ## Requirements
 
@@ -121,8 +207,32 @@ See the `examples/` directory for complete working examples:
 
 - `basic_example.go`: Basic Vulkan setup and device enumeration
 - `compute_example.go`: **Compute shader example for AI/ML workloads**
+- `vulkan13_test.go`: **Complete Vulkan 1.3 feature test and demonstration**
 - `type_example.go`: Type system and constant validation
 - `simple_example.go`: Minimal Vulkan instance creation
+
+## Testing
+
+The implementation includes comprehensive tests for all Vulkan 1.3 features:
+
+```bash
+# Test all Vulkan 1.3 features
+go run examples/vulkan13_test.go
+
+# Test basic functionality
+go run examples/basic_example.go
+
+# Test compute capabilities for AI workloads
+go run examples/compute_example.go
+```
+
+The Vulkan 1.3 test validates:
+- ✅ Dynamic Rendering APIs
+- ✅ Synchronization2 enhanced submission
+- ✅ Extended Dynamic State commands
+- ✅ Private Data management
+- ✅ Maintenance4 memory requirements
+- ✅ All new pipeline stage flags and constants
 
 ## API Reference
 

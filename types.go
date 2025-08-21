@@ -297,3 +297,106 @@ const (
 	RemainingArrayLayers      = C.VK_REMAINING_ARRAY_LAYERS
 	WholeSize                 = uint64(C.VK_WHOLE_SIZE)
 )
+
+// ============================================================================
+// Vulkan 1.3 Additional Types
+// ============================================================================
+
+// ResolveModeFlagBits represents multisample resolve modes
+type ResolveModeFlagBits uint32
+
+const (
+	ResolveModeNone           ResolveModeFlagBits = C.VK_RESOLVE_MODE_NONE
+	ResolveModeSampleZero     ResolveModeFlagBits = C.VK_RESOLVE_MODE_SAMPLE_ZERO_BIT
+	ResolveModeAverage        ResolveModeFlagBits = C.VK_RESOLVE_MODE_AVERAGE_BIT
+	ResolveModeMin            ResolveModeFlagBits = C.VK_RESOLVE_MODE_MIN_BIT
+	ResolveModeMax            ResolveModeFlagBits = C.VK_RESOLVE_MODE_MAX_BIT
+)
+
+// CullModeFlags represents face culling modes
+type CullModeFlags uint32
+
+const (
+	CullModeNone         CullModeFlags = C.VK_CULL_MODE_NONE
+	CullModeFront        CullModeFlags = C.VK_CULL_MODE_FRONT_BIT
+	CullModeBack         CullModeFlags = C.VK_CULL_MODE_BACK_BIT
+	CullModeFrontAndBack CullModeFlags = C.VK_CULL_MODE_FRONT_AND_BACK
+)
+
+// FrontFace represents front-facing triangle orientation
+type FrontFace uint32
+
+const (
+	FrontFaceCounterClockwise FrontFace = C.VK_FRONT_FACE_COUNTER_CLOCKWISE
+	FrontFaceClockwise        FrontFace = C.VK_FRONT_FACE_CLOCKWISE
+)
+
+// PrimitiveTopology represents primitive topology
+type PrimitiveTopology uint32
+
+const (
+	PrimitiveTopologyPointList                  PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_POINT_LIST
+	PrimitiveTopologyLineList                   PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_LINE_LIST
+	PrimitiveTopologyLineStrip                  PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_LINE_STRIP
+	PrimitiveTopologyTriangleList               PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+	PrimitiveTopologyTriangleStrip              PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP
+	PrimitiveTopologyTriangleFan                PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN
+	PrimitiveTopologyLineListWithAdjacency      PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY
+	PrimitiveTopologyLineStripWithAdjacency     PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY
+	PrimitiveTopologyTriangleListWithAdjacency  PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY
+	PrimitiveTopologyTriangleStripWithAdjacency PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY
+	PrimitiveTopologyPatchList                  PrimitiveTopology = C.VK_PRIMITIVE_TOPOLOGY_PATCH_LIST
+)
+
+// CompareOp represents comparison operations
+type CompareOp uint32
+
+const (
+	CompareOpNever          CompareOp = C.VK_COMPARE_OP_NEVER
+	CompareOpLess           CompareOp = C.VK_COMPARE_OP_LESS
+	CompareOpEqual          CompareOp = C.VK_COMPARE_OP_EQUAL
+	CompareOpLessOrEqual    CompareOp = C.VK_COMPARE_OP_LESS_OR_EQUAL
+	CompareOpGreater        CompareOp = C.VK_COMPARE_OP_GREATER
+	CompareOpNotEqual       CompareOp = C.VK_COMPARE_OP_NOT_EQUAL
+	CompareOpGreaterOrEqual CompareOp = C.VK_COMPARE_OP_GREATER_OR_EQUAL
+	CompareOpAlways         CompareOp = C.VK_COMPARE_OP_ALWAYS
+)
+
+// StencilFaceFlags represents stencil face selection
+type StencilFaceFlags uint32
+
+const (
+	StencilFaceFront        StencilFaceFlags = C.VK_STENCIL_FACE_FRONT_BIT
+	StencilFaceBack         StencilFaceFlags = C.VK_STENCIL_FACE_BACK_BIT
+	StencilFaceFrontAndBack StencilFaceFlags = C.VK_STENCIL_FACE_FRONT_AND_BACK
+)
+
+// StencilOp represents stencil operations
+type StencilOp uint32
+
+const (
+	StencilOpKeep              StencilOp = C.VK_STENCIL_OP_KEEP
+	StencilOpZero              StencilOp = C.VK_STENCIL_OP_ZERO
+	StencilOpReplace           StencilOp = C.VK_STENCIL_OP_REPLACE
+	StencilOpIncrementAndClamp StencilOp = C.VK_STENCIL_OP_INCREMENT_AND_CLAMP
+	StencilOpDecrementAndClamp StencilOp = C.VK_STENCIL_OP_DECREMENT_AND_CLAMP
+	StencilOpInvert            StencilOp = C.VK_STENCIL_OP_INVERT
+	StencilOpIncrementAndWrap  StencilOp = C.VK_STENCIL_OP_INCREMENT_AND_WRAP
+	StencilOpDecrementAndWrap  StencilOp = C.VK_STENCIL_OP_DECREMENT_AND_WRAP
+)
+
+// ObjectType represents Vulkan object types
+type ObjectType uint32
+
+const (
+	ObjectTypeUnknown        ObjectType = C.VK_OBJECT_TYPE_UNKNOWN
+	ObjectTypeInstance       ObjectType = C.VK_OBJECT_TYPE_INSTANCE
+	ObjectTypePhysicalDevice ObjectType = C.VK_OBJECT_TYPE_PHYSICAL_DEVICE
+	ObjectTypeDevice         ObjectType = C.VK_OBJECT_TYPE_DEVICE
+	ObjectTypeQueue          ObjectType = C.VK_OBJECT_TYPE_QUEUE
+	ObjectTypeSemaphore      ObjectType = C.VK_OBJECT_TYPE_SEMAPHORE
+	ObjectTypeCommandBuffer  ObjectType = C.VK_OBJECT_TYPE_COMMAND_BUFFER
+	ObjectTypeFence          ObjectType = C.VK_OBJECT_TYPE_FENCE
+	ObjectTypeDeviceMemory   ObjectType = C.VK_OBJECT_TYPE_DEVICE_MEMORY
+	ObjectTypeBuffer         ObjectType = C.VK_OBJECT_TYPE_BUFFER
+)
