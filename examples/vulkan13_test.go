@@ -287,6 +287,7 @@ func main() {
 
 	// Test GetDeviceBufferMemoryRequirements
 	bufferCreateInfo := &vulkan.BufferCreateInfo{
+		Flags:       0, // Default flags
 		Size:        1024,
 		Usage:       vulkan.BufferUsageStorageBufferBit,
 		SharingMode: vulkan.SharingModeExclusive,
@@ -298,6 +299,7 @@ func main() {
 
 	// Test GetDeviceImageMemoryRequirements
 	imageCreateInfo := &vulkan.ImageCreateInfo{
+		Flags:         0, // Default flags
 		ImageType:     vulkan.ImageType2D,
 		Format:        vulkan.FormatR8G8B8A8Unorm,
 		Extent:        vulkan.Extent3D{Width: 256, Height: 256, Depth: 1},

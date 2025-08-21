@@ -14,10 +14,22 @@ import (
 
 // BufferCreateInfo contains buffer creation information
 type BufferCreateInfo struct {
+	Flags       BufferCreateFlags
 	Size        DeviceSize
 	Usage       BufferUsageFlags
 	SharingMode SharingMode
 }
+
+// BufferCreateFlags represents buffer creation flags
+type BufferCreateFlags uint32
+
+const (
+	BufferCreateSparseBindingBit              BufferCreateFlags = C.VK_BUFFER_CREATE_SPARSE_BINDING_BIT
+	BufferCreateSparseResidencyBit            BufferCreateFlags = C.VK_BUFFER_CREATE_SPARSE_RESIDENCY_BIT
+	BufferCreateSparseAliasedBit              BufferCreateFlags = C.VK_BUFFER_CREATE_SPARSE_ALIASED_BIT
+	BufferCreateProtectedBit                  BufferCreateFlags = C.VK_BUFFER_CREATE_PROTECTED_BIT
+	BufferCreateDeviceAddressCaptureReplayBit BufferCreateFlags = C.VK_BUFFER_CREATE_DEVICE_ADDRESS_CAPTURE_REPLAY_BIT
+)
 
 // BufferUsageFlags represents buffer usage flags
 type BufferUsageFlags uint32
@@ -58,6 +70,7 @@ type MemoryRequirements struct {
 
 // ImageCreateInfo contains image creation information
 type ImageCreateInfo struct {
+	Flags         ImageCreateFlags
 	ImageType     ImageType
 	Format        Format
 	Extent        Extent3D
@@ -77,6 +90,27 @@ const (
 	ImageType1D ImageType = C.VK_IMAGE_TYPE_1D
 	ImageType2D ImageType = C.VK_IMAGE_TYPE_2D
 	ImageType3D ImageType = C.VK_IMAGE_TYPE_3D
+)
+
+// ImageCreateFlags represents image creation flags
+type ImageCreateFlags uint32
+
+const (
+	ImageCreateSparseBindingBit                     ImageCreateFlags = C.VK_IMAGE_CREATE_SPARSE_BINDING_BIT
+	ImageCreateSparseResidencyBit                   ImageCreateFlags = C.VK_IMAGE_CREATE_SPARSE_RESIDENCY_BIT
+	ImageCreateSparseAliasedBit                     ImageCreateFlags = C.VK_IMAGE_CREATE_SPARSE_ALIASED_BIT
+	ImageCreateMutableFormatBit                     ImageCreateFlags = C.VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+	ImageCreateCubeCompatibleBit                    ImageCreateFlags = C.VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
+	ImageCreateAliasBit                             ImageCreateFlags = C.VK_IMAGE_CREATE_ALIAS_BIT
+	ImageCreateSplitInstanceBindRegionsBit          ImageCreateFlags = C.VK_IMAGE_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT
+	ImageCreate2DArrayCompatibleBit                 ImageCreateFlags = C.VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT
+	ImageCreateBlockTexelViewCompatibleBit          ImageCreateFlags = C.VK_IMAGE_CREATE_BLOCK_TEXEL_VIEW_COMPATIBLE_BIT
+	ImageCreateExtendedUsageBit                     ImageCreateFlags = C.VK_IMAGE_CREATE_EXTENDED_USAGE_BIT
+	ImageCreateProtectedBit                         ImageCreateFlags = C.VK_IMAGE_CREATE_PROTECTED_BIT
+	ImageCreateDisjointBit                          ImageCreateFlags = C.VK_IMAGE_CREATE_DISJOINT_BIT
+	ImageCreateCornerSampledBitNV                   ImageCreateFlags = C.VK_IMAGE_CREATE_CORNER_SAMPLED_BIT_NV
+	ImageCreateSampleLocationsCompatibleDepthBitEXT ImageCreateFlags = C.VK_IMAGE_CREATE_SAMPLE_LOCATIONS_COMPATIBLE_DEPTH_BIT_EXT
+	ImageCreateSubsampledBitEXT                     ImageCreateFlags = C.VK_IMAGE_CREATE_SUBSAMPLED_BIT_EXT
 )
 
 // Format represents pixel formats
@@ -186,7 +220,7 @@ func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
 	var cCreateInfo C.VkBufferCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
 	cCreateInfo.pNext = nil
-	cCreateInfo.flags = 0
+	cCreateInfo.flags = C.VkBufferCreateFlags(createInfo.Flags)
 	cCreateInfo.size = C.VkDeviceSize(createInfo.Size)
 	cCreateInfo.usage = C.VkBufferUsageFlags(createInfo.Usage)
 	cCreateInfo.sharingMode = C.VkSharingMode(createInfo.SharingMode)
@@ -270,7 +304,7 @@ func CreateImage(device Device, createInfo *ImageCreateInfo) (Image, error) {
 	var cCreateInfo C.VkImageCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO
 	cCreateInfo.pNext = nil
-	cCreateInfo.flags = 0
+	cCreateInfo.flags = C.VkImageCreateFlags(createInfo.Flags)
 	cCreateInfo.imageType = C.VkImageType(createInfo.ImageType)
 	cCreateInfo.format = C.VkFormat(createInfo.Format)
 	cCreateInfo.extent.width = C.uint32_t(createInfo.Extent.Width)

@@ -102,6 +102,7 @@ func main() {
 
 	// Input buffer
 	inputBuffer, err := vulkan.CreateBuffer(device, &vulkan.BufferCreateInfo{
+		Flags:       0, // Default flags
 		Size:        bufferSize,
 		Usage:       vulkan.BufferUsageStorageBufferBit | vulkan.BufferUsageTransferDstBit,
 		SharingMode: vulkan.SharingModeExclusive,
@@ -113,6 +114,7 @@ func main() {
 
 	// Output buffer
 	outputBuffer, err := vulkan.CreateBuffer(device, &vulkan.BufferCreateInfo{
+		Flags:       0, // Default flags
 		Size:        bufferSize,
 		Usage:       vulkan.BufferUsageStorageBufferBit | vulkan.BufferUsageTransferSrcBit,
 		SharingMode: vulkan.SharingModeExclusive,

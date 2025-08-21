@@ -185,6 +185,7 @@ func main() {
 	// Create a simple buffer
 	fmt.Println("\n12. Creating buffer...")
 	bufferCreateInfo := &vulkan.BufferCreateInfo{
+		Flags:       0,    // Default flags
 		Size:        1024, // 1KB buffer
 		Usage:       vulkan.BufferUsageVertexBufferBit,
 		SharingMode: vulkan.SharingModeExclusive,

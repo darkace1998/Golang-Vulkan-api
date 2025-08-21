@@ -539,7 +539,7 @@ func GetDeviceBufferMemoryRequirements(device Device, bufferCreateInfo *BufferCr
 	cBufferCreateInfo := C.VkBufferCreateInfo{
 		sType:                 C.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		pNext:                 nil,
-		flags:                 0, // Use default flags
+		flags:                 C.VkBufferCreateFlags(bufferCreateInfo.Flags),
 		size:                  C.VkDeviceSize(bufferCreateInfo.Size),
 		usage:                 C.VkBufferUsageFlags(bufferCreateInfo.Usage),
 		sharingMode:           C.VkSharingMode(bufferCreateInfo.SharingMode),
@@ -575,7 +575,7 @@ func GetDeviceImageMemoryRequirements(device Device, imageCreateInfo *ImageCreat
 	cImageCreateInfo := C.VkImageCreateInfo{
 		sType:                 C.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		pNext:                 nil,
-		flags:                 0, // Use default flags
+		flags:                 C.VkImageCreateFlags(imageCreateInfo.Flags),
 		imageType:             C.VkImageType(imageCreateInfo.ImageType),
 		format:                C.VkFormat(imageCreateInfo.Format),
 		mipLevels:             C.uint32_t(imageCreateInfo.MipLevels),
