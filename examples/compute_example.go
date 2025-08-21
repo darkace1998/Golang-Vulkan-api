@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"unsafe"
 
 	vulkan "github.com/darkace1998/Golang-Vulkan-api"
 )
@@ -55,9 +54,9 @@ func main() {
 
 	// Check compute capabilities
 	fmt.Printf("Max compute shared memory: %d bytes\n", properties.Limits.MaxComputeSharedMemorySize)
-	fmt.Printf("Max compute work group size: [%d, %d, %d]\n", 
+	fmt.Printf("Max compute work group size: [%d, %d, %d]\n",
 		properties.Limits.MaxComputeWorkGroupSize[0],
-		properties.Limits.MaxComputeWorkGroupSize[1], 
+		properties.Limits.MaxComputeWorkGroupSize[1],
 		properties.Limits.MaxComputeWorkGroupSize[2])
 	fmt.Printf("Max compute work group invocations: %d\n", properties.Limits.MaxComputeWorkGroupInvocations)
 
@@ -125,9 +124,9 @@ func main() {
 
 	// Get memory requirements and allocate memory
 	memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
-	
+
 	inputMemReqs := vulkan.GetBufferMemoryRequirements(device, inputBuffer)
-	memoryType, found := vulkan.FindMemoryType(memProps, inputMemReqs.MemoryTypeBits, 
+	memoryType, found := vulkan.FindMemoryType(memProps, inputMemReqs.MemoryTypeBits,
 		vulkan.MemoryPropertyHostVisibleBit|vulkan.MemoryPropertyHostCoherentBit)
 	if !found {
 		log.Fatal("Failed to find suitable memory type for input buffer")
@@ -260,7 +259,7 @@ func main() {
 
 	// Dispatch compute work
 	// For AI workloads, you'd typically dispatch work groups that process chunks of data
-	workGroupSize := uint32(64)  // Typical size for AI compute
+	workGroupSize := uint32(64)       // Typical size for AI compute
 	numElements := uint32(1024 * 256) // Number of elements to process
 	numWorkGroups := (numElements + workGroupSize - 1) / workGroupSize
 

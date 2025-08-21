@@ -36,20 +36,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to enumerate physical devices: %v", err)
 	}
-	
+
 	if len(physicalDevices) == 0 {
 		log.Fatal("No physical devices found")
 	}
 
 	fmt.Printf("Found %d physical device(s):\n", len(physicalDevices))
-	
+
 	for i, device := range physicalDevices {
 		props := vulkan.GetPhysicalDeviceProperties(device)
 		fmt.Printf("  Device %d: %s\n", i, props.DeviceName)
-		fmt.Printf("    Type: %d, API Version: %d.%d.%d\n", 
-			props.DeviceType, 
-			props.APIVersion.Major(), 
-			props.APIVersion.Minor(), 
+		fmt.Printf("    Type: %d, API Version: %d.%d.%d\n",
+			props.DeviceType,
+			props.APIVersion.Major(),
+			props.APIVersion.Minor(),
 			props.APIVersion.Patch())
 	}
 
@@ -57,14 +57,14 @@ func main() {
 	fmt.Println("\n3. Testing version functions...")
 	version := vulkan.MakeVersion(1, 3, 269)
 	fmt.Printf("Created version 1.3.269: %d\n", version)
-	fmt.Printf("  Major: %d, Minor: %d, Patch: %d\n", 
+	fmt.Printf("  Major: %d, Minor: %d, Patch: %d\n",
 		version.Major(), version.Minor(), version.Patch())
 
 	// Test predefined versions
 	fmt.Println("\n4. Testing predefined versions...")
-	fmt.Printf("Vulkan 1.0: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.0: %d.%d.%d\n",
 		vulkan.Version10.Major(), vulkan.Version10.Minor(), vulkan.Version10.Patch())
-	fmt.Printf("Vulkan 1.3: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.3: %d.%d.%d\n",
 		vulkan.Version13.Major(), vulkan.Version13.Minor(), vulkan.Version13.Patch())
 
 	// Test error handling

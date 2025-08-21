@@ -64,23 +64,23 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to enumerate physical devices: %v", err)
 	}
-	
+
 	if len(physicalDevices) == 0 {
 		log.Fatal("No physical devices found")
 	}
 
 	fmt.Printf("Found %d physical device(s):\n", len(physicalDevices))
-	
+
 	var selectedDevice vulkan.PhysicalDevice
 	for i, device := range physicalDevices {
 		props := vulkan.GetPhysicalDeviceProperties(device)
 		fmt.Printf("  Device %d: %s\n", i, props.DeviceName)
-		fmt.Printf("    Type: %d, Vendor ID: 0x%x, Device ID: 0x%x\n", 
+		fmt.Printf("    Type: %d, Vendor ID: 0x%x, Device ID: 0x%x\n",
 			props.DeviceType, props.VendorID, props.DeviceID)
 		fmt.Printf("    API Version: %d.%d.%d, Driver Version: %d.%d.%d\n",
 			props.APIVersion.Major(), props.APIVersion.Minor(), props.APIVersion.Patch(),
 			props.DriverVersion.Major(), props.DriverVersion.Minor(), props.DriverVersion.Patch())
-		
+
 		if i == 0 {
 			selectedDevice = device // Use the first device
 		}
@@ -101,7 +101,7 @@ func main() {
 	fmt.Printf("Memory properties:\n")
 	fmt.Printf("  - Memory types: %d\n", memProps.MemoryTypeCount)
 	fmt.Printf("  - Memory heaps: %d\n", memProps.MemoryHeapCount)
-	
+
 	for i := uint32(0); i < memProps.MemoryHeapCount; i++ {
 		heap := memProps.MemoryHeaps[i]
 		fmt.Printf("    Heap %d: %d MB, flags: %d\n", i, heap.Size/(1024*1024), heap.Flags)
@@ -111,7 +111,7 @@ func main() {
 	fmt.Println("\n7. Checking queue families...")
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(selectedDevice)
 	fmt.Printf("Found %d queue families:\n", len(queueFamilies))
-	
+
 	var graphicsQueueFamily uint32 = ^uint32(0) // Invalid index
 	for i, qf := range queueFamilies {
 		fmt.Printf("  Queue family %d: %d queues, flags: %d\n", i, qf.QueueCount, qf.QueueFlags)
@@ -206,7 +206,7 @@ func main() {
 	fmt.Printf("  - Memory type bits: 0x%x\n", memRequirements.MemoryTypeBits)
 
 	// Find suitable memory type
-	memTypeIndex, found := vulkan.FindMemoryType(memProps, memRequirements.MemoryTypeBits, 
+	memTypeIndex, found := vulkan.FindMemoryType(memProps, memRequirements.MemoryTypeBits,
 		vulkan.MemoryPropertyHostVisibleBit|vulkan.MemoryPropertyHostCoherentBit)
 	if !found {
 		log.Fatal("Failed to find suitable memory type")
@@ -237,7 +237,7 @@ func main() {
 
 	// Test synchronization objects
 	fmt.Println("\n16. Creating synchronization objects...")
-	
+
 	// Create semaphore
 	semaphoreCreateInfo := &vulkan.SemaphoreCreateInfo{}
 	semaphore, err := vulkan.CreateSemaphore(device, semaphoreCreateInfo)
@@ -263,7 +263,7 @@ func main() {
 	beginInfo := &vulkan.CommandBufferBeginInfo{
 		Flags: vulkan.CommandBufferUsageOneTimeSubmitBit,
 	}
-	
+
 	err = vulkan.BeginCommandBuffer(commandBuffers[0], beginInfo)
 	if err != nil {
 		log.Fatalf("Failed to begin command buffer: %v", err)

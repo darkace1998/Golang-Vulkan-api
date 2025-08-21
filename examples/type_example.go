@@ -14,20 +14,20 @@ func main() {
 	fmt.Println("\n1. Testing version functions...")
 	version := vulkan.MakeVersion(1, 3, 269)
 	fmt.Printf("Created version 1.3.269: %d\n", version)
-	fmt.Printf("  Major: %d, Minor: %d, Patch: %d\n", 
+	fmt.Printf("  Major: %d, Minor: %d, Patch: %d\n",
 		version.Major(), version.Minor(), version.Patch())
 
 	// Test predefined versions
 	fmt.Println("\n2. Testing predefined versions...")
-	fmt.Printf("Vulkan 1.0: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.0: %d.%d.%d\n",
 		vulkan.Version10.Major(), vulkan.Version10.Minor(), vulkan.Version10.Patch())
-	fmt.Printf("Vulkan 1.1: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.1: %d.%d.%d\n",
 		vulkan.Version11.Major(), vulkan.Version11.Minor(), vulkan.Version11.Patch())
-	fmt.Printf("Vulkan 1.2: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.2: %d.%d.%d\n",
 		vulkan.Version12.Major(), vulkan.Version12.Minor(), vulkan.Version12.Patch())
-	fmt.Printf("Vulkan 1.3: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.3: %d.%d.%d\n",
 		vulkan.Version13.Major(), vulkan.Version13.Minor(), vulkan.Version13.Patch())
-	fmt.Printf("Vulkan 1.4: %d.%d.%d\n", 
+	fmt.Printf("Vulkan 1.4: %d.%d.%d\n",
 		vulkan.Version14.Major(), vulkan.Version14.Minor(), vulkan.Version14.Patch())
 
 	// Test error handling
@@ -36,7 +36,7 @@ func main() {
 	fmt.Printf("Error Out of Host Memory: %s\n", vulkan.ErrorOutOfHostMemory.Error())
 	fmt.Printf("Error Device Lost: %s\n", vulkan.ErrorDeviceLost.Error())
 	fmt.Printf("Error Out of Date KHR: %s\n", vulkan.ErrorOutOfDateKHR.Error())
-	
+
 	fmt.Printf("Is Success an error? %t\n", vulkan.Success.IsError())
 	fmt.Printf("Is Success successful? %t\n", vulkan.Success.IsSuccess())
 	fmt.Printf("Is ErrorOutOfHostMemory an error? %t\n", vulkan.ErrorOutOfHostMemory.IsError())
@@ -62,7 +62,7 @@ func main() {
 	fmt.Printf("Queue Graphics Bit: %d\n", vulkan.QueueGraphicsBit)
 	fmt.Printf("Queue Compute Bit: %d\n", vulkan.QueueComputeBit)
 	fmt.Printf("Queue Transfer Bit: %d\n", vulkan.QueueTransferBit)
-	
+
 	fmt.Printf("Buffer Usage Vertex Buffer Bit: %d\n", vulkan.BufferUsageVertexBufferBit)
 	fmt.Printf("Buffer Usage Index Buffer Bit: %d\n", vulkan.BufferUsageIndexBufferBit)
 	fmt.Printf("Buffer Usage Uniform Buffer Bit: %d\n", vulkan.BufferUsageUniformBufferBit)
@@ -108,7 +108,7 @@ func main() {
 	// Test utility functions
 	fmt.Println("\n12. Testing utility functions...")
 	apiVersion := vulkan.GetAPIVersion()
-	fmt.Printf("Supported API Version: %d.%d.%d\n", 
+	fmt.Printf("Supported API Version: %d.%d.%d\n",
 		apiVersion.Major(), apiVersion.Minor(), apiVersion.Patch())
 
 	// Test extension/layer checking
@@ -116,14 +116,14 @@ func main() {
 		{ExtensionName: "VK_KHR_swapchain", SpecVersion: 70},
 		{ExtensionName: "VK_EXT_debug_utils", SpecVersion: 2},
 	}
-	
+
 	fmt.Printf("Is VK_KHR_swapchain supported? %t\n", vulkan.IsExtensionSupported("VK_KHR_swapchain", extensions))
 	fmt.Printf("Is VK_KHR_nonexistent supported? %t\n", vulkan.IsExtensionSupported("VK_KHR_nonexistent", extensions))
 
 	layers := []vulkan.LayerProperties{
 		{LayerName: "VK_LAYER_KHRONOS_validation", Description: "Validation layer"},
 	}
-	
+
 	fmt.Printf("Is VK_LAYER_KHRONOS_validation supported? %t\n", vulkan.IsLayerSupported("VK_LAYER_KHRONOS_validation", layers))
 	fmt.Printf("Is VK_LAYER_nonexistent supported? %t\n", vulkan.IsLayerSupported("VK_LAYER_nonexistent", layers))
 

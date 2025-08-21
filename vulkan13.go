@@ -6,6 +6,7 @@ package vulkan
 #include <stdlib.h>
 */
 import "C"
+
 import (
 	"unsafe"
 )
@@ -21,8 +22,8 @@ type RenderingFlags uint32
 
 const (
 	RenderingContentsSecondaryCommandBuffers RenderingFlags = C.VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT
-	RenderingSuspending                       RenderingFlags = C.VK_RENDERING_SUSPENDING_BIT
-	RenderingResuming                         RenderingFlags = C.VK_RENDERING_RESUMING_BIT
+	RenderingSuspending                      RenderingFlags = C.VK_RENDERING_SUSPENDING_BIT
+	RenderingResuming                        RenderingFlags = C.VK_RENDERING_RESUMING_BIT
 )
 
 // RenderingAttachmentInfo describes a single attachment for dynamic rendering
@@ -39,13 +40,13 @@ type RenderingAttachmentInfo struct {
 
 // RenderingInfo contains information to begin a render pass instance
 type RenderingInfo struct {
-	Flags                RenderingFlags
-	RenderArea           Rect2D
-	LayerCount           uint32
-	ViewMask             uint32
-	ColorAttachments     []RenderingAttachmentInfo
-	DepthAttachment      *RenderingAttachmentInfo
-	StencilAttachment    *RenderingAttachmentInfo
+	Flags             RenderingFlags
+	RenderArea        Rect2D
+	LayerCount        uint32
+	ViewMask          uint32
+	ColorAttachments  []RenderingAttachmentInfo
+	DepthAttachment   *RenderingAttachmentInfo
+	StencilAttachment *RenderingAttachmentInfo
 }
 
 // CmdBeginRendering begins a render pass instance with dynamic rendering
@@ -135,9 +136,9 @@ const (
 
 // SemaphoreSubmitInfo describes a semaphore signal or wait operation
 type SemaphoreSubmitInfo struct {
-	Semaphore  Semaphore
-	Value      uint64
-	StageMask  PipelineStageFlags2
+	Semaphore   Semaphore
+	Value       uint64
+	StageMask   PipelineStageFlags2
 	DeviceIndex uint32
 }
 
@@ -149,10 +150,10 @@ type CommandBufferSubmitInfo struct {
 
 // SubmitInfo2 describes a queue submission operation with enhanced synchronization
 type SubmitInfo2 struct {
-	Flags                  SubmitFlags
-	WaitSemaphoreInfos     []SemaphoreSubmitInfo
-	CommandBufferInfos     []CommandBufferSubmitInfo
-	SignalSemaphoreInfos   []SemaphoreSubmitInfo
+	Flags                SubmitFlags
+	WaitSemaphoreInfos   []SemaphoreSubmitInfo
+	CommandBufferInfos   []CommandBufferSubmitInfo
+	SignalSemaphoreInfos []SemaphoreSubmitInfo
 }
 
 // PipelineStageFlags2 represents enhanced pipeline stage flags
@@ -191,7 +192,7 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 	var cSubmitInfos []C.VkSubmitInfo2
 	if len(submitInfos) > 0 {
 		cSubmitInfos = make([]C.VkSubmitInfo2, len(submitInfos))
-		
+
 		for i, submitInfo := range submitInfos {
 			cSubmitInfos[i].sType = C.VK_STRUCTURE_TYPE_SUBMIT_INFO_2
 			cSubmitInfos[i].pNext = nil
@@ -277,7 +278,7 @@ func CmdSetCullMode(commandBuffer CommandBuffer, cullMode CullModeFlags) {
 	C.vkCmdSetCullMode(C.VkCommandBuffer(commandBuffer), C.VkCullModeFlags(cullMode))
 }
 
-// CmdSetFrontFace sets the front face orientation dynamically  
+// CmdSetFrontFace sets the front face orientation dynamically
 func CmdSetFrontFace(commandBuffer CommandBuffer, frontFace FrontFace) {
 	C.vkCmdSetFrontFace(C.VkCommandBuffer(commandBuffer), C.VkFrontFace(frontFace))
 }
@@ -292,12 +293,12 @@ func CmdSetViewportWithCount(commandBuffer CommandBuffer, viewports []Viewport) 
 	if len(viewports) == 0 {
 		return
 	}
-	
+
 	cViewports := make([]C.VkViewport, len(viewports))
 	for i, viewport := range viewports {
 		cViewports[i] = *(*C.VkViewport)(unsafe.Pointer(&viewport))
 	}
-	
+
 	C.vkCmdSetViewportWithCount(
 		C.VkCommandBuffer(commandBuffer),
 		C.uint32_t(len(cViewports)),
@@ -310,12 +311,12 @@ func CmdSetScissorWithCount(commandBuffer CommandBuffer, scissors []Rect2D) {
 	if len(scissors) == 0 {
 		return
 	}
-	
+
 	cScissors := make([]C.VkRect2D, len(scissors))
 	for i, scissor := range scissors {
 		cScissors[i] = *(*C.VkRect2D)(unsafe.Pointer(&scissor))
 	}
-	
+
 	C.vkCmdSetScissorWithCount(
 		C.VkCommandBuffer(commandBuffer),
 		C.uint32_t(len(cScissors)),
@@ -328,12 +329,12 @@ func CmdBindVertexBuffers2(commandBuffer CommandBuffer, firstBinding uint32, buf
 	if len(buffers) == 0 {
 		return
 	}
-	
+
 	cBuffers := make([]C.VkBuffer, len(buffers))
 	for i, buffer := range buffers {
 		cBuffers[i] = C.VkBuffer(buffer)
 	}
-	
+
 	var cOffsets []C.VkDeviceSize
 	if len(offsets) > 0 {
 		cOffsets = make([]C.VkDeviceSize, len(offsets))
@@ -341,7 +342,7 @@ func CmdBindVertexBuffers2(commandBuffer CommandBuffer, firstBinding uint32, buf
 			cOffsets[i] = C.VkDeviceSize(offset)
 		}
 	}
-	
+
 	var cSizes []C.VkDeviceSize
 	if len(sizes) > 0 {
 		cSizes = make([]C.VkDeviceSize, len(sizes))
@@ -349,7 +350,7 @@ func CmdBindVertexBuffers2(commandBuffer CommandBuffer, firstBinding uint32, buf
 			cSizes[i] = C.VkDeviceSize(size)
 		}
 	}
-	
+
 	var cStrides []C.VkDeviceSize
 	if len(strides) > 0 {
 		cStrides = make([]C.VkDeviceSize, len(strides))
@@ -357,22 +358,22 @@ func CmdBindVertexBuffers2(commandBuffer CommandBuffer, firstBinding uint32, buf
 			cStrides[i] = C.VkDeviceSize(stride)
 		}
 	}
-	
+
 	var pOffsets *C.VkDeviceSize
 	if len(cOffsets) > 0 {
 		pOffsets = &cOffsets[0]
 	}
-	
+
 	var pSizes *C.VkDeviceSize
 	if len(cSizes) > 0 {
 		pSizes = &cSizes[0]
 	}
-	
+
 	var pStrides *C.VkDeviceSize
 	if len(cStrides) > 0 {
 		pStrides = &cStrides[0]
 	}
-	
+
 	C.vkCmdBindVertexBuffers2(
 		C.VkCommandBuffer(commandBuffer),
 		C.uint32_t(firstBinding),
@@ -440,7 +441,7 @@ func CreatePrivateDataSlot(device Device, createInfo *PrivateDataSlotCreateInfo)
 		pNext: nil,
 		flags: C.VkPrivateDataSlotCreateFlags(createInfo.Flags),
 	}
-	
+
 	var cPrivateDataSlot C.VkPrivateDataSlot
 	result := C.vkCreatePrivateDataSlot(
 		C.VkDevice(device),
@@ -448,11 +449,11 @@ func CreatePrivateDataSlot(device Device, createInfo *PrivateDataSlotCreateInfo)
 		nil,
 		&cPrivateDataSlot,
 	)
-	
+
 	if result != C.VK_SUCCESS {
 		return PrivateDataSlot(uintptr(0)), Result(result)
 	}
-	
+
 	return PrivateDataSlot(cPrivateDataSlot), nil
 }
 
@@ -474,11 +475,11 @@ func SetPrivateData(device Device, objectType ObjectType, objectHandle uint64, p
 		C.VkPrivateDataSlot(privateDataSlot),
 		C.uint64_t(data),
 	)
-	
+
 	if result != C.VK_SUCCESS {
 		return Result(result)
 	}
-	
+
 	return nil
 }
 
@@ -492,7 +493,7 @@ func GetPrivateData(device Device, objectType ObjectType, objectHandle uint64, p
 		C.VkPrivateDataSlot(privateDataSlot),
 		&data,
 	)
-	
+
 	return uint64(data)
 }
 
@@ -504,9 +505,9 @@ func GetPrivateData(device Device, objectType ObjectType, objectHandle uint64, p
 type PipelineCreationFeedbackFlags uint32
 
 const (
-	PipelineCreationFeedbackValid                         PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT
-	PipelineCreationFeedbackApplicationPipelineCacheHit   PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_APPLICATION_PIPELINE_CACHE_HIT_BIT
-	PipelineCreationFeedbackBasePipelineAcceleration      PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_BASE_PIPELINE_ACCELERATION_BIT
+	PipelineCreationFeedbackValid                       PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_VALID_BIT
+	PipelineCreationFeedbackApplicationPipelineCacheHit PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_APPLICATION_PIPELINE_CACHE_HIT_BIT
+	PipelineCreationFeedbackBasePipelineAcceleration    PipelineCreationFeedbackFlags = C.VK_PIPELINE_CREATION_FEEDBACK_BASE_PIPELINE_ACCELERATION_BIT
 )
 
 // PipelineCreationFeedback provides feedback about pipeline creation
@@ -517,7 +518,7 @@ type PipelineCreationFeedback struct {
 
 // PipelineCreationFeedbackCreateInfo contains pipeline creation feedback information
 type PipelineCreationFeedbackCreateInfo struct {
-	PipelineCreationFeedback      *PipelineCreationFeedback
+	PipelineCreationFeedback       *PipelineCreationFeedback
 	PipelineStageCreationFeedbacks []PipelineCreationFeedback
 }
 

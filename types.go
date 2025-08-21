@@ -6,6 +6,7 @@ package vulkan
 #include <stdlib.h>
 */
 import "C"
+
 import (
 	"unsafe"
 )
@@ -306,11 +307,11 @@ const (
 type ResolveModeFlagBits uint32
 
 const (
-	ResolveModeNone           ResolveModeFlagBits = C.VK_RESOLVE_MODE_NONE
-	ResolveModeSampleZero     ResolveModeFlagBits = C.VK_RESOLVE_MODE_SAMPLE_ZERO_BIT
-	ResolveModeAverage        ResolveModeFlagBits = C.VK_RESOLVE_MODE_AVERAGE_BIT
-	ResolveModeMin            ResolveModeFlagBits = C.VK_RESOLVE_MODE_MIN_BIT
-	ResolveModeMax            ResolveModeFlagBits = C.VK_RESOLVE_MODE_MAX_BIT
+	ResolveModeNone       ResolveModeFlagBits = C.VK_RESOLVE_MODE_NONE
+	ResolveModeSampleZero ResolveModeFlagBits = C.VK_RESOLVE_MODE_SAMPLE_ZERO_BIT
+	ResolveModeAverage    ResolveModeFlagBits = C.VK_RESOLVE_MODE_AVERAGE_BIT
+	ResolveModeMin        ResolveModeFlagBits = C.VK_RESOLVE_MODE_MIN_BIT
+	ResolveModeMax        ResolveModeFlagBits = C.VK_RESOLVE_MODE_MAX_BIT
 )
 
 // CullModeFlags represents face culling modes

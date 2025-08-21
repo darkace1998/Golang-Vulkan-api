@@ -7,6 +7,7 @@ package vulkan
 #include <string.h>
 */
 import "C"
+
 import (
 	"unsafe"
 )
