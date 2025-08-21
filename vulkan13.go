@@ -78,7 +78,9 @@ func CmdBeginRendering(commandBuffer CommandBuffer, renderingInfo *RenderingInfo
 			}
 		}
 		cRenderingInfo.colorAttachmentCount = C.uint32_t(len(cColorAttachments))
-		cRenderingInfo.pColorAttachments = &cColorAttachments[0]
+		if len(cColorAttachments) > 0 {
+			cRenderingInfo.pColorAttachments = &cColorAttachments[0]
+		}
 	}
 
 	// Handle depth attachment
@@ -212,7 +214,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 					}
 				}
 				cSubmitInfos[i].waitSemaphoreInfoCount = C.uint32_t(len(cWaitSemaphoreInfos))
-				cSubmitInfos[i].pWaitSemaphoreInfos = &cWaitSemaphoreInfos[0]
+				if len(cWaitSemaphoreInfos) > 0 {
+					cSubmitInfos[i].pWaitSemaphoreInfos = &cWaitSemaphoreInfos[0]
+				}
 			}
 
 			// Handle command buffers
@@ -227,7 +231,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 					}
 				}
 				cSubmitInfos[i].commandBufferInfoCount = C.uint32_t(len(cCommandBufferInfos))
-				cSubmitInfos[i].pCommandBufferInfos = &cCommandBufferInfos[0]
+				if len(cCommandBufferInfos) > 0 {
+					cSubmitInfos[i].pCommandBufferInfos = &cCommandBufferInfos[0]
+				}
 			}
 
 			// Handle signal semaphores
@@ -244,7 +250,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 					}
 				}
 				cSubmitInfos[i].signalSemaphoreInfoCount = C.uint32_t(len(cSignalSemaphoreInfos))
-				cSubmitInfos[i].pSignalSemaphoreInfos = &cSignalSemaphoreInfos[0]
+				if len(cSignalSemaphoreInfos) > 0 {
+					cSubmitInfos[i].pSignalSemaphoreInfos = &cSignalSemaphoreInfos[0]
+				}
 			}
 		}
 	}
