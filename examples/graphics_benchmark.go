@@ -396,6 +396,15 @@ func main() {
 		fmt.Println("🚀 Running HARDWARE-ACCELERATED stress test")
 		app.runStressTest()
 	}
+	
+	// Generate final report
+	results := app.generateResults()
+	app.displayResults(results)
+	
+	// Export data if requested
+	if *csvExport && *outputDir != "" {
+		app.exportToCSV(*outputDir)
+	}
 }
 
 func (app *BenchmarkApp) initVulkan() error {
@@ -524,6 +533,18 @@ func (app *BenchmarkApp) initGPUMonitoring() {
 func (app *BenchmarkApp) cleanupGPUMonitoring() {
 	if app.nvmlInitialized {
 		nvml.Shutdown()
+	}
+}
+
+func (app *BenchmarkApp) cleanup() {
+	if app.commandPool != nil {
+		vulkan.DestroyCommandPool(app.device, app.commandPool)
+	}
+	if app.device != nil {
+		vulkan.DestroyDevice(app.device)
+	}
+	if app.instance != nil {
+		vulkan.DestroyInstance(app.instance)
 	}
 }
 
@@ -1022,140 +1043,6 @@ func (app *BenchmarkApp) simulateAdvancedWorkload() {
 	
 	if len(app.frameTimesMs) > 1000 {
 		app.frameTimesMs = app.frameTimesMs[1:]
-	}
-}
-
-// Enhanced rendering simulation functions
-func (app *BenchmarkApp) simulateRayTracingPass() {
-	fmt.Println("\nRunning simulated benchmark (no GPU drivers available)...")
-	fmt.Println("This demonstrates the benchmark structure and monitoring capabilities")
-	
-	duration := app.maxDuration
-	if duration == 0 {
-		duration = 5 * time.Second // Default simulation duration
-	}
-	
-	targetFPS := app.targetFPS
-	if targetFPS == 0 {
-		targetFPS = 60
-	}
-	
-	totalFrames := int(duration.Seconds()) * targetFPS
-	
-	for i := 0; i < totalFrames; i++ {
-		app.renderFrame()
-		
-		if i%targetFPS == 0 {
-			app.displayStats()
-		}
-		
-		time.Sleep(time.Second / time.Duration(targetFPS))
-	}
-	
-	fmt.Printf("\nSimulated benchmark complete! (%v)\n", duration)
-	app.displayFinalStats()
-}
-
-func (app *BenchmarkApp) displayStats() {
-	// Clear screen (simple approach)
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		fmt.Print("\033[2J\033[H")
-	}
-	
-	fmt.Println("Vulkan Graphics Benchmark - Live Stats")
-	fmt.Println("=====================================")
-	
-	// Runtime stats
-	elapsed := time.Since(app.startTime)
-	avgFPS := float64(app.frameCount) / elapsed.Seconds()
-	
-	fmt.Printf("Runtime: %v\n", elapsed.Round(time.Second))
-	fmt.Printf("Total Frames: %d\n", app.frameCount)
-	fmt.Printf("Average FPS: %.1f\n", avgFPS)
-	fmt.Printf("Current FPS: %.1f\n", app.currentFPS)
-	fmt.Printf("Rotation Angle: %.2f radians\n", app.rotationAngle)
-	
-	// GPU stats
-	gpuStats := app.getGPUStats()
-	if gpuStats != nil {
-		fmt.Printf("\nGPU Statistics (%s):\n", gpuStats.Vendor)
-		if gpuStats.Temperature > 0 {
-			fmt.Printf("Temperature: %d°C\n", gpuStats.Temperature)
-		}
-		if gpuStats.GraphicsClock > 0 {
-			fmt.Printf("Graphics Clock: %d MHz\n", gpuStats.GraphicsClock)
-		}
-		if gpuStats.MemoryClock > 0 {
-			fmt.Printf("Memory Clock: %d MHz\n", gpuStats.MemoryClock)
-		}
-		if gpuStats.GPUUtilization > 0 {
-			fmt.Printf("GPU Utilization: %d%%\n", gpuStats.GPUUtilization)
-		}
-		if gpuStats.MemoryTotal > 0 {
-			fmt.Printf("Memory Used: %.1f MB / %.1f MB (%.1f%%)\n",
-				float64(gpuStats.MemoryUsed)/1024/1024,
-				float64(gpuStats.MemoryTotal)/1024/1024,
-				float64(gpuStats.MemoryUsed)*100/float64(gpuStats.MemoryTotal))
-		}
-	} else {
-		fmt.Println("\nGPU Statistics: Not available")
-		fmt.Println("(GPU monitoring requires supported hardware and drivers)")
-	}
-	
-	// System stats
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
-	fmt.Printf("\nSystem Memory: %.1f MB allocated\n", float64(memStats.Alloc)/1024/1024)
-	fmt.Printf("Goroutines: %d\n", runtime.NumGoroutine())
-}
-
-func (app *BenchmarkApp) displayFinalStats() {
-	elapsed := time.Since(app.startTime)
-	avgFPS := float64(app.frameCount) / elapsed.Seconds()
-	
-	fmt.Println("\n" + strings.Repeat("=", 50))
-	fmt.Println("FINAL BENCHMARK RESULTS")
-	fmt.Println(strings.Repeat("=", 50))
-	fmt.Printf("Total Runtime: %v\n", elapsed.Round(time.Millisecond))
-	fmt.Printf("Total Frames Rendered: %d\n", app.frameCount)
-	fmt.Printf("Average FPS: %.2f\n", avgFPS)
-	fmt.Printf("Final Rotation Angle: %.2f radians\n", app.rotationAngle)
-	
-	// Performance rating
-	var rating string
-	switch {
-	case avgFPS >= 120:
-		rating = "Excellent"
-	case avgFPS >= 60:
-		rating = "Good"
-	case avgFPS >= 30:
-		rating = "Fair"
-	default:
-		rating = "Poor"
-	}
-	fmt.Printf("Performance Rating: %s\n", rating)
-	
-	// GPU stats summary
-	gpuStats := app.getGPUStats()
-	if gpuStats != nil {
-		fmt.Printf("GPU Vendor: %s\n", gpuStats.Vendor)
-		if gpuStats.Temperature > 0 {
-			fmt.Printf("Max Temperature: %d°C\n", gpuStats.Temperature)
-		}
-	}
-	
-	fmt.Println(strings.Repeat("=", 50))
-}
-
-func (app *BenchmarkApp) cleanup() {
-	if app.commandPool != nil {
-		vulkan.DestroyCommandPool(app.device, app.commandPool)
-	}
-	if app.device != nil {
-		vulkan.DestroyDevice(app.device)
-	}
-	if app.instance != nil {
-		vulkan.DestroyInstance(app.instance)
 	}
 }
 

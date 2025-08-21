@@ -1,53 +1,253 @@
-# Vulkan Graphics Benchmark
+# Vulkan GPU Stress Testing & Benchmark Application
 
-A comprehensive graphics benchmark application built using the Golang Vulkan API. This benchmark renders a dynamic scene and provides real-time performance monitoring including FPS, GPU temperatures, and clock speeds.
+A comprehensive GPU stress testing and benchmarking application built using the Golang Vulkan API. This advanced application is designed to push modern graphics cards to their limits, test for stability, evaluate thermal performance, and provide comprehensive performance metrics similar to FurMark and 3DMark.
 
 ## Features
 
-- **Dynamic Scene Rendering**: Renders an animated scene with rotating geometry
-- **Real-time FPS Monitoring**: Displays current and average frame rates
-- **GPU Monitoring**: Shows GPU temperature, clock speeds, and memory usage (NVIDIA GPUs)
-- **Cross-platform Support**: Works on Linux, Windows, and macOS
-- **Graceful Fallbacks**: Functions even without GPU drivers for testing
+### 🔥 Intensive Graphics Workload
+- **Dynamic Scene Rendering**: Renders complex animated scenes with rotating geometry
+- **Advanced Graphics Techniques**: 
+  - Complex shader simulation (compute shaders, tessellation)
+  - High-resolution texture operations
+  - Advanced lighting and shadow effects simulation
+  - Volumetric effects (fog, smoke)
+  - Post-processing effects (bloom, motion blur)
+  - Ray tracing workload simulation
+- **Quality Levels**: Low, Medium, High, Ultra - each providing different levels of GPU stress
+- **Resolution Support**: From 720p to 4K and custom resolutions
 
-## Requirements
+### 📊 Real-Time Monitoring Dashboard
+- **Performance Metrics**: Current FPS, Average FPS, 1% lows, frame times
+- **GPU Hardware Monitoring**: 
+  - Temperature monitoring with thermal throttling detection
+  - GPU core and memory clock speeds
+  - Power consumption (NVIDIA GPUs)
+  - Fan speed monitoring
+  - GPU utilization percentage
+  - VRAM usage tracking
+- **Cross-platform GPU Support**:
+  - NVIDIA GPUs via NVML library for detailed hardware stats
+  - AMD/Intel GPU monitoring via sysfs on Linux
+  - Graceful fallbacks when hardware monitoring isn't available
 
-### System Requirements
-- Go 1.24.6 or later
-- Vulkan SDK and drivers
-- pkg-config
+### ⚙️ Customizable Test Parameters
+- **Resolution Selection**: Standard presets (720p, 1080p, 1440p, 4K) and custom resolution input
+- **Graphics Quality Levels**: 
+  - **Low**: Basic rendering, minimal GPU load
+  - **Medium**: Standard effects, moderate GPU load  
+  - **High**: Advanced effects, high GPU load
+  - **Ultra**: Maximum effects, extreme GPU load
+- **Test Modes**:
+  - **Stress Test**: Runs indefinitely until manually stopped
+  - **Benchmark**: Runs for fixed duration and provides performance score
 
-### For GPU Monitoring (Optional)
-- NVIDIA GPU with drivers (for hardware monitoring)
-- NVIDIA Management Library (NVML)
+### 🛡️ Stability and Error Detection
+- **Artifact Detection**: Monitors for frame time anomalies and rendering artifacts
+- **Thermal Monitoring**: Detects and reports thermal throttling
+- **Performance Analysis**: Calculates stability scores and performance ratings
+- **Error Logging**: Tracks and reports system instabilities
+
+### 📋 Enhanced Reporting and Analytics
+- **Comprehensive Final Reports**: 
+  - Performance metrics with percentile analysis
+  - Hardware statistics (max temperature, power usage)
+  - Stability assessment with scoring
+  - Benchmark scoring system
+  - Performance recommendations
+- **CSV Export**: Export detailed performance data for analysis
+- **Real-time Statistics**: Live monitoring dashboard with performance graphs
+- **Performance Scoring**: Benchmark scoring similar to popular GPU benchmarks
 
 ## Installation
 
-1. Install Vulkan development libraries:
+### System Requirements
+- Go 1.19 or later
+- Vulkan SDK and drivers (for hardware acceleration)
+- pkg-config
+
+### For Enhanced GPU Monitoring (Optional)
+- NVIDIA GPU with drivers (for hardware monitoring via NVML)
+- AMD/Intel GPU on Linux (for basic monitoring via sysfs)
+
+### Install Dependencies
 
 ```bash
 # Ubuntu/Debian
 sudo apt install libvulkan-dev vulkan-tools pkg-config
 
-# Fedora/RHEL
+# Fedora/RHEL  
 sudo dnf install vulkan-devel vulkan-tools pkgconfig
 
 # macOS (with Homebrew)
 brew install vulkan-headers vulkan-loader molten-vk
 ```
 
-2. Build and run the benchmark:
+### Build and Run
 
 ```bash
 cd examples
-go run graphics_benchmark.go
+go build -o gpu_stress_test graphics_benchmark.go
+./gpu_stress_test -help
 ```
 
 ## Usage
 
-### Running the Benchmark
+### Basic Usage
 
 ```bash
+# Basic stress test at 1080p with high quality
+./gpu_stress_test
+
+# Quick help
+./gpu_stress_test -help
+
+# List available resolutions
+./gpu_stress_test -list-res
+```
+
+### Comprehensive Examples
+
+```bash
+# 4K benchmark for 5 minutes with CSV export
+./gpu_stress_test -mode=benchmark -resolution=4K -duration=5m -csv -output=./results
+
+# Ultra quality stress test with artifact detection
+./gpu_stress_test -quality=ultra -artifacts -verbose
+
+# Custom resolution benchmark with specific parameters
+./gpu_stress_test -resolution=2560x1440 -mode=benchmark -duration=2m -fps=120
+
+# Low intensity test for basic stability checking
+./gpu_stress_test -quality=low -duration=30s -mode=benchmark
+
+# Maximum stress test (run until stopped)
+./gpu_stress_test -quality=ultra -artifacts
+```
+
+### Command Line Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-mode` | Test mode: 'stress' or 'benchmark' | stress |
+| `-quality` | Graphics quality: 'low', 'medium', 'high', 'ultra' | high |
+| `-resolution` | Resolution preset or custom (e.g., '4K' or '1920x1080') | 1080p |
+| `-duration` | Test duration (0 for infinite stress test) | 0 |
+| `-fps` | Target FPS for the test | 60 |
+| `-artifacts` | Enable artifact detection mode | false |
+| `-csv` | Export performance data to CSV | false |
+| `-output` | Output directory for logs and reports | "" |
+| `-sim` | Force simulation mode (no Vulkan required) | false |
+| `-verbose` | Enable verbose logging | false |
+
+## Monitoring Features
+
+### GPU Hardware Monitoring
+The application provides comprehensive GPU monitoring:
+
+- **NVIDIA GPUs**: Full hardware monitoring via NVML including temperature, clocks, power, fan speed, and utilization
+- **AMD/Intel GPUs**: Temperature and basic monitoring via Linux sysfs
+- **Thermal Protection**: Automatic detection of thermal throttling
+- **Power Monitoring**: Real-time power consumption tracking (NVIDIA)
+
+### Performance Analysis
+- **Frame Time Analysis**: 1%, 5%, 95%, 99% percentile frame times
+- **Stability Scoring**: Automated stability assessment (0-100 scale)
+- **Performance Rating**: Benchmark scoring system
+- **Recommendations**: Automated suggestions based on results
+
+## Test Modes
+
+### Stress Test Mode
+- Runs indefinitely until manually stopped (Ctrl+C)
+- Designed for long-term stability testing
+- Ideal for testing overclocks and thermal performance
+- Continuous real-time monitoring
+
+### Benchmark Mode  
+- Runs for specified duration
+- Provides final performance score
+- Generates comprehensive report
+- Suitable for performance comparison
+
+## Quality Levels
+
+### Low Quality
+- Basic geometric rendering
+- Minimal shader work
+- Light GPU load (~25% typical utilization)
+- Good for basic stability testing
+
+### Medium Quality
+- Standard shader operations
+- Moderate texture work
+- Medium GPU load (~50-70% typical utilization)
+- Balanced testing
+
+### High Quality (Default)
+- Advanced lighting simulation
+- Complex shader operations
+- High GPU load (~80-90% typical utilization)
+- Recommended for most testing
+
+### Ultra Quality
+- Maximum GPU stress
+- Ray tracing simulation
+- Volumetric effects
+- Post-processing simulation
+- Extreme GPU load (~95-100% utilization)
+- For maximum stress testing
+
+## Output and Reporting
+
+### Live Dashboard
+The application displays a real-time monitoring dashboard showing:
+- Current and average FPS
+- GPU temperature and clock speeds
+- Power consumption and fan speeds
+- Memory usage and system statistics
+- Test progress and remaining time
+
+### Final Report
+Comprehensive results including:
+- Performance metrics with percentile analysis
+- Hardware monitoring summary
+- Stability assessment and scoring
+- Benchmark score and rating
+- Performance recommendations
+
+### CSV Export
+Detailed performance data export includes:
+- Timestamp data
+- Frame rates and frame times
+- GPU temperature readings
+- Power consumption data
+- Memory usage statistics
+
+## Graceful Degradation
+
+The application handles various scenarios elegantly:
+- **No Vulkan Drivers**: Automatically falls back to simulation mode
+- **No GPU Monitoring**: Shows system stats and simulated workload
+- **CI Environments**: Runs successfully without hardware acceleration
+- **Different GPU Vendors**: Adapts monitoring approach based on hardware
+
+## Comparison to Industry Tools
+
+This application provides features similar to:
+- **FurMark**: Intensive GPU stress testing and thermal monitoring
+- **3DMark**: Comprehensive benchmarking with scoring
+- **Unigine Superposition**: Advanced graphics stress testing
+- **MSI Kombustor**: Real-time monitoring and burn-in testing
+
+## Development and Testing
+
+The application includes comprehensive testing:
+- Unit tests for core functionality
+- Performance benchmarks
+- Integration tests
+- Cross-platform compatibility testing
+
+For developers working with Vulkan APIs, this serves as both a practical GPU testing tool and a demonstration of advanced Vulkan application development.
 go run examples/graphics_benchmark.go
 ```
 
