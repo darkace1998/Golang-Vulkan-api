@@ -6,6 +6,9 @@ package vulkan
 #include <stdlib.h>
 */
 import "C"
+import (
+	"unsafe"
+)
 
 // ShaderModuleCreateInfo contains shader module creation information
 type ShaderModuleCreateInfo struct {
@@ -278,7 +281,7 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 		cCreateInfos[i].stage.pNext = nil
 		cCreateInfos[i].stage.flags = 0
 		cCreateInfos[i].stage.stage = C.VkShaderStageFlagBits(info.Stage.Stage)
-		cCreateInfos[i].stage._module = C.VkShaderModule(info.Stage.Module)
+		cCreateInfos[i].stage.module = C.VkShaderModule(info.Stage.Module)
 
 		// Convert name to C string
 		cName := C.CString(info.Stage.Name)
