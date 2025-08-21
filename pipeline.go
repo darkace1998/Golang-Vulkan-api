@@ -272,6 +272,9 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 	cCreateInfos := make([]C.VkComputePipelineCreateInfo, len(createInfos))
 	cPipelines := make([]C.VkPipeline, len(createInfos))
 
+	// Collect C strings for proper memory management
+	cNames := make([]*C.char, len(createInfos))
+
 	for i, info := range createInfos {
 		cCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO
 		cCreateInfos[i].pNext = nil
@@ -284,16 +287,24 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 		cCreateInfos[i].stage.stage = C.VkShaderStageFlagBits(info.Stage.Stage)
 		cCreateInfos[i].stage.module = C.VkShaderModule(info.Stage.Module)
 
-		// Convert name to C string
-		cName := C.CString(info.Stage.Name)
-		defer C.free(unsafe.Pointer(cName))
-		cCreateInfos[i].stage.pName = cName
+		// Convert name to C string and store for later cleanup
+		cNames[i] = C.CString(info.Stage.Name)
+		cCreateInfos[i].stage.pName = cNames[i]
 		cCreateInfos[i].stage.pSpecializationInfo = nil
 
 		cCreateInfos[i].layout = C.VkPipelineLayout(info.Layout)
 		cCreateInfos[i].basePipelineHandle = C.VkPipeline(nil)
 		cCreateInfos[i].basePipelineIndex = -1
 	}
+
+	// Free all C strings after API call regardless of success/failure
+	defer func() {
+		for _, cName := range cNames {
+			if cName != nil {
+				C.free(unsafe.Pointer(cName))
+			}
+		}
+	}()
 
 	result := Result(C.vkCreateComputePipelines(
 		C.VkDevice(device),
