@@ -361,11 +361,11 @@ vulkan.CmdDispatch(commandBuffer, workGroupsX, workGroupsY, workGroupsZ)
 
 ## Building
 
-The library uses CGO to interface with the Vulkan C API. Make sure you have:
+The library uses CGO to interface with the Vulkan C API and is designed to work across multiple platforms. Make sure you have:
 
 1. CGO enabled (`CGO_ENABLED=1`)
 2. Vulkan development libraries installed
-3. pkg-config available (Linux/macOS)
+3. A supported Go compiler (Go 1.16+)
 
 ```bash
 # Build the library
@@ -379,26 +379,39 @@ cd examples
 go build basic_test.go
 ```
 
-## Platform-Specific Notes
+The library automatically configures build settings for your platform using Go build tags.
+
+## Platform-Specific Setup
 
 ### Linux
 ```bash
 # Install Vulkan development libraries
-sudo apt-get install libvulkan-dev
+sudo apt-get install libvulkan-dev pkg-config
 
 # Or on other distributions
-sudo yum install vulkan-devel
-sudo pacman -S vulkan-headers vulkan-validation-layers
+sudo yum install vulkan-devel pkgconf-pkg-config
+sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config
 ```
 
 ### Windows
-- Install the Vulkan SDK from LunarG
-- Make sure the SDK is in your PATH
-- May need to set CGO_LDFLAGS manually if using custom install location
+1. Install the Vulkan SDK from [LunarG](https://vulkan.lunarg.com/)
+2. Make sure the SDK is in your PATH
+3. Ensure Vulkan libraries are available:
+   ```cmd
+   # The library will automatically link vulkan-1.lib
+   # No additional configuration needed if SDK is installed properly
+   ```
 
 ### macOS
-- Install Vulkan SDK with MoltenVK support
-- Vulkan runs on top of Metal via MoltenVK translation layer
+1. Install Vulkan SDK with MoltenVK support from [LunarG](https://vulkan.lunarg.com/)
+2. Install pkg-config if not available:
+   ```bash
+   brew install pkg-config
+   ```
+3. Vulkan runs on top of Metal via MoltenVK translation layer
+
+### Other Unix Systems
+The library supports other Unix-like systems (FreeBSD, OpenBSD, etc.) that have pkg-config and Vulkan development libraries available.
 
 ## Contributing
 

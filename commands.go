@@ -1,7 +1,6 @@
 package vulkan
 
 /*
-#cgo pkg-config: vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
