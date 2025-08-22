@@ -3,7 +3,6 @@
 package vulkan
 
 /*
-#cgo CFLAGS: -I${SRCDIR}
 // For Vulkan SDK installed in standard locations:
 #cgo LDFLAGS: -lvulkan-1
 // Alternative if Vulkan SDK is in a custom location:
