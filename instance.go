@@ -7,7 +7,8 @@ package vulkan
 
 // Helper function to convert Go string slice to C char**
 char** makeCharArray(int size) {
-    return calloc(sizeof(char*), size);
+    char** result = calloc(sizeof(char*), size);
+    return result; // Returns NULL if allocation fails
 }
 
 // Helper function to set string in char array
@@ -17,6 +18,9 @@ void setArrayString(char **a, char *s, int n) {
 
 // Helper function to free char array
 void freeCharArray(char **a, int size) {
+    if (a == NULL) {
+        return; // Safely handle NULL pointer
+    }
     for (int i = 0; i < size; i++) {
         free(a[i]);
     }
