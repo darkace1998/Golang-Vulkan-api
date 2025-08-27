@@ -1,6 +1,6 @@
 # Multiplatform Build Support
 
-This document explains how the Golang-Vulkan-api library supports multiple platforms through conditional compilation.
+This document explains how the Golang-Vulkan-api library supports multiple platforms through conditional compilation. For detailed installation instructions, see the [main README](../README.md#platform-specific-setup).
 
 ## Architecture
 

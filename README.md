@@ -210,6 +210,9 @@ See the `examples/` directory for complete working examples:
 - `vulkan13_test.go`: **Complete Vulkan 1.3 feature test and demonstration**
 - `type_example.go`: Type system and constant validation
 - `simple_example.go`: Minimal Vulkan instance creation
+- `graphics_benchmark.go`: **GPU stress testing and benchmarking tool**
+
+See [examples/BENCHMARK_README.md](examples/BENCHMARK_README.md) for detailed information about the GPU benchmark tool.
 
 ## Testing
 
@@ -365,7 +368,7 @@ The library uses CGO to interface with the Vulkan C API and is designed to work 
 
 1. CGO enabled (`CGO_ENABLED=1`)
 2. Vulkan development libraries installed
-3. A supported Go compiler (Go 1.16+)
+3. A supported Go compiler (Go 1.19+)
 
 ```bash
 # Build the library
@@ -376,7 +379,7 @@ go test
 
 # Build examples
 cd examples
-go build basic_test.go
+go build basic_example.go
 ```
 
 The library automatically configures build settings for your platform using Go build tags.

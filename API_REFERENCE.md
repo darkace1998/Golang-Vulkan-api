@@ -2,6 +2,27 @@
 
 This document provides a comprehensive reference for all available functions in the Vulkan Go binding, including complete Vulkan 1.3 support.
 
+## Table of Contents
+
+- [Core Types](#core-types)
+  - [Version Management](#version-management)
+  - [Error Handling](#error-handling)
+  - [Boolean Conversion](#boolean-conversion)
+- [Instance Management](#instance-management)
+- [Device Management](#device-management)
+- [Memory Management](#memory-management)
+- [Command Buffer Management](#command-buffer-management)
+- [Synchronization](#synchronization)
+- [Vulkan 1.3 Features ⭐ NEW](#vulkan-13-features--new)
+- [Pipeline Management](#pipeline-management)
+- [Descriptor Management](#descriptor-management)
+- [Command Recording](#command-recording)
+- [Compute Pipeline Management](#compute-pipeline-management)
+- [Utility Functions](#utility-functions)
+- [Constants and Enums](#constants-and-enums)
+- [Important Constants](#important-constants)
+- [Notes](#notes)
+
 ## Core Types
 
 ### Version Management
