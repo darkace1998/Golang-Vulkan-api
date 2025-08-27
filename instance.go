@@ -7,7 +7,7 @@ package vulkan
 
 // Helper function to convert Go string slice to C char**
 char** makeCharArray(int size) {
-    char** result = calloc(sizeof(char*), size);
+    char** result = calloc(size, sizeof(char*));
     return result; // Returns NULL if allocation fails
 }
 
