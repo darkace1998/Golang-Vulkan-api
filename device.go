@@ -128,6 +128,59 @@ const (
 
 // CreateDevice creates a logical device
 func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (Device, error) {
+	// Input validation
+	if physicalDevice == nil {
+		return nil, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
+	// Validate queue create infos
+	const maxQueues = 16 // Reasonable limit for queue families
+	if len(createInfo.QueueCreateInfos) > maxQueues {
+		return nil, NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
+	}
+	for i, qci := range createInfo.QueueCreateInfos {
+		if len(qci.QueuePriorities) == 0 {
+			return nil, NewValidationError("QueueCreateInfos", "queue family must have at least one queue")
+		}
+		const maxQueuesPerFamily = 16
+		if len(qci.QueuePriorities) > maxQueuesPerFamily {
+			return nil, NewValidationError("QueueCreateInfos", "queue family exceeds maximum of 16 queues")
+		}
+		// Validate queue priorities are in range [0.0, 1.0]
+		for j, priority := range qci.QueuePriorities {
+			if priority < 0.0 || priority > 1.0 {
+				return nil, NewValidationError("QueueCreateInfos", "queue priority must be between 0.0 and 1.0")
+			}
+			_ = j // avoid unused variable
+		}
+		_ = i // avoid unused variable
+	}
+
+	// Validate layers (reuse same validation as CreateInstance)
+	const maxLayers = 64
+	if len(createInfo.EnabledLayerNames) > maxLayers {
+		return nil, NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
+	}
+	for _, layer := range createInfo.EnabledLayerNames {
+		if len(layer) > 256 {
+			return nil, NewValidationError("EnabledLayerNames", "layer name exceeds maximum length of 256 characters")
+		}
+	}
+
+	// Validate extensions
+	const maxExtensions = 256
+	if len(createInfo.EnabledExtensionNames) > maxExtensions {
+		return nil, NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
+	}
+	for _, ext := range createInfo.EnabledExtensionNames {
+		if len(ext) > 256 {
+			return nil, NewValidationError("EnabledExtensionNames", "extension name exceeds maximum length of 256 characters")
+		}
+	}
+
 	var cCreateInfo C.VkDeviceCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -163,6 +216,9 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	var cLayers **C.char
 	if len(createInfo.EnabledLayerNames) > 0 {
 		cLayers = stringSliceToCharArray(createInfo.EnabledLayerNames)
+		if cLayers == nil {
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for layer names")
+		}
 		defer freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
 		cCreateInfo.enabledLayerCount = C.uint32_t(len(createInfo.EnabledLayerNames))
 		cCreateInfo.ppEnabledLayerNames = cLayers
@@ -172,6 +228,9 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	var cExtensions **C.char
 	if len(createInfo.EnabledExtensionNames) > 0 {
 		cExtensions = stringSliceToCharArray(createInfo.EnabledExtensionNames)
+		if cExtensions == nil {
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for extension names")
+		}
 		defer freeStringArray(cExtensions, len(createInfo.EnabledExtensionNames))
 		cCreateInfo.enabledExtensionCount = C.uint32_t(len(createInfo.EnabledExtensionNames))
 		cCreateInfo.ppEnabledExtensionNames = cExtensions
@@ -187,7 +246,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	var device C.VkDevice
 	result := Result(C.vkCreateDevice(C.VkPhysicalDevice(physicalDevice), &cCreateInfo, nil, &device))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateDevice", "Vulkan device creation failed")
 	}
 
 	return Device(device), nil

@@ -240,9 +240,27 @@ func stringSliceToCharArray(strs []string) **C.char {
 		return nil
 	}
 
+	// Add bounds checking for large allocations
+	const maxAllowedSize = 10000 // Reasonable limit for string arrays
+	if len(strs) > maxAllowedSize {
+		return nil
+	}
+
 	cArray := C.makeCharArray(C.int(len(strs)))
+	// Check if allocation failed
+	if cArray == nil {
+		return nil
+	}
+
+	// Convert strings and track successful allocations for cleanup on failure
 	for i, str := range strs {
 		cStr := C.CString(str)
+		// Check if string allocation failed
+		if cStr == nil {
+			// Clean up the array - freeCharArray handles partial cleanup
+			C.freeCharArray(cArray, C.int(i)) // Only free up to current index
+			return nil
+		}
 		C.setArrayString(cArray, cStr, C.int(i))
 	}
 	return cArray
@@ -257,6 +275,43 @@ func freeStringArray(cArray **C.char, size int) {
 
 // CreateInstance creates a Vulkan instance
 func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
+	// Input validation
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
+	// Validate application info if provided
+	if createInfo.ApplicationInfo != nil {
+		if len(createInfo.ApplicationInfo.ApplicationName) > 256 {
+			return nil, NewValidationError("ApplicationInfo.ApplicationName", "exceeds maximum length of 256 characters")
+		}
+		if len(createInfo.ApplicationInfo.EngineName) > 256 {
+			return nil, NewValidationError("ApplicationInfo.EngineName", "exceeds maximum length of 256 characters")
+		}
+	}
+
+	// Validate layer names
+	const maxLayers = 64 // Reasonable limit
+	if len(createInfo.EnabledLayerNames) > maxLayers {
+		return nil, NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
+	}
+	for i, layer := range createInfo.EnabledLayerNames {
+		if len(layer) > 256 {
+			return nil, NewValidationError("EnabledLayerNames", "layer name at index exceeds maximum length of 256 characters")
+		}
+	}
+
+	// Validate extension names
+	const maxExtensions = 256 // Reasonable limit
+	if len(createInfo.EnabledExtensionNames) > maxExtensions {
+		return nil, NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
+	}
+	for i, ext := range createInfo.EnabledExtensionNames {
+		if len(ext) > 256 {
+			return nil, NewValidationError("EnabledExtensionNames", "extension name at index exceeds maximum length of 256 characters")
+		}
+	}
+
 	var cCreateInfo C.VkInstanceCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -267,6 +322,9 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	var appNamePtr, engineNamePtr *C.char
 	if createInfo.ApplicationInfo != nil {
 		cAppInfo = (*C.VkApplicationInfo)(C.malloc(C.size_t(unsafe.Sizeof(C.VkApplicationInfo{}))))
+		if cAppInfo == nil {
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for application info")
+		}
 		cAppInfo.sType = C.VK_STRUCTURE_TYPE_APPLICATION_INFO
 		cAppInfo.pNext = nil
 		cAppInfo.pApplicationName = nil
@@ -274,12 +332,23 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 
 		if createInfo.ApplicationInfo.ApplicationName != "" {
 			appNamePtr = C.CString(createInfo.ApplicationInfo.ApplicationName)
+			if appNamePtr == nil {
+				C.free(unsafe.Pointer(cAppInfo))
+				return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for application name")
+			}
 			cAppInfo.pApplicationName = appNamePtr
 		}
 		cAppInfo.applicationVersion = C.uint32_t(createInfo.ApplicationInfo.ApplicationVersion)
 
 		if createInfo.ApplicationInfo.EngineName != "" {
 			engineNamePtr = C.CString(createInfo.ApplicationInfo.EngineName)
+			if engineNamePtr == nil {
+				if appNamePtr != nil {
+					C.free(unsafe.Pointer(appNamePtr))
+				}
+				C.free(unsafe.Pointer(cAppInfo))
+				return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for engine name")
+			}
 			cAppInfo.pEngineName = engineNamePtr
 		}
 		cAppInfo.engineVersion = C.uint32_t(createInfo.ApplicationInfo.EngineVersion)
@@ -292,6 +361,19 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	var cLayers **C.char
 	if len(createInfo.EnabledLayerNames) > 0 {
 		cLayers = stringSliceToCharArray(createInfo.EnabledLayerNames)
+		if cLayers == nil {
+			// Clean up already allocated memory
+			if appNamePtr != nil {
+				C.free(unsafe.Pointer(appNamePtr))
+			}
+			if engineNamePtr != nil {
+				C.free(unsafe.Pointer(engineNamePtr))
+			}
+			if cAppInfo != nil {
+				C.free(unsafe.Pointer(cAppInfo))
+			}
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for layer names")
+		}
 		cCreateInfo.enabledLayerCount = C.uint32_t(len(createInfo.EnabledLayerNames))
 		cCreateInfo.ppEnabledLayerNames = cLayers
 	}
@@ -300,6 +382,22 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	var cExtensions **C.char
 	if len(createInfo.EnabledExtensionNames) > 0 {
 		cExtensions = stringSliceToCharArray(createInfo.EnabledExtensionNames)
+		if cExtensions == nil {
+			// Clean up already allocated memory
+			if appNamePtr != nil {
+				C.free(unsafe.Pointer(appNamePtr))
+			}
+			if engineNamePtr != nil {
+				C.free(unsafe.Pointer(engineNamePtr))
+			}
+			if cAppInfo != nil {
+				C.free(unsafe.Pointer(cAppInfo))
+			}
+			if cLayers != nil {
+				freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
+			}
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for extension names")
+		}
 		cCreateInfo.enabledExtensionCount = C.uint32_t(len(createInfo.EnabledExtensionNames))
 		cCreateInfo.ppEnabledExtensionNames = cExtensions
 	}
@@ -325,7 +423,7 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	}
 
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateInstance", "Vulkan instance creation failed")
 	}
 
 	return Instance(instance), nil
