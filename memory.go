@@ -216,6 +216,30 @@ const (
 
 // CreateBuffer creates a buffer
 func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
+	// Input validation
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+	
+	// Validate buffer size
+	if createInfo.Size == 0 {
+		return nil, NewValidationError("Size", "buffer size cannot be zero")
+	}
+	
+	// Check for reasonable size limits (1GB limit for safety)
+	const maxBufferSize = DeviceSize(1024 * 1024 * 1024)
+	if createInfo.Size > maxBufferSize {
+		return nil, NewValidationError("Size", "buffer size exceeds reasonable limit of 1GB")
+	}
+	
+	// Validate usage flags (must have at least one usage bit set)
+	if createInfo.Usage == 0 {
+		return nil, NewValidationError("Usage", "buffer usage flags cannot be zero")
+	}
+	
 	var cCreateInfo C.VkBufferCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -229,7 +253,7 @@ func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
 	var buffer C.VkBuffer
 	result := Result(C.vkCreateBuffer(C.VkDevice(device), &cCreateInfo, nil, &buffer))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateBuffer", "Vulkan buffer creation failed")
 	}
 
 	return Buffer(buffer), nil

@@ -135,8 +135,28 @@ func CmdSetScissor(commandBuffer CommandBuffer, firstScissor uint32, scissors []
 
 // CmdBindVertexBuffers binds vertex buffers
 func CmdBindVertexBuffers(commandBuffer CommandBuffer, firstBinding uint32, buffers []Buffer, offsets []DeviceSize) {
-	if len(buffers) == 0 || len(buffers) != len(offsets) {
-		return
+	// Input validation
+	if commandBuffer == nil {
+		return // Invalid command buffer
+	}
+	if len(buffers) == 0 {
+		return // No buffers to bind
+	}
+	if len(buffers) != len(offsets) {
+		return // Mismatched array lengths
+	}
+	
+	// Bounds checking
+	const maxVertexBuffers = 16 // Vulkan spec minimum requirement
+	if len(buffers) > maxVertexBuffers {
+		return // Too many buffers
+	}
+	
+	// Check for valid buffer handles
+	for _, buffer := range buffers {
+		if buffer == nil {
+			return // Invalid buffer handle
+		}
 	}
 
 	cBuffers := make([]C.VkBuffer, len(buffers))
@@ -152,6 +172,19 @@ func CmdBindVertexBuffers(commandBuffer CommandBuffer, firstBinding uint32, buff
 
 // CmdBindIndexBuffer binds an index buffer
 func CmdBindIndexBuffer(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, indexType IndexType) {
+	// Input validation
+	if commandBuffer == nil {
+		return // Invalid command buffer
+	}
+	if buffer == nil {
+		return // Invalid buffer handle
+	}
+	
+	// Validate index type
+	if indexType != IndexTypeUint16 && indexType != IndexTypeUint32 {
+		return // Invalid index type
+	}
+	
 	C.vkCmdBindIndexBuffer(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkIndexType(indexType))
 }
 
@@ -175,8 +208,33 @@ func CmdDrawIndexed(commandBuffer CommandBuffer, indexCount, instanceCount, firs
 
 // CmdCopyBuffer copies data between buffers
 func CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, regions []BufferCopy) {
+	// Input validation
+	if commandBuffer == nil {
+		return // Invalid command buffer
+	}
+	if srcBuffer == nil || dstBuffer == nil {
+		return // Invalid buffer handles
+	}
 	if len(regions) == 0 {
-		return
+		return // No regions to copy
+	}
+	
+	// Bounds checking
+	const maxCopyRegions = 1024 // Reasonable limit for copy operations
+	if len(regions) > maxCopyRegions {
+		return // Too many copy regions
+	}
+	
+	// Validate copy regions
+	for _, region := range regions {
+		if region.Size == 0 {
+			return // Invalid copy size
+		}
+		// Check for potential overflow
+		const maxDeviceSize = DeviceSize(^uint64(0) >> 1) // Max safe size
+		if region.SrcOffset > maxDeviceSize || region.DstOffset > maxDeviceSize || region.Size > maxDeviceSize {
+			return // Potential overflow
+		}
 	}
 
 	cRegions := make([]C.VkBufferCopy, len(regions))
