@@ -155,13 +155,13 @@ type Configuration struct {
 }
 
 func showDetailedHelp() {
-	fmt.Println("GPU STRESS TESTING & BENCHMARK APPLICATION (Windows/Simulation Mode)")
+	fmt.Println("GPU STRESS TESTING & BENCHMARK APPLICATION (Windows/Cross-Platform)")
 	fmt.Println("====================================================================")
 	fmt.Println()
 	fmt.Println("DESCRIPTION:")
 	fmt.Println("  GPU stress testing application that can run on Windows and other")
-	fmt.Println("  platforms without requiring Vulkan SDK installation. Runs in")
-	fmt.Println("  simulation mode to test system stability and performance.")
+	fmt.Println("  platforms without requiring Vulkan SDK installation. Provides")
+	fmt.Println("  both stress testing and benchmark modes with simulated GPU load.")
 	fmt.Println()
 	fmt.Println("USAGE:")
 	flag.PrintDefaults()
@@ -175,6 +175,13 @@ func showDetailedHelp() {
 	fmt.Println("  medium    - Standard workload, moderate system load")
 	fmt.Println("  high      - Advanced workload, high system load (default)")
 	fmt.Println("  ultra     - Maximum workload, extreme system load")
+	fmt.Println()
+	fmt.Println("EXAMPLES:")
+	fmt.Println("  # Run a 60-second benchmark test at high quality:")
+	fmt.Println("  ./bench.exe -mode=benchmark -duration=60s -quality=high")
+	fmt.Println()
+	fmt.Println("  # Run an infinite stress test at ultra quality:")
+	fmt.Println("  ./bench.exe -mode=stress -quality=ultra")
 	fmt.Println()
 }
 
@@ -278,7 +285,7 @@ func main() {
 
 	fmt.Println("╔═════════════════════════════════════════════════╗")
 	fmt.Println("║     GPU STRESS TESTING & BENCHMARK             ║")
-	fmt.Println("║        Windows/Simulation Mode                 ║")
+	fmt.Println("║       Cross-Platform / Windows Build           ║")
 	fmt.Println("╚═════════════════════════════════════════════════╝")
 	fmt.Println()
 
@@ -312,9 +319,14 @@ func main() {
 		}
 	}
 
-	// Always run in simulation mode
-	fmt.Println("🔧 Running in SIMULATION mode (Vulkan/hardware acceleration disabled)")
+	// Always run in simulation mode (no real GPU hardware)
+	fmt.Printf("🔧 Running %s in SIMULATION mode (Vulkan/hardware acceleration disabled)\n", strings.ToUpper(app.getTestModeString()))
 	fmt.Println("   This mode tests CPU performance and provides cross-platform compatibility")
+	if app.testMode == Benchmark {
+		fmt.Printf("   Benchmark will run for %s and provide a performance score\n", formatDuration(app.maxDuration))
+	} else {
+		fmt.Println("   Stress test will run indefinitely until manually stopped")
+	}
 	fmt.Println()
 	app.runSimulation()
 
@@ -380,8 +392,12 @@ func (app *BenchmarkApp) getQualityString() string {
 }
 
 func (app *BenchmarkApp) runSimulation() {
-	fmt.Println("🔧 RUNNING SIMULATION MODE")
-	fmt.Println("Simulating GPU load without hardware acceleration...")
+	fmt.Printf("🎯 RUNNING %s\n", strings.ToUpper(app.getTestModeString()))
+	if app.testMode == Benchmark {
+		fmt.Printf("Benchmark test: Simulating GPU load for %s...\n", formatDuration(app.maxDuration))
+	} else {
+		fmt.Println("Stress test: Simulating GPU load indefinitely...")
+	}
 	fmt.Println()
 
 	app.startTime = time.Now()
@@ -562,7 +578,7 @@ func (app *BenchmarkApp) displayLiveStats() {
 	elapsed := time.Since(app.startTime)
 
 	fmt.Println("╔═══════════════════════════════════════════════════════════════╗")
-	fmt.Println("║              SIMULATION MODE - LIVE MONITORING               ║")
+	fmt.Printf("║              %s - LIVE MONITORING               ║\n", strings.ToUpper(app.getTestModeString()))
 	fmt.Println("╠═══════════════════════════════════════════════════════════════╣")
 
 	fmt.Printf("║ Runtime: %-15s │ Total Frames: %-15d ║\n",
@@ -695,7 +711,7 @@ func (app *BenchmarkApp) displayResults(results *TestResults) {
 	fmt.Println()
 
 	fmt.Printf("🏁 TEST SUMMARY\n")
-	fmt.Printf("   Mode: %s (Simulation)\n", app.getTestModeString())
+	fmt.Printf("   Mode: %s (Simulated)\n", app.getTestModeString())
 	fmt.Printf("   Quality: %s\n", app.getQualityString())
 	fmt.Printf("   Resolution: %s (%dx%d)\n", app.resolution.Name, app.resolution.Width, app.resolution.Height)
 	fmt.Printf("   Duration: %s\n", formatDuration(results.Duration))
