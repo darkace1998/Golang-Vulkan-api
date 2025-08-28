@@ -19,12 +19,6 @@ For users who want **real GPU hardware acceleration** on Windows:
 3. **Build with hardware acceleration**:
    ```bash
    cd examples
-   go build -tags vulkan_hardware -o bench.exe graphics_benchmark_hardware.go gpu_monitoring_windows.go
-   ```
-
-   **Alternative** (if above fails):
-   ```bash
-   cd examples
    go build -o bench.exe graphics_benchmark.go gpu_monitoring_windows.go
    ```
 
@@ -33,7 +27,6 @@ This gives you:
 - ✅ **Hardware GPU monitoring** (simulated on Windows)
 - ✅ Both stress testing and benchmark modes
 - ✅ Full performance scoring
-- ✅ **Automatic fallback** to simulation if Vulkan setup fails
 
 ### Option 2: Simulation Mode (No Dependencies Required)
 For users who want **cross-platform compatibility** without Vulkan SDK:
@@ -56,10 +49,6 @@ This gives you:
 ```bash
 # Hardware-accelerated 60-second benchmark
 bench.exe -mode=benchmark -duration=60s -quality=high
-
-# If hardware acceleration fails, it automatically falls back to simulation
-# Force simulation mode if desired
-bench.exe -mode=benchmark -duration=60s -sim
 ```
 
 ### Simulation Mode (Option 2)
@@ -76,16 +65,16 @@ bench.exe -mode=benchmark -duration=60s -quality=high
 If hardware mode fails to build or run:
 
 1. **Build Error - Vulkan not found**: Install Vulkan SDK and ensure environment variables are set
-2. **Runtime Error - Falls back to simulation**: This is normal behavior when Vulkan setup isn't complete
-3. **Want simulation anyway**: Use the `-sim` flag to force simulation mode
+2. **Runtime Error - No Vulkan device**: Ensure your GPU supports Vulkan or use Option 2 (simulation mode)
+3. **Want cross-platform testing**: Use Option 2 for dependency-free simulation mode
 
-**The hardware version is designed to gracefully fallback to simulation mode if Vulkan setup isn't working properly.**
+**If you encounter build errors with Option 1, use Option 2 which provides dependency-free simulation mode.**
 
 ### Available Options:
 - **Test Modes**: `stress` (infinite) or `benchmark` (timed)
 - **Quality Levels**: `low`, `medium`, `high`, `ultra`
 - **Resolutions**: `720p`, `1080p`, `1440p`, `4K`, or custom `WIDTHxHEIGHT`
-- **Hardware Control**: `-sim` flag to force simulation mode (Option 1 only)
+- **Hardware Control**: N/A (use Option 2 for simulation mode)
 - **Export**: `-csv` flag to export performance data
 - **Help**: `bench.exe -help` for detailed options
 
