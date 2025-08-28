@@ -45,7 +45,7 @@ type Resolution struct {
 
 // BenchmarkApp represents our comprehensive GPU stress testing application
 type BenchmarkApp struct {
-	// Vulkan objects - stubbed for Windows/no-CGO mode
+	// Vulkan objects - stubbed for simulation-only mode
 	instance       interface{}
 	physicalDevice interface{}
 	device         interface{}
@@ -159,12 +159,16 @@ func showDetailedHelp() {
 	fmt.Println("====================================================================")
 	fmt.Println()
 	fmt.Println("DESCRIPTION:")
-	fmt.Println("  GPU stress testing application that can run on Windows and other")
-	fmt.Println("  platforms without requiring Vulkan SDK installation. Provides")
-	fmt.Println("  both stress testing and benchmark modes with simulated GPU load.")
+	fmt.Println("  GPU stress testing application that supports both hardware-accelerated")
+	fmt.Println("  Vulkan mode and cross-platform simulation mode. Provides comprehensive")
+	fmt.Println("  stress testing and benchmark modes for GPU performance evaluation.")
 	fmt.Println()
 	fmt.Println("USAGE:")
 	flag.PrintDefaults()
+	fmt.Println()
+	fmt.Println("EXECUTION MODES:")
+	fmt.Println("  Hardware Mode  - Uses Vulkan API for real GPU acceleration (default)")
+	fmt.Println("  Simulation Mode - CPU-based cross-platform mode (use -sim flag)")
 	fmt.Println()
 	fmt.Println("TEST MODES:")
 	fmt.Println("  stress    - Runs indefinitely until manually stopped (default)")
@@ -177,10 +181,13 @@ func showDetailedHelp() {
 	fmt.Println("  ultra     - Maximum workload, extreme system load")
 	fmt.Println()
 	fmt.Println("EXAMPLES:")
-	fmt.Println("  # Run a 60-second benchmark test at high quality:")
+	fmt.Println("  # Run hardware-accelerated 60-second benchmark:")
 	fmt.Println("  ./bench.exe -mode=benchmark -duration=60s -quality=high")
 	fmt.Println()
-	fmt.Println("  # Run an infinite stress test at ultra quality:")
+	fmt.Println("  # Run simulation mode benchmark (no Vulkan required):")
+	fmt.Println("  ./bench.exe -mode=benchmark -duration=60s -sim")
+	fmt.Println()
+	fmt.Println("  # Run hardware-accelerated infinite stress test:")
 	fmt.Println("  ./bench.exe -mode=stress -quality=ultra")
 	fmt.Println()
 }
@@ -264,6 +271,7 @@ func main() {
 		csvExport       = flag.Bool("csv", false, "Export performance data to CSV")
 		artifactScan    = flag.Bool("artifacts", false, "Enable artifact detection mode")
 		showHelp        = flag.Bool("help", false, "Show detailed help information")
+		simMode         = flag.Bool("sim", false, "Force simulation mode (no Vulkan)")
 		listResolutions = flag.Bool("list-res", false, "List available resolutions")
 		verboseMode     = flag.Bool("verbose", false, "Enable verbose logging")
 	)
@@ -285,7 +293,7 @@ func main() {
 
 	fmt.Println("╔═════════════════════════════════════════════════╗")
 	fmt.Println("║     GPU STRESS TESTING & BENCHMARK             ║")
-	fmt.Println("║       Cross-Platform / Windows Build           ║")
+	fmt.Println("║     Simulation Mode - Cross-Platform Build     ║")
 	fmt.Println("╚═════════════════════════════════════════════════╝")
 	fmt.Println()
 
@@ -319,8 +327,16 @@ func main() {
 		}
 	}
 
-	// Always run in simulation mode (no real GPU hardware)
-	fmt.Printf("🔧 Running %s in SIMULATION mode (Vulkan/hardware acceleration disabled)\n", strings.ToUpper(app.getTestModeString()))
+	// Check if user wants hardware acceleration but is using wrong build
+	if *simMode {
+		fmt.Printf("🔧 Running %s in SIMULATION mode (as requested)\n", strings.ToUpper(app.getTestModeString()))
+	} else {
+		fmt.Printf("💡 Note: For HARDWARE ACCELERATION on Windows, use:\n")
+		fmt.Printf("   go build -o bench.exe graphics_benchmark.go gpu_monitoring_windows.go\n")
+		fmt.Printf("   (requires Vulkan SDK installation)\n")
+		fmt.Println()
+		fmt.Printf("🔧 Running %s in SIMULATION mode\n", strings.ToUpper(app.getTestModeString()))
+	}
 	fmt.Println("   This mode tests CPU performance and provides cross-platform compatibility")
 	if app.testMode == Benchmark {
 		fmt.Printf("   Benchmark will run for %s and provide a performance score\n", formatDuration(app.maxDuration))
