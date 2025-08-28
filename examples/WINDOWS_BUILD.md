@@ -3,7 +3,7 @@
 ## Problem Solved
 The original `graphics_benchmark.go` example failed to build on Windows due to:
 - NVML dependency requiring `dlfcn.h` (Unix-only header)
-- Missing Vulkan SDK installation
+- Complex Vulkan SDK configuration requirements
 
 ## Solutions
 
@@ -11,17 +11,29 @@ The original `graphics_benchmark.go` example failed to build on Windows due to:
 For users who want **real GPU hardware acceleration** on Windows:
 
 1. **Install Vulkan SDK**: Download from [LunarG Vulkan SDK](https://vulkan.lunarg.com/)
-2. **Build with hardware acceleration**:
-```bash
-cd examples
-go build -o bench.exe graphics_benchmark.go gpu_monitoring_windows.go
-```
+2. **Set environment variables** (if not done automatically):
+   ```cmd
+   set VULKAN_SDK=C:\VulkanSDK\1.3.x.x
+   set PATH=%PATH%;%VULKAN_SDK%\Bin
+   ```
+3. **Build with hardware acceleration**:
+   ```bash
+   cd examples
+   go build -tags vulkan_hardware -o bench.exe graphics_benchmark_hardware.go gpu_monitoring_windows.go
+   ```
+
+   **Alternative** (if above fails):
+   ```bash
+   cd examples
+   go build -o bench.exe graphics_benchmark.go gpu_monitoring_windows.go
+   ```
 
 This gives you:
 - ✅ **Real Vulkan GPU acceleration**
 - ✅ **Hardware GPU monitoring** (simulated on Windows)
 - ✅ Both stress testing and benchmark modes
 - ✅ Full performance scoring
+- ✅ **Automatic fallback** to simulation if Vulkan setup fails
 
 ### Option 2: Simulation Mode (No Dependencies Required)
 For users who want **cross-platform compatibility** without Vulkan SDK:
@@ -36,6 +48,7 @@ This gives you:
 - ✅ **Cross-platform compatibility**
 - ✅ Both stress testing and benchmark modes
 - ✅ Realistic simulated GPU statistics
+- ✅ Clear guidance to upgrade to hardware mode
 
 ## Usage Examples:
 
@@ -44,6 +57,7 @@ This gives you:
 # Hardware-accelerated 60-second benchmark
 bench.exe -mode=benchmark -duration=60s -quality=high
 
+# If hardware acceleration fails, it automatically falls back to simulation
 # Force simulation mode if desired
 bench.exe -mode=benchmark -duration=60s -sim
 ```
@@ -56,6 +70,16 @@ bench.exe -mode=benchmark -duration=60s -quality=high
 # Note: This version will show a message about hardware acceleration
 # and recommend using Option 1 for real GPU acceleration
 ```
+
+## Troubleshooting Hardware Mode
+
+If hardware mode fails to build or run:
+
+1. **Build Error - Vulkan not found**: Install Vulkan SDK and ensure environment variables are set
+2. **Runtime Error - Falls back to simulation**: This is normal behavior when Vulkan setup isn't complete
+3. **Want simulation anyway**: Use the `-sim` flag to force simulation mode
+
+**The hardware version is designed to gracefully fallback to simulation mode if Vulkan setup isn't working properly.**
 
 ### Available Options:
 - **Test Modes**: `stress` (infinite) or `benchmark` (timed)
