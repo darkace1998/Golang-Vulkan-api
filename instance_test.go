@@ -50,7 +50,7 @@ func TestStringSliceToCharArrayValidation(t *testing.T) {
 			}
 
 			result := stringSliceToCharArray(tt.input)
-			
+
 			if tt.expected {
 				if len(tt.input) == 0 {
 					if result != nil {
@@ -184,13 +184,13 @@ func TestCreateInstanceValidation(t *testing.T) {
 			}
 
 			_, err := CreateInstance(tt.createInfo)
-			
+
 			if tt.expectError {
 				if err == nil {
 					t.Errorf("Expected error but got nil")
 					return
 				}
-				
+
 				// Check error type
 				switch tt.errorType {
 				case "ValidationError":
@@ -222,35 +222,35 @@ func TestCreateInstanceValidation(t *testing.T) {
 // TestVulkanErrorType tests the VulkanError type
 func TestVulkanErrorType(t *testing.T) {
 	err := NewVulkanError(ErrorInitializationFailed, "TestOperation", "test details")
-	
+
 	if err.Result != ErrorInitializationFailed {
 		t.Errorf("Expected Result %v, got %v", ErrorInitializationFailed, err.Result)
 	}
-	
+
 	if err.Operation != "TestOperation" {
 		t.Errorf("Expected Operation 'TestOperation', got '%s'", err.Operation)
 	}
-	
+
 	if err.Details != "test details" {
 		t.Errorf("Expected Details 'test details', got '%s'", err.Details)
 	}
-	
+
 	expectedMsg := "TestOperation failed: VK_ERROR_INITIALIZATION_FAILED (test details)"
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
 	}
-	
+
 	// Test Unwrap
 	unwrapped := err.Unwrap()
 	if unwrapped != ErrorInitializationFailed {
 		t.Errorf("Expected unwrapped error %v, got %v", ErrorInitializationFailed, unwrapped)
 	}
-	
+
 	// Test IsVulkanError
 	if !IsVulkanError(err) {
 		t.Errorf("IsVulkanError should return true for VulkanError")
 	}
-	
+
 	// Test with regular error
 	regularErr := errors.New("regular error")
 	if IsVulkanError(regularErr) {
@@ -261,15 +261,15 @@ func TestVulkanErrorType(t *testing.T) {
 // TestValidationErrorType tests the ValidationError type
 func TestValidationErrorType(t *testing.T) {
 	err := NewValidationError("testParam", "test message")
-	
+
 	if err.Parameter != "testParam" {
 		t.Errorf("Expected Parameter 'testParam', got '%s'", err.Parameter)
 	}
-	
+
 	if err.Message != "test message" {
 		t.Errorf("Expected Message 'test message', got '%s'", err.Message)
 	}
-	
+
 	expectedMsg := "validation error for parameter 'testParam': test message"
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
@@ -279,15 +279,15 @@ func TestValidationErrorType(t *testing.T) {
 // TestVersionHelpers tests version utility functions
 func TestVersionHelpers(t *testing.T) {
 	version := MakeVersion(1, 2, 3)
-	
+
 	if version.Major() != 1 {
 		t.Errorf("Expected major version 1, got %d", version.Major())
 	}
-	
+
 	if version.Minor() != 2 {
 		t.Errorf("Expected minor version 2, got %d", version.Minor())
 	}
-	
+
 	if version.Patch() != 3 {
 		t.Errorf("Expected patch version 3, got %d", version.Patch())
 	}
@@ -299,12 +299,12 @@ func TestResultHelpers(t *testing.T) {
 	if !Success.IsSuccess() {
 		t.Errorf("Success should return true for IsSuccess()")
 	}
-	
+
 	// Test error result
 	if ErrorInitializationFailed.IsSuccess() {
 		t.Errorf("Error result should return false for IsSuccess()")
 	}
-	
+
 	// Test error message
 	expected := "VK_ERROR_INITIALIZATION_FAILED"
 	if ErrorInitializationFailed.Error() != expected {
@@ -315,7 +315,7 @@ func TestResultHelpers(t *testing.T) {
 // BenchmarkStringSliceToCharArray benchmarks the string slice conversion
 func BenchmarkStringSliceToCharArray(b *testing.B) {
 	testSlice := []string{"layer1", "layer2", "layer3", "layer4", "layer5"}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		result := stringSliceToCharArray(testSlice)

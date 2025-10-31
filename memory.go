@@ -223,23 +223,23 @@ func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
 	if createInfo == nil {
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
-	
+
 	// Validate buffer size
 	if createInfo.Size == 0 {
 		return nil, NewValidationError("Size", "buffer size cannot be zero")
 	}
-	
+
 	// Check for reasonable size limits (1GB limit for safety)
 	const maxBufferSize = DeviceSize(1024 * 1024 * 1024)
 	if createInfo.Size > maxBufferSize {
 		return nil, NewValidationError("Size", "buffer size exceeds reasonable limit of 1GB")
 	}
-	
+
 	// Validate usage flags (must have at least one usage bit set)
 	if createInfo.Usage == 0 {
 		return nil, NewValidationError("Usage", "buffer usage flags cannot be zero")
 	}
-	
+
 	var cCreateInfo C.VkBufferCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO
 	cCreateInfo.pNext = nil

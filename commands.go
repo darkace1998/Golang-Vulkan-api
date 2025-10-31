@@ -145,13 +145,13 @@ func CmdBindVertexBuffers(commandBuffer CommandBuffer, firstBinding uint32, buff
 	if len(buffers) != len(offsets) {
 		return // Mismatched array lengths
 	}
-	
+
 	// Bounds checking
 	const maxVertexBuffers = 16 // Vulkan spec minimum requirement
 	if len(buffers) > maxVertexBuffers {
 		return // Too many buffers
 	}
-	
+
 	// Check for valid buffer handles
 	for _, buffer := range buffers {
 		if buffer == nil {
@@ -179,12 +179,12 @@ func CmdBindIndexBuffer(commandBuffer CommandBuffer, buffer Buffer, offset Devic
 	if buffer == nil {
 		return // Invalid buffer handle
 	}
-	
+
 	// Validate index type
 	if indexType != IndexTypeUint16 && indexType != IndexTypeUint32 {
 		return // Invalid index type
 	}
-	
+
 	C.vkCmdBindIndexBuffer(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkIndexType(indexType))
 }
 
@@ -218,13 +218,13 @@ func CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, reg
 	if len(regions) == 0 {
 		return // No regions to copy
 	}
-	
+
 	// Bounds checking
 	const maxCopyRegions = 1024 // Reasonable limit for copy operations
 	if len(regions) > maxCopyRegions {
 		return // Too many copy regions
 	}
-	
+
 	// Validate copy regions
 	for _, region := range regions {
 		if region.Size == 0 {

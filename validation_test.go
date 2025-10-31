@@ -13,19 +13,19 @@ func TestVulkanErrorTypeBasic(t *testing.T) {
 	// Use a simple Result value that doesn't require CGO constants
 	testResult := Result(-1) // Generic error
 	err := NewVulkanError(testResult, "TestOperation", "test details")
-	
+
 	if err.Result != testResult {
 		t.Errorf("Expected Result %v, got %v", testResult, err.Result)
 	}
-	
+
 	if err.Operation != "TestOperation" {
 		t.Errorf("Expected Operation 'TestOperation', got '%s'", err.Operation)
 	}
-	
+
 	if err.Details != "test details" {
 		t.Errorf("Expected Details 'test details', got '%s'", err.Details)
 	}
-	
+
 	// Test error message contains expected components
 	errorMsg := err.Error()
 	if !strings.Contains(errorMsg, "TestOperation failed") {
@@ -34,18 +34,18 @@ func TestVulkanErrorTypeBasic(t *testing.T) {
 	if !strings.Contains(errorMsg, "test details") {
 		t.Errorf("Error message should contain details, got '%s'", errorMsg)
 	}
-	
+
 	// Test Unwrap
 	unwrapped := err.Unwrap()
 	if unwrapped != testResult {
 		t.Errorf("Expected unwrapped error %v, got %v", testResult, unwrapped)
 	}
-	
+
 	// Test IsVulkanError
 	if !IsVulkanError(err) {
 		t.Errorf("IsVulkanError should return true for VulkanError")
 	}
-	
+
 	// Test with regular error
 	regularErr := errors.New("regular error")
 	if IsVulkanError(regularErr) {
@@ -57,13 +57,13 @@ func TestVulkanErrorTypeBasic(t *testing.T) {
 func TestVulkanErrorWithoutDetails(t *testing.T) {
 	testResult := Result(-2)
 	err := NewVulkanError(testResult, "TestOperation", "")
-	
+
 	errorMsg := err.Error()
 	expectedPrefix := "TestOperation failed:"
 	if !strings.HasPrefix(errorMsg, expectedPrefix) {
 		t.Errorf("Expected error message to start with '%s', got '%s'", expectedPrefix, errorMsg)
 	}
-	
+
 	// Should not contain empty parentheses when no details
 	if strings.Contains(errorMsg, "()") {
 		t.Errorf("Error message should not contain empty parentheses, got '%s'", errorMsg)
@@ -73,15 +73,15 @@ func TestVulkanErrorWithoutDetails(t *testing.T) {
 // TestValidationErrorType tests the ValidationError type
 func TestValidationErrorType(t *testing.T) {
 	err := NewValidationError("testParam", "test message")
-	
+
 	if err.Parameter != "testParam" {
 		t.Errorf("Expected Parameter 'testParam', got '%s'", err.Parameter)
 	}
-	
+
 	if err.Message != "test message" {
 		t.Errorf("Expected Message 'test message', got '%s'", err.Message)
 	}
-	
+
 	expectedMsg := "validation error for parameter 'testParam': test message"
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
@@ -164,7 +164,7 @@ func TestValidationPatterns(t *testing.T) {
 			expectError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.validate()
@@ -188,12 +188,12 @@ func TestValidationPatterns(t *testing.T) {
 func TestErrorWrapping(t *testing.T) {
 	testResult := Result(-3)
 	vulkanErr := NewVulkanError(testResult, "TestOp", "test details")
-	
+
 	// Test errors.Is
 	if !errors.Is(vulkanErr, testResult) {
 		t.Errorf("errors.Is should return true for wrapped Result")
 	}
-	
+
 	// Test errors.As
 	var resultErr Result
 	if !errors.As(vulkanErr, &resultErr) {
@@ -208,23 +208,23 @@ func TestErrorWrapping(t *testing.T) {
 func TestErrorTypeDistinction(t *testing.T) {
 	vulkanErr := NewVulkanError(Result(-1), "VulkanOp", "details")
 	validationErr := NewValidationError("param", "invalid")
-	
+
 	// Test that we can distinguish between error types
 	if IsVulkanError(validationErr) {
 		t.Errorf("ValidationError should not be identified as VulkanError")
 	}
-	
+
 	// Test error.As with different types
 	var vErr *VulkanError
 	var valErr *ValidationError
-	
+
 	if !errors.As(vulkanErr, &vErr) {
 		t.Errorf("Should be able to extract VulkanError")
 	}
 	if errors.As(vulkanErr, &valErr) {
 		t.Errorf("Should not be able to extract ValidationError from VulkanError")
 	}
-	
+
 	if errors.As(validationErr, &vErr) {
 		t.Errorf("Should not be able to extract VulkanError from ValidationError")
 	}
@@ -240,7 +240,7 @@ func BenchmarkErrorCreation(b *testing.B) {
 			_ = NewVulkanError(Result(-1), "TestOp", "details")
 		}
 	})
-	
+
 	b.Run("ValidationError", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = NewValidationError("param", "message")
