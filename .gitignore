@@ -9,6 +9,15 @@
 /bin/
 /dist/
 
+# Compiled binaries in examples
+examples/type_example
+examples/gpu_stress_test
+examples/basic_example
+examples/compute_example
+examples/simple_example
+examples/vulkan13_test
+examples/graphics_benchmark
+
 # IDE
 .vscode/
 .idea/

@@ -6,10 +6,12 @@ This document provides a comprehensive security analysis of the Vulkan Go bindin
 
 ## Security Scan Results
 
-### ✅ No External Dependencies
+### ✅ Minimal External Dependencies
 
-- The module has **zero external dependencies** (`go list -m all` shows only the module itself)
-- This eliminates potential supply chain attacks from compromised third-party packages
+- The module has **minimal external dependencies**:
+  - `github.com/NVIDIA/go-nvml v0.13.0-1` - Used only in examples for GPU monitoring
+  - `github.com/stretchr/testify v1.10.0` - Used only for testing (indirect)
+- Core Vulkan binding has no runtime dependencies beyond the standard library and CGO
 - Reduced attack surface compared to projects with many dependencies
 
 ### ✅ Memory Safety Analysis
