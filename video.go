@@ -156,12 +156,6 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.LumaBitDepth)
 	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.ChromaBitDepth)
 
-	var cVideoProfileList C.VkVideoProfileListInfoKHR
-	cVideoProfileList.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR
-	cVideoProfileList.pNext = nil
-	cVideoProfileList.profileCount = 1
-	cVideoProfileList.pProfiles = &cVideoProfile
-
 	var cCaps C.VkVideoCapabilitiesKHR
 	cCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR
 	cCaps.pNext = nil
@@ -220,16 +214,10 @@ func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (Vide
 	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.LumaBitDepth)
 	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.ChromaBitDepth)
 
-	var cVideoProfileList C.VkVideoProfileListInfoKHR
-	cVideoProfileList.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR
-	cVideoProfileList.pNext = nil
-	cVideoProfileList.profileCount = 1
-	cVideoProfileList.pProfiles = &cVideoProfile
-
 	// Create C video session create info
 	var cCreateInfo C.VkVideoSessionCreateInfoKHR
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR
-	cCreateInfo.pNext = unsafe.Pointer(&cVideoProfileList)
+	cCreateInfo.pNext = nil
 	cCreateInfo.flags = 0
 	cCreateInfo.queueFamilyIndex = C.uint32_t(createInfo.QueueFamilyIndex)
 	cCreateInfo.pVideoProfile = &cVideoProfile
