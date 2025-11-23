@@ -1,15 +1,5 @@
 package vulkan
 
-/*
-#include <vulkan/vulkan.h>
-#include <stdlib.h>
-*/
-import "C"
-
-import (
-	"unsafe"
-)
-
 // Video codec extension name constants
 const (
 	// H.264 (AVC) extensions
