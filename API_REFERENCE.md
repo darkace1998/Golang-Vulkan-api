@@ -18,6 +18,7 @@ This document provides a comprehensive reference for all available functions in 
 - [Descriptor Management](#descriptor-management)
 - [Command Recording](#command-recording)
 - [Compute Pipeline Management](#compute-pipeline-management)
+- [Video Codec Support 🎬 NEW](#video-codec-support--new)
 - [Utility Functions](#utility-functions)
 - [Constants and Enums](#constants-and-enums)
 - [Important Constants](#important-constants)
@@ -222,6 +223,77 @@ This document provides a comprehensive reference for all available functions in 
 ### Compute Pipeline Creation
 - `CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error)` - Create compute pipelines
 - `DestroyPipeline(device Device, pipeline Pipeline)` - Destroy pipeline (graphics or compute)
+
+## Video Codec Support 🎬 NEW
+
+### Video Codec Extensions
+
+Supported video codec extensions:
+- **H.264 (AVC)**: `VK_KHR_video_encode_h264` & `VK_KHR_video_decode_h264`
+- **H.265 (HEVC)**: `VK_KHR_video_encode_h265` & `VK_KHR_video_decode_h265`
+- **AV1**: `VK_KHR_video_encode_av1` & `VK_KHR_video_decode_av1`
+
+### Video Codec Functions
+
+#### Capability Queries
+- `GetSupportedVideoCodecs(physicalDevice PhysicalDevice) ([]string, error)` - Get list of supported video codecs on the device
+- `GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProfileInfo) (*VideoCapabilities, error)` - Get video codec capabilities
+- `IsVideoCodecSupported(extensionName string, availableExtensions []ExtensionProperties) bool` - Check if specific video codec is supported
+
+#### Video Session Management
+- `CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (VideoSession, error)` - Create video session for encoding/decoding
+- `DestroyVideoSession(device Device, videoSession VideoSession)` - Destroy video session
+- `CreateVideoSessionParameters(device Device, createInfo *VideoSessionParametersCreateInfo) (VideoSessionParameters, error)` - Create video session parameters
+- `DestroyVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters)` - Destroy video session parameters
+
+#### Video Coding Commands
+- `CmdBeginVideoCoding(commandBuffer CommandBuffer, videoSession VideoSession, videoSessionParameters VideoSessionParameters)` - Begin video coding operations
+- `CmdEndVideoCoding(commandBuffer CommandBuffer)` - End video coding operations
+- `CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo)` - Perform video decode operation
+- `CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo)` - Perform video encode operation
+
+### Video Types and Constants
+
+#### Video Codec Operations
+- `VideoCodecOperationDecodeH264Bit` - H.264 decode operation
+- `VideoCodecOperationDecodeH265Bit` - H.265 decode operation
+- `VideoCodecOperationDecodeAV1Bit` - AV1 decode operation
+- `VideoCodecOperationEncodeH264Bit` - H.264 encode operation
+- `VideoCodecOperationEncodeH265Bit` - H.265 encode operation
+- `VideoCodecOperationEncodeAV1Bit` - AV1 encode operation
+
+#### Chroma Subsampling
+- `VideoChromaSubsamplingMonochrome` - Monochrome (no chroma)
+- `VideoChromaSubsampling420` - 4:2:0 subsampling
+- `VideoChromaSubsampling422` - 4:2:2 subsampling
+- `VideoChromaSubsampling444` - 4:4:4 subsampling
+
+#### Component Bit Depths
+- `VideoComponentBitDepth8` - 8-bit component depth
+- `VideoComponentBitDepth10` - 10-bit component depth
+- `VideoComponentBitDepth12` - 12-bit component depth
+
+### Example Usage
+
+```go
+// Check supported video codecs
+supportedCodecs, err := vulkan.GetSupportedVideoCodecs(physicalDevice)
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, codec := range supportedCodecs {
+    fmt.Printf("Supported codec: %s\n", codec)
+}
+
+// Check if H.264 decode is available
+extensions, _ := vulkan.EnumerateDeviceExtensionProperties(physicalDevice, "")
+if vulkan.IsVideoCodecSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) {
+    fmt.Println("H.264 hardware decode is supported")
+}
+```
+
+**Note**: Full video codec functionality requires the Vulkan Video extensions to be enabled on the device and supported by the GPU driver. Hardware support varies by GPU model and driver version.
 
 ## Utility Functions
 
