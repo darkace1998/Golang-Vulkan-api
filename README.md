@@ -26,6 +26,18 @@ This library provides a complete, type-safe Go interface to the Vulkan API, supp
 - ✅ **Dispatch Commands**: Efficient compute work group dispatching
 - ✅ **Cross-Platform**: Works on Linux, Windows, and macOS (where Vulkan is supported)
 
+## Video Codec Support 🎬
+
+### Fully Supported (Encode & Decode)
+
+These codecs have ratified extensions for both operations:
+
+- **H.264 (AVC)** - VK_KHR_video_encode_h264 & VK_KHR_video_decode_h264
+- **H.265 (HEVC)** - VK_KHR_video_encode_h265 & VK_KHR_video_decode_h265
+- **AV1** - VK_KHR_video_encode_av1 & VK_KHR_video_decode_av1
+
+Hardware-accelerated video encoding and decoding is supported through Vulkan Video extensions, enabling efficient media processing on compatible GPUs.
+
 ## Vulkan 1.3 Features ⭐ NEW
 
 ### Dynamic Rendering
