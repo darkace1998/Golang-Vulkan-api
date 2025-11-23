@@ -134,11 +134,6 @@ type VideoEncodeInfo struct {
 	}
 }
 
-// IsVideoCodecSupported checks if a specific video codec is supported
-func IsVideoCodecSupported(extensionName string, availableExtensions []ExtensionProperties) bool {
-	return IsExtensionSupported(extensionName, availableExtensions)
-}
-
 // GetVideoCapabilities retrieves video codec capabilities for a physical device
 // Note: This is a placeholder for the actual implementation which would require
 // additional Vulkan API bindings. Full implementation requires VK_KHR_video_queue extension.
@@ -158,10 +153,11 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (VideoSession, error) {
 	// This would call vkCreateVideoSessionKHR
 	// For now, return a nil handle with an informational error
-	return VideoSession(NullHandle), &VulkanError{
-		Code:    ErrorExtensionNotPresent,
-		Message: "Video session creation requires VK_KHR_video_queue extension to be enabled",
-	}
+	return VideoSession(NullHandle), NewVulkanError(
+		ErrorExtensionNotPresent,
+		"CreateVideoSession",
+		"VK_KHR_video_queue extension must be enabled on the device",
+	)
 }
 
 // DestroyVideoSession destroys a video session
@@ -174,10 +170,11 @@ func DestroyVideoSession(device Device, videoSession VideoSession) {
 // Note: This is a placeholder for the actual implementation
 func CreateVideoSessionParameters(device Device, createInfo *VideoSessionParametersCreateInfo) (VideoSessionParameters, error) {
 	// This would call vkCreateVideoSessionParametersKHR
-	return VideoSessionParameters(NullHandle), &VulkanError{
-		Code:    ErrorExtensionNotPresent,
-		Message: "Video session parameters creation requires VK_KHR_video_queue extension to be enabled",
-	}
+	return VideoSessionParameters(NullHandle), NewVulkanError(
+		ErrorExtensionNotPresent,
+		"CreateVideoSessionParameters",
+		"VK_KHR_video_queue extension must be enabled on the device",
+	)
 }
 
 // DestroyVideoSessionParameters destroys video session parameters
@@ -225,38 +222,28 @@ func GetSupportedVideoCodecs(physicalDevice PhysicalDevice) ([]string, error) {
 	supportedCodecs := []string{}
 
 	// Check H.264 support
-	if IsVideoCodecSupported(ExtensionNameVideoDecodeH264, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoDecodeH264, extensions) {
 		supportedCodecs = append(supportedCodecs, "H.264 (AVC) Decode")
 	}
-	if IsVideoCodecSupported(ExtensionNameVideoEncodeH264, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoEncodeH264, extensions) {
 		supportedCodecs = append(supportedCodecs, "H.264 (AVC) Encode")
 	}
 
 	// Check H.265 support
-	if IsVideoCodecSupported(ExtensionNameVideoDecodeH265, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoDecodeH265, extensions) {
 		supportedCodecs = append(supportedCodecs, "H.265 (HEVC) Decode")
 	}
-	if IsVideoCodecSupported(ExtensionNameVideoEncodeH265, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoEncodeH265, extensions) {
 		supportedCodecs = append(supportedCodecs, "H.265 (HEVC) Encode")
 	}
 
 	// Check AV1 support
-	if IsVideoCodecSupported(ExtensionNameVideoDecodeAV1, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoDecodeAV1, extensions) {
 		supportedCodecs = append(supportedCodecs, "AV1 Decode")
 	}
-	if IsVideoCodecSupported(ExtensionNameVideoEncodeAV1, extensions) {
+	if IsExtensionSupported(ExtensionNameVideoEncodeAV1, extensions) {
 		supportedCodecs = append(supportedCodecs, "AV1 Encode")
 	}
 
 	return supportedCodecs, nil
-}
-
-// VulkanError represents a Vulkan error with additional context
-type VulkanError struct {
-	Code    Result
-	Message string
-}
-
-func (e *VulkanError) Error() string {
-	return e.Message + ": " + e.Code.Error()
 }

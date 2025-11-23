@@ -238,7 +238,8 @@ Supported video codec extensions:
 #### Capability Queries
 - `GetSupportedVideoCodecs(physicalDevice PhysicalDevice) ([]string, error)` - Get list of supported video codecs on the device
 - `GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProfileInfo) (*VideoCapabilities, error)` - Get video codec capabilities
-- `IsVideoCodecSupported(extensionName string, availableExtensions []ExtensionProperties) bool` - Check if specific video codec is supported
+
+**Note**: To check if a specific video codec extension is supported, use `IsExtensionSupported(extensionName, availableExtensions)` with the appropriate extension name constant (e.g., `ExtensionNameVideoDecodeH264`).
 
 #### Video Session Management
 - `CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (VideoSession, error)` - Create video session for encoding/decoding
@@ -288,7 +289,7 @@ for _, codec := range supportedCodecs {
 
 // Check if H.264 decode is available
 extensions, _ := vulkan.EnumerateDeviceExtensionProperties(physicalDevice, "")
-if vulkan.IsVideoCodecSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) {
+if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) {
     fmt.Println("H.264 hardware decode is supported")
 }
 ```
