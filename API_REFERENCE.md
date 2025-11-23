@@ -244,12 +244,15 @@ Supported video codec extensions:
 #### Video Session Management
 - `CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (VideoSession, error)` - Create video session for encoding/decoding
 - `DestroyVideoSession(device Device, videoSession VideoSession)` - Destroy video session
+- `GetVideoSessionMemoryRequirements(device Device, videoSession VideoSession) ([]MemoryRequirements, error)` - Get memory requirements for video session
+- `BindVideoSessionMemory(device Device, videoSession VideoSession, bindInfos []VideoBindMemoryInfo) error` - Bind memory to video session
 - `CreateVideoSessionParameters(device Device, createInfo *VideoSessionParametersCreateInfo) (VideoSessionParameters, error)` - Create video session parameters
 - `DestroyVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters)` - Destroy video session parameters
 
 #### Video Coding Commands
-- `CmdBeginVideoCoding(commandBuffer CommandBuffer, videoSession VideoSession, videoSessionParameters VideoSessionParameters)` - Begin video coding operations
+- `CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo)` - Begin video coding operations
 - `CmdEndVideoCoding(commandBuffer CommandBuffer)` - End video coding operations
+- `CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCodingControlInfo)` - Control video coding operations
 - `CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo)` - Perform video decode operation
 - `CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo)` - Perform video encode operation
 
@@ -291,6 +294,62 @@ for _, codec := range supportedCodecs {
 extensions, _ := vulkan.EnumerateDeviceExtensionProperties(physicalDevice, "")
 if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) {
     fmt.Println("H.264 hardware decode is supported")
+    
+    // Get video capabilities
+    videoProfile := &vulkan.VideoProfileInfo{
+        VideoCodecOperation: vulkan.VideoCodecOperationDecodeH264Bit,
+        ChromaSubsampling:   vulkan.VideoChromaSubsampling420,
+        LumaBitDepth:        vulkan.VideoComponentBitDepth8,
+        ChromaBitDepth:      vulkan.VideoComponentBitDepth8,
+    }
+    
+    caps, err := vulkan.GetVideoCapabilities(physicalDevice, videoProfile)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Max DPB slots: %d\n", caps.MaxDpbSlots)
+    fmt.Printf("Max active references: %d\n", caps.MaxActiveReferencePictures)
+    
+    // Create video session (requires device with video queue extension enabled)
+    createInfo := &vulkan.VideoSessionCreateInfo{
+        QueueFamilyIndex:       queueFamilyIndex,
+        VideoProfile:           videoProfile,
+        PictureFormat:          vulkan.FormatG8B8G8R8422Unorm,
+        MaxCodedExtent:         vulkan.Extent2D{Width: 1920, Height: 1080},
+        ReferencePictureFormat: vulkan.FormatG8B8G8R8422Unorm,
+        MaxDpbSlots:            caps.MaxDpbSlots,
+        MaxActiveReferences:    caps.MaxActiveReferencePictures,
+    }
+    
+    videoSession, err := vulkan.CreateVideoSession(device, createInfo)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer vulkan.DestroyVideoSession(device, videoSession)
+    
+    // Get and bind memory for video session
+    memReqs, err := vulkan.GetVideoSessionMemoryRequirements(device, videoSession)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Allocate and bind memory (example for first requirement)
+    if len(memReqs) > 0 {
+        memory, _ := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
+            AllocationSize:  memReqs[0].Size,
+            MemoryTypeIndex: findMemoryType(memReqs[0].MemoryTypeBits),
+        })
+        
+        bindInfo := []vulkan.VideoBindMemoryInfo{{
+            MemoryBindIndex: 0,
+            Memory:          memory,
+            MemoryOffset:    0,
+            MemorySize:      memReqs[0].Size,
+        }}
+        
+        vulkan.BindVideoSessionMemory(device, videoSession, bindInfo)
+    }
 }
 ```
 
