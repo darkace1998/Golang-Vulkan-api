@@ -103,16 +103,22 @@ type VideoSessionParametersCreateInfo struct {
 	VideoSessionParameters VideoSessionParameters
 }
 
+// VideoPictureResource contains video picture resource information
+type VideoPictureResource struct {
+	ImageView      ImageView
+	ImageLayout    ImageLayout
+	CodedOffset    Offset2D
+	CodedExtent    Extent2D
+	BaseArrayLayer uint32
+}
+
 // VideoDecodeInfo contains parameters for video decode operations
 type VideoDecodeInfo struct {
 	SrcBuffer          Buffer
 	SrcBufferOffset    DeviceSize
 	SrcBufferRange     DeviceSize
-	DstPictureResource struct {
-		ImageView   ImageView
-		ImageLayout ImageLayout
-	}
-	ReferenceSlots []struct {
+	DstPictureResource VideoPictureResource
+	ReferenceSlots     []struct {
 		SlotIndex   int32
 		ImageView   ImageView
 		ImageLayout ImageLayout
@@ -121,14 +127,11 @@ type VideoDecodeInfo struct {
 
 // VideoEncodeInfo contains parameters for video encode operations
 type VideoEncodeInfo struct {
-	SrcPictureResource struct {
-		ImageView   ImageView
-		ImageLayout ImageLayout
-	}
-	DstBuffer       Buffer
-	DstBufferOffset DeviceSize
-	DstBufferRange  DeviceSize
-	ReferenceSlots  []struct {
+	SrcPictureResource VideoPictureResource
+	DstBuffer          Buffer
+	DstBufferOffset    DeviceSize
+	DstBufferRange     DeviceSize
+	ReferenceSlots     []struct {
 		SlotIndex   int32
 		ImageView   ImageView
 		ImageLayout ImageLayout
@@ -472,11 +475,11 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) {
 	var cDstPictureResource C.VkVideoPictureResourceInfoKHR
 	cDstPictureResource.sType = C.VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR
 	cDstPictureResource.pNext = nil
-	cDstPictureResource.codedOffset.x = 0
-	cDstPictureResource.codedOffset.y = 0
-	cDstPictureResource.codedExtent.width = 0
-	cDstPictureResource.codedExtent.height = 0
-	cDstPictureResource.baseArrayLayer = 0
+	cDstPictureResource.codedOffset.x = C.int32_t(decodeInfo.DstPictureResource.CodedOffset.X)
+	cDstPictureResource.codedOffset.y = C.int32_t(decodeInfo.DstPictureResource.CodedOffset.Y)
+	cDstPictureResource.codedExtent.width = C.uint32_t(decodeInfo.DstPictureResource.CodedExtent.Width)
+	cDstPictureResource.codedExtent.height = C.uint32_t(decodeInfo.DstPictureResource.CodedExtent.Height)
+	cDstPictureResource.baseArrayLayer = C.uint32_t(decodeInfo.DstPictureResource.BaseArrayLayer)
 	cDstPictureResource.imageViewBinding = C.VkImageView(decodeInfo.DstPictureResource.ImageView)
 
 	cDecodeInfo.dstPictureResource = cDstPictureResource
@@ -502,11 +505,11 @@ func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) {
 	var cSrcPictureResource C.VkVideoPictureResourceInfoKHR
 	cSrcPictureResource.sType = C.VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR
 	cSrcPictureResource.pNext = nil
-	cSrcPictureResource.codedOffset.x = 0
-	cSrcPictureResource.codedOffset.y = 0
-	cSrcPictureResource.codedExtent.width = 0
-	cSrcPictureResource.codedExtent.height = 0
-	cSrcPictureResource.baseArrayLayer = 0
+	cSrcPictureResource.codedOffset.x = C.int32_t(encodeInfo.SrcPictureResource.CodedOffset.X)
+	cSrcPictureResource.codedOffset.y = C.int32_t(encodeInfo.SrcPictureResource.CodedOffset.Y)
+	cSrcPictureResource.codedExtent.width = C.uint32_t(encodeInfo.SrcPictureResource.CodedExtent.Width)
+	cSrcPictureResource.codedExtent.height = C.uint32_t(encodeInfo.SrcPictureResource.CodedExtent.Height)
+	cSrcPictureResource.baseArrayLayer = C.uint32_t(encodeInfo.SrcPictureResource.BaseArrayLayer)
 	cSrcPictureResource.imageViewBinding = C.VkImageView(encodeInfo.SrcPictureResource.ImageView)
 
 	cEncodeInfo.srcPictureResource = cSrcPictureResource
