@@ -18,6 +18,7 @@ This document provides a comprehensive reference for all available functions in 
 - [Descriptor Management](#descriptor-management)
 - [Command Recording](#command-recording)
 - [Compute Pipeline Management](#compute-pipeline-management)
+- [Video Codec Support 🎬 NEW](#video-codec-support--new)
 - [Utility Functions](#utility-functions)
 - [Constants and Enums](#constants-and-enums)
 - [Important Constants](#important-constants)
@@ -222,6 +223,169 @@ This document provides a comprehensive reference for all available functions in 
 ### Compute Pipeline Creation
 - `CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error)` - Create compute pipelines
 - `DestroyPipeline(device Device, pipeline Pipeline)` - Destroy pipeline (graphics or compute)
+
+## Video Codec Support 🎬 NEW
+
+### Video Codec Extensions
+
+Supported video codec extensions:
+- **H.264 (AVC)**: `VK_KHR_video_encode_h264` & `VK_KHR_video_decode_h264`
+- **H.265 (HEVC)**: `VK_KHR_video_encode_h265` & `VK_KHR_video_decode_h265`
+- **AV1**: `VK_KHR_video_encode_av1` & `VK_KHR_video_decode_av1`
+
+### Video Codec Functions
+
+#### Capability Queries
+- `GetSupportedVideoCodecs(physicalDevice PhysicalDevice) ([]string, error)` - Get list of supported video codecs on the device
+- `GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProfileInfo) (*VideoCapabilities, error)` - Get video codec capabilities
+
+**Note**: To check if a specific video codec extension is supported, use `IsExtensionSupported(extensionName, availableExtensions)` with the appropriate extension name constant (e.g., `ExtensionNameVideoDecodeH264`).
+
+#### Video Session Management
+- `CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (VideoSession, error)` - Create video session for encoding/decoding
+- `DestroyVideoSession(device Device, videoSession VideoSession)` - Destroy video session
+- `GetVideoSessionMemoryRequirements(device Device, videoSession VideoSession) ([]MemoryRequirements, error)` - Get memory requirements for video session
+- `BindVideoSessionMemory(device Device, videoSession VideoSession, bindInfos []VideoBindMemoryInfo) error` - Bind memory to video session
+- `CreateVideoSessionParameters(device Device, createInfo *VideoSessionParametersCreateInfo) (VideoSessionParameters, error)` - Create video session parameters
+- `DestroyVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters)` - Destroy video session parameters
+
+#### Video Coding Commands
+- `CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo)` - Begin video coding operations
+- `CmdEndVideoCoding(commandBuffer CommandBuffer)` - End video coding operations
+- `CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCodingControlInfo)` - Control video coding operations
+- `CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo)` - Perform video decode operation
+- `CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo)` - Perform video encode operation
+
+### Video Types and Constants
+
+#### Video Codec Operations
+- `VideoCodecOperationDecodeH264Bit` - H.264 decode operation
+- `VideoCodecOperationDecodeH265Bit` - H.265 decode operation
+- `VideoCodecOperationDecodeAV1Bit` - AV1 decode operation
+- `VideoCodecOperationEncodeH264Bit` - H.264 encode operation
+- `VideoCodecOperationEncodeH265Bit` - H.265 encode operation
+- `VideoCodecOperationEncodeAV1Bit` - AV1 encode operation
+
+#### Chroma Subsampling
+- `VideoChromaSubsamplingMonochrome` - Monochrome (no chroma)
+- `VideoChromaSubsampling420` - 4:2:0 subsampling
+- `VideoChromaSubsampling422` - 4:2:2 subsampling
+- `VideoChromaSubsampling444` - 4:4:4 subsampling
+
+#### Component Bit Depths
+- `VideoComponentBitDepth8` - 8-bit component depth
+- `VideoComponentBitDepth10` - 10-bit component depth
+- `VideoComponentBitDepth12` - 12-bit component depth
+
+### Example Usage
+
+```go
+// Check supported video codecs
+supportedCodecs, err := vulkan.GetSupportedVideoCodecs(physicalDevice)
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, codec := range supportedCodecs {
+    fmt.Printf("Supported codec: %s\n", codec)
+}
+
+// Check if H.264 decode is available
+extensions, _ := vulkan.EnumerateDeviceExtensionProperties(physicalDevice, "")
+if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) {
+    fmt.Println("H.264 hardware decode is supported")
+    
+    // Get video capabilities
+    videoProfile := &vulkan.VideoProfileInfo{
+        VideoCodecOperation: vulkan.VideoCodecOperationDecodeH264Bit,
+        ChromaSubsampling:   vulkan.VideoChromaSubsampling420,
+        LumaBitDepth:        vulkan.VideoComponentBitDepth8,
+        ChromaBitDepth:      vulkan.VideoComponentBitDepth8,
+    }
+    
+    caps, err := vulkan.GetVideoCapabilities(physicalDevice, videoProfile)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Max DPB slots: %d\n", caps.MaxDpbSlots)
+    fmt.Printf("Max active references: %d\n", caps.MaxActiveReferencePictures)
+    
+    // Create video session (requires device with video queue extension enabled)
+    // Note: Use an appropriate format for your video codec (e.g., NV12 for YUV 4:2:0)
+    // Prerequisites:
+    // - device: must be created with video queue extension enabled
+    // - queueFamilyIndex: obtained from GetPhysicalDeviceQueueFamilyProperties,
+    //   selecting a queue family that supports video decode operations (with QueueVideoDecodeBitKHR)
+    createInfo := &vulkan.VideoSessionCreateInfo{
+        QueueFamilyIndex:       queueFamilyIndex,
+        VideoProfile:           videoProfile,
+        PictureFormat:          vulkan.FormatR8G8B8A8Unorm,
+        MaxCodedExtent:         vulkan.Extent2D{Width: 1920, Height: 1080},
+        ReferencePictureFormat: vulkan.FormatR8G8B8A8Unorm,
+        MaxDpbSlots:            caps.MaxDpbSlots,
+        MaxActiveReferences:    caps.MaxActiveReferencePictures,
+    }
+    
+    videoSession, err := vulkan.CreateVideoSession(device, createInfo)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer vulkan.DestroyVideoSession(device, videoSession)
+    
+    // Get and bind memory for video session
+    memReqs, err := vulkan.GetVideoSessionMemoryRequirements(device, videoSession)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Allocate and bind memory (example for first requirement)
+    // Note: You can use FindMemoryType from memory.go or implement your own selector.
+    // Example implementation:
+    //
+    // func findMemoryType(physicalDevice vulkan.PhysicalDevice, typeBits uint32, properties vulkan.MemoryPropertyFlags) (uint32, bool) {
+    //     memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
+    //     for i := uint32(0); i < memProps.MemoryTypeCount; i++ {
+    //         if (typeBits & (1 << i)) != 0 && (memProps.MemoryTypes[i].PropertyFlags & properties) == properties {
+    //             return i, true
+    //         }
+    //     }
+    //     return 0, false
+    // }
+    //
+    if len(memReqs) > 0 {
+        // Get memory properties from the physical device
+        memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
+        
+        // Use FindMemoryType from memory.go
+        memTypeIndex, found := vulkan.FindMemoryType(memProps, memReqs[0].MemoryTypeBits, 0)
+        if !found {
+            log.Fatal("Failed to find suitable memory type")
+        }
+        memory, err := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
+            AllocationSize:  memReqs[0].Size,
+            MemoryTypeIndex: memTypeIndex,
+        })
+        if err != nil {
+            log.Fatal(err)
+        }
+        
+        bindInfo := []vulkan.VideoBindMemoryInfo{{
+            MemoryBindIndex: 0,
+            Memory:          memory,
+            MemoryOffset:    0,
+            MemorySize:      memReqs[0].Size,
+        }}
+        
+        err = vulkan.BindVideoSessionMemory(device, videoSession, bindInfo)
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+}
+```
+
+**Note**: Full video codec functionality requires the Vulkan Video extensions to be enabled on the device and supported by the GPU driver. Hardware support varies by GPU model and driver version.
 
 ## Utility Functions
 

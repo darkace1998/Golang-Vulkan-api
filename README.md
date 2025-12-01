@@ -26,6 +26,38 @@ This library provides a complete, type-safe Go interface to the Vulkan API, supp
 - ✅ **Dispatch Commands**: Efficient compute work group dispatching
 - ✅ **Cross-Platform**: Works on Linux, Windows, and macOS (where Vulkan is supported)
 
+## Video Codec Support 🎬
+
+### Fully Supported (Encode & Decode)
+
+These codecs have ratified extensions for both operations:
+
+- **H.264 (AVC)** - VK_KHR_video_encode_h264 & VK_KHR_video_decode_h264
+- **H.265 (HEVC)** - VK_KHR_video_encode_h265 & VK_KHR_video_decode_h265
+- **AV1** - VK_KHR_video_encode_av1 & VK_KHR_video_decode_av1
+
+Hardware-accelerated video encoding and decoding is supported through Vulkan Video extensions, enabling efficient media processing on compatible GPUs.
+
+### Checking Video Codec Support
+
+Use the provided API to check which codecs are supported on your hardware:
+
+```go
+// Get supported video codecs for a physical device
+supportedCodecs, err := vulkan.GetSupportedVideoCodecs(physicalDevice)
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, codec := range supportedCodecs {
+    fmt.Printf("Supported: %s\n", codec)
+}
+```
+
+See `examples/video_codec_check.go` for a complete example that detects and displays supported video codecs on your system.
+
+**Note**: Actual hardware support depends on your GPU model and driver version. Extension availability does not guarantee hardware acceleration.
+
 ## Vulkan 1.3 Features ⭐ NEW
 
 ### Dynamic Rendering
@@ -208,6 +240,7 @@ See the `examples/` directory for complete working examples:
 - `basic_example.go`: Basic Vulkan setup and device enumeration
 - `compute_example.go`: **Compute shader example for AI/ML workloads**
 - `vulkan13_test.go`: **Complete Vulkan 1.3 feature test and demonstration**
+- `video_codec_check.go`: **Video codec support detection tool** 🎬
 - `type_example.go`: Type system and constant validation
 - `simple_example.go`: Minimal Vulkan instance creation
 - `graphics_benchmark.go`: **GPU stress testing and benchmarking tool**
@@ -227,6 +260,9 @@ go run examples/basic_example.go
 
 # Test compute capabilities for AI workloads
 go run examples/compute_example.go
+
+# Check video codec support on your GPU
+go run examples/video_codec_check.go
 ```
 
 The Vulkan 1.3 test validates:
