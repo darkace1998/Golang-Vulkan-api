@@ -350,6 +350,9 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
     // }
     //
     if len(memReqs) > 0 {
+        // Get memory properties from the physical device
+        memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
+        
         // Use FindMemoryType from memory.go or implement your own selector
         memTypeIndex, _ := vulkan.FindMemoryType(memProps, memReqs[0].MemoryTypeBits, 0)
         memory, _ := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
