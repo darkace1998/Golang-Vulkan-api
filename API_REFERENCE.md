@@ -312,12 +312,13 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
     fmt.Printf("Max active references: %d\n", caps.MaxActiveReferencePictures)
     
     // Create video session (requires device with video queue extension enabled)
+    // Note: Use an appropriate format for your video codec (e.g., NV12 for YUV 4:2:0)
     createInfo := &vulkan.VideoSessionCreateInfo{
         QueueFamilyIndex:       queueFamilyIndex,
         VideoProfile:           videoProfile,
-        PictureFormat:          vulkan.FormatG8B8G8R8422Unorm,
+        PictureFormat:          vulkan.FormatR8G8B8A8Unorm,
         MaxCodedExtent:         vulkan.Extent2D{Width: 1920, Height: 1080},
-        ReferencePictureFormat: vulkan.FormatG8B8G8R8422Unorm,
+        ReferencePictureFormat: vulkan.FormatR8G8B8A8Unorm,
         MaxDpbSlots:            caps.MaxDpbSlots,
         MaxActiveReferences:    caps.MaxActiveReferencePictures,
     }
@@ -335,10 +336,25 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
     }
     
     // Allocate and bind memory (example for first requirement)
+    // Note: findMemoryType is a helper function you need to implement based on your
+    // memory selection strategy. Here's a simple example:
+    //
+    // func findMemoryType(physicalDevice vulkan.PhysicalDevice, typeBits uint32) uint32 {
+    //     memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
+    //     for i := uint32(0); i < memProps.MemoryTypeCount; i++ {
+    //         if (typeBits & (1 << i)) != 0 {
+    //             return i
+    //         }
+    //     }
+    //     return 0
+    // }
+    //
     if len(memReqs) > 0 {
+        // Use FindMemoryType from memory.go or implement your own selector
+        memTypeIndex, _ := vulkan.FindMemoryType(memProps, memReqs[0].MemoryTypeBits, 0)
         memory, _ := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
             AllocationSize:  memReqs[0].Size,
-            MemoryTypeIndex: findMemoryType(memReqs[0].MemoryTypeBits),
+            MemoryTypeIndex: memTypeIndex,
         })
         
         bindInfo := []vulkan.VideoBindMemoryInfo{{
