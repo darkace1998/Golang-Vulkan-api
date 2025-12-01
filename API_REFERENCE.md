@@ -313,6 +313,10 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
     
     // Create video session (requires device with video queue extension enabled)
     // Note: Use an appropriate format for your video codec (e.g., NV12 for YUV 4:2:0)
+    // Prerequisites:
+    // - device: must be created with video queue extension enabled
+    // - queueFamilyIndex: obtained from GetPhysicalDeviceQueueFamilyProperties,
+    //   selecting a queue family that supports video decode operations (with QueueVideoDecodeBitKHR)
     createInfo := &vulkan.VideoSessionCreateInfo{
         QueueFamilyIndex:       queueFamilyIndex,
         VideoProfile:           videoProfile,
@@ -336,29 +340,35 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
     }
     
     // Allocate and bind memory (example for first requirement)
-    // Note: findMemoryType is a helper function you need to implement based on your
-    // memory selection strategy. Here's a simple example:
+    // Note: You can use FindMemoryType from memory.go or implement your own selector.
+    // Example implementation:
     //
-    // func findMemoryType(physicalDevice vulkan.PhysicalDevice, typeBits uint32) uint32 {
+    // func findMemoryType(physicalDevice vulkan.PhysicalDevice, typeBits uint32, properties vulkan.MemoryPropertyFlags) (uint32, bool) {
     //     memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
     //     for i := uint32(0); i < memProps.MemoryTypeCount; i++ {
-    //         if (typeBits & (1 << i)) != 0 {
-    //             return i
+    //         if (typeBits & (1 << i)) != 0 && (memProps.MemoryTypes[i].PropertyFlags & properties) == properties {
+    //             return i, true
     //         }
     //     }
-    //     return 0
+    //     return 0, false
     // }
     //
     if len(memReqs) > 0 {
         // Get memory properties from the physical device
         memProps := vulkan.GetPhysicalDeviceMemoryProperties(physicalDevice)
         
-        // Use FindMemoryType from memory.go or implement your own selector
-        memTypeIndex, _ := vulkan.FindMemoryType(memProps, memReqs[0].MemoryTypeBits, 0)
-        memory, _ := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
+        // Use FindMemoryType from memory.go
+        memTypeIndex, found := vulkan.FindMemoryType(memProps, memReqs[0].MemoryTypeBits, 0)
+        if !found {
+            log.Fatal("Failed to find suitable memory type")
+        }
+        memory, err := vulkan.AllocateMemory(device, &vulkan.MemoryAllocateInfo{
             AllocationSize:  memReqs[0].Size,
             MemoryTypeIndex: memTypeIndex,
         })
+        if err != nil {
+            log.Fatal(err)
+        }
         
         bindInfo := []vulkan.VideoBindMemoryInfo{{
             MemoryBindIndex: 0,
@@ -367,7 +377,10 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
             MemorySize:      memReqs[0].Size,
         }}
         
-        vulkan.BindVideoSessionMemory(device, videoSession, bindInfo)
+        err = vulkan.BindVideoSessionMemory(device, videoSession, bindInfo)
+        if err != nil {
+            log.Fatal(err)
+        }
     }
 }
 ```

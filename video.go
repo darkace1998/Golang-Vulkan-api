@@ -472,6 +472,8 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) {
 
 	cDecodeInfo.dstPictureResource = cDstPictureResource
 	cDecodeInfo.pSetupReferenceSlot = nil
+	// Note: Reference slots are not yet implemented. Any provided decodeInfo.ReferenceSlots are ignored.
+	// Future implementation should iterate over ReferenceSlots and populate C structures.
 	cDecodeInfo.referenceSlotCount = 0
 	cDecodeInfo.pReferenceSlots = nil
 
@@ -502,6 +504,8 @@ func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) {
 
 	cEncodeInfo.srcPictureResource = cSrcPictureResource
 	cEncodeInfo.pSetupReferenceSlot = nil
+	// Note: Reference slots are not yet implemented. Any provided encodeInfo.ReferenceSlots are ignored.
+	// Future implementation should iterate over ReferenceSlots and populate C structures.
 	cEncodeInfo.referenceSlotCount = 0
 	cEncodeInfo.pReferenceSlots = nil
 	cEncodeInfo.dstBuffer = C.VkBuffer(encodeInfo.DstBuffer)
