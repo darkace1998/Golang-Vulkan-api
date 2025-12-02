@@ -45,7 +45,7 @@ linters:
       - vendor
       - third_party$
       - builtin$
-      - examples/
+      - examples/*
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
@@ -64,4 +64,4 @@ formatters:
       - vendor
       - third_party$
       - builtin$
-      - examples$
+      - examples/*
