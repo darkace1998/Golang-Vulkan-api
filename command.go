@@ -211,7 +211,7 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			}
 			allWaitSemaphores = append(allWaitSemaphores, waitSems)
 			cSubmitInfos[i].waitSemaphoreCount = C.uint32_t(len(waitSems))
-			cSubmitInfos[i].pWaitSemaphores = &waitSems[0]
+			cSubmitInfos[i].pWaitSemaphores = &allWaitSemaphores[len(allWaitSemaphores)-1][0]
 		}
 
 		// Wait stages
@@ -221,7 +221,7 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 				waitStages[j] = C.VkPipelineStageFlags(stage)
 			}
 			allWaitStages = append(allWaitStages, waitStages)
-			cSubmitInfos[i].pWaitDstStageMask = &waitStages[0]
+			cSubmitInfos[i].pWaitDstStageMask = &allWaitStages[len(allWaitStages)-1][0]
 		}
 
 		// Command buffers
@@ -232,7 +232,7 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			}
 			allCommandBuffers = append(allCommandBuffers, cmdBufs)
 			cSubmitInfos[i].commandBufferCount = C.uint32_t(len(cmdBufs))
-			cSubmitInfos[i].pCommandBuffers = &cmdBufs[0]
+			cSubmitInfos[i].pCommandBuffers = &allCommandBuffers[len(allCommandBuffers)-1][0]
 		}
 
 		// Signal semaphores
@@ -243,7 +243,7 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			}
 			allSignalSemaphores = append(allSignalSemaphores, signalSems)
 			cSubmitInfos[i].signalSemaphoreCount = C.uint32_t(len(signalSems))
-			cSubmitInfos[i].pSignalSemaphores = &signalSems[0]
+			cSubmitInfos[i].pSignalSemaphores = &allSignalSemaphores[len(allSignalSemaphores)-1][0]
 		}
 	}
 

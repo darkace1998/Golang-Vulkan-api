@@ -458,7 +458,7 @@ func CreatePrivateDataSlot(device Device, createInfo *PrivateDataSlotCreateInfo)
 	)
 
 	if result != C.VK_SUCCESS {
-		return PrivateDataSlot(uintptr(0)), Result(result)
+		return PrivateDataSlot(nil), Result(result)
 	}
 
 	return PrivateDataSlot(cPrivateDataSlot), nil

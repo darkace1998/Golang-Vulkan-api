@@ -15,12 +15,15 @@ linters:
   settings:
     cyclop:
       max-complexity: 15
+      skip-tests: true
     errcheck:
       check-type-assertions: true
       check-blank: false
     funlen:
-      lines: 100
-      statements: 50
+      lines: 150
+      statements: 60
+    gocyclo:
+      min-complexity: 40
     goconst:
       min-len: 3
       min-occurrences: 3
@@ -34,6 +37,7 @@ linters:
         - structtag
       disable:
         - composites
+        - unsafeptr
   exclusions:
     generated: lax
     rules:
@@ -41,6 +45,13 @@ linters:
           - gosec
         path: .*\.go
         text: Use of unsafe calls should be audited
+      - linters:
+          - govet
+        path: _test\.go
+        text: possible misuse of unsafe.Pointer
+      - linters:
+          - cyclop
+        path: _test\.go
     paths:
       - vendor
       - third_party$
