@@ -328,6 +328,8 @@ func main() {
 	)
 	flag.Parse()
 
+	_ = csvExport // TODO: Implement CSV export functionality
+
 	if *listResolutions {
 		fmt.Println("Available Resolutions:")
 		for _, res := range standardResolutions {
@@ -1160,18 +1162,6 @@ func (app *BenchmarkApp) cleanup() {
 }
 
 // Advanced rendering simulation functions
-func (app *BenchmarkApp) simulateRayTracingPass() {
-	// Simulate ray tracing workload - very compute intensive
-	rayCount := app.resolution.Width * app.resolution.Height / 4
-	for i := uint32(0); i < rayCount; i++ {
-		// Simulate ray-scene intersection calculations
-		_ = math.Sqrt(float64(i)) * math.Tan(float64(app.rotationAngle))
-		if i%1000 == 0 {
-			runtime.Gosched()
-		}
-	}
-}
-
 func (app *BenchmarkApp) simulateVolumetricEffects() {
 	// Simulate volumetric fog/smoke calculations
 	voxelCount := app.complexityLevel * 10000
