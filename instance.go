@@ -295,7 +295,7 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	if len(createInfo.EnabledLayerNames) > maxLayers {
 		return nil, NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
 	}
-	for i, layer := range createInfo.EnabledLayerNames {
+	for _, layer := range createInfo.EnabledLayerNames {
 		if len(layer) > 256 {
 			return nil, NewValidationError("EnabledLayerNames", "layer name at index exceeds maximum length of 256 characters")
 		}
@@ -306,7 +306,7 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	if len(createInfo.EnabledExtensionNames) > maxExtensions {
 		return nil, NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
 	}
-	for i, ext := range createInfo.EnabledExtensionNames {
+	for _, ext := range createInfo.EnabledExtensionNames {
 		if len(ext) > 256 {
 			return nil, NewValidationError("EnabledExtensionNames", "extension name at index exceeds maximum length of 256 characters")
 		}
