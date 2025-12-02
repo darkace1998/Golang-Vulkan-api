@@ -15,7 +15,6 @@ linters:
   settings:
     cyclop:
       max-complexity: 15
-      skip-tests: true
     errcheck:
       check-type-assertions: true
       check-blank: false
