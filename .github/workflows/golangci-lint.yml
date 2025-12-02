@@ -22,11 +22,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install Vulkan SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libvulkan-dev vulkan-validationlayers
-
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
