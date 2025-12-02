@@ -1,7 +1,7 @@
 version: "2"
 linters:
   enable:
-    - cyclop
+    
     - dupl
     - funlen
     - goconst
@@ -12,6 +12,7 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - lll
+    - cyclop
   settings:
     cyclop:
       max-complexity: 15
