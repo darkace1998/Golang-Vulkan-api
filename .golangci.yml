@@ -12,6 +12,7 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - lll
+    - typecheck
   settings:
     cyclop:
       max-complexity: 15
