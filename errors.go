@@ -1,18 +1,5 @@
 package vulkan
 
-// Result represents Vulkan result codes (minimal definition for testing)
-type Result int32
-
-// Error makes Result implement the error interface
-func (r Result) Error() string {
-	switch r {
-	case 0:
-		return "VK_SUCCESS"
-	default:
-		return "Unknown Vulkan Result"
-	}
-}
-
 // VulkanError represents a structured Vulkan error with additional context
 type VulkanError struct {
 	Result    Result

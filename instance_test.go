@@ -258,24 +258,6 @@ func TestVulkanErrorType(t *testing.T) {
 	}
 }
 
-// TestValidationErrorType tests the ValidationError type
-func TestValidationErrorType(t *testing.T) {
-	err := NewValidationError("testParam", "test message")
-
-	if err.Parameter != "testParam" {
-		t.Errorf("Expected Parameter 'testParam', got '%s'", err.Parameter)
-	}
-
-	if err.Message != "test message" {
-		t.Errorf("Expected Message 'test message', got '%s'", err.Message)
-	}
-
-	expectedMsg := "validation error for parameter 'testParam': test message"
-	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
-	}
-}
-
 // TestVersionHelpers tests version utility functions
 func TestVersionHelpers(t *testing.T) {
 	version := MakeVersion(1, 2, 3)

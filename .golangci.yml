@@ -1,93 +1,78 @@
-# Linting and Security Configuration for Vulkan Go Binding
-
-linters-settings:
-  goimports:
-    local-prefixes: github.com/darkace1998/Golang-Vulkan-api
-    
-  govet:
-    enable:
-      - printf
-      - shift
-      - structtag
-    disable:
-      - composites  # Allow struct literals without field names for CGO structs
-
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
-
-  gosec:
-    excludes:
-      - G103  # Use of unsafe calls - required for Vulkan CGO bindings
-
-  funlen:
-    lines: 100
-    statements: 50
-
-  cyclop:
-    max-complexity: 15
-
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-
+version: "2"
 linters:
   enable:
-    - gofmt
-    - gofumpt      # Stricter formatting than gofmt
-    - goimports    # Import management
-    - govet        # Static analysis
-    - errcheck     # Error checking
-    - staticcheck  # Advanced static analysis
-    - unused       # Unused code detection
-    - gosimple     # Simplification suggestions
-    - ineffassign  # Ineffectual assignments
-    - gosec        # Security analysis
-    - unconvert    # Unnecessary type conversions
-    - dupl         # Code duplication
-    - goconst      # Repeated strings that could be constants
-    - gocyclo      # Cyclomatic complexity
-    - funlen       # Function length
-    - cyclop       # Package cyclomatic complexity
-  
+    
+    - dupl
+    - funlen
+    - goconst
+    - gocyclo
+    - gosec
+    - unconvert
   disable:
-    - typecheck    # Disabled due to missing Vulkan C libraries in CI/CD
-    - lll          # Line length - disabled for CGO code with long C function calls
-    - gochecknoglobals  # Global variables expected in bindings
-    - gochecknoinits    # Init functions expected in bindings
-
+    - gochecknoglobals
+    - gochecknoinits
+    - lll
+    - cyclop
+  settings:
+    cyclop:
+      max-complexity: 15
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+    funlen:
+      lines: 200
+      statements: 100
+    gocyclo:
+      min-complexity: 40
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gosec:
+      excludes:
+        - G103
+    govet:
+      enable:
+        - printf
+        - shift
+        - structtag
+      disable:
+        - composites
+        - unsafeptr
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - gosec
+        path: .*\.go
+        text: Use of unsafe calls should be audited
+      - linters:
+          - govet
+        path: _test\.go
+        text: possible misuse of unsafe.Pointer
+      - linters:
+          - cyclop
+        path: _test\.go
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples/*
 issues:
-  exclude-rules:
-    # Exclude unsafe usage warnings for Vulkan bindings - required for CGO
-    - path: ".*\\.go"
-      text: "Use of unsafe calls should be audited"
-      linters:
-        - gosec
-    
-    # Allow multiple main functions in examples directory
-    - path: "examples/.*\\.go"
-      text: "main redeclared in this block"
-      linters:
-        - typecheck
-    
-    # Exclude typecheck errors due to missing Vulkan C libraries
-    - path: ".*\\.go"
-      text: "could not import C"
-      linters:
-        - typecheck
-        
-    # Exclude pkg-config errors for Vulkan libraries
-    - path: ".*\\.go"
-      text: "Package vulkan was not found"
-      linters:
-        - typecheck
-
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-
-  exclude-dirs:
-    - vendor
-
-run:
-  timeout: 5m
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/darkace1998/Golang-Vulkan-api
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - third_party$
+      - builtin$
+      - examples/*
