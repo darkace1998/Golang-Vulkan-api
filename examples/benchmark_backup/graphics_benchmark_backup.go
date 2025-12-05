@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/NVIDIA/go-nvml/pkg/nvml"
-	vulkan "github.com/darkace1998/Golang-Vulkan-api"
+	vulkan "github.com/darkace1998/golang-vulkan-api"
 )
 
 // TestMode defines the type of test being run

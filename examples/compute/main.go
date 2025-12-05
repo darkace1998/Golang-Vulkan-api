@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	vulkan "github.com/darkace1998/Golang-Vulkan-api"
+	vulkan "github.com/darkace1998/golang-vulkan-api"
 )
 
 // Example compute shader (SPIR-V bytecode would be loaded here)

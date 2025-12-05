@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	vulkan "github.com/darkace1998/Golang-Vulkan-api"
+	vulkan "github.com/darkace1998/golang-vulkan-api"
 )
 
 func main() {
