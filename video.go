@@ -22,12 +22,18 @@ static PFN_vkCmdEncodeVideoKHR pfn_vkCmdEncodeVideoKHR = NULL;
 
 // Helper functions to load extension functions
 static int loadVideoInstanceFunctions(VkInstance instance) {
+    if (instance == VK_NULL_HANDLE) {
+        return 0;
+    }
     pfn_vkGetPhysicalDeviceVideoCapabilitiesKHR = (PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR)
         vkGetInstanceProcAddr(instance, "vkGetPhysicalDeviceVideoCapabilitiesKHR");
     return pfn_vkGetPhysicalDeviceVideoCapabilitiesKHR != NULL;
 }
 
 static int loadVideoDeviceFunctions(VkDevice device) {
+    if (device == VK_NULL_HANDLE) {
+        return 0;
+    }
     pfn_vkCreateVideoSessionKHR = (PFN_vkCreateVideoSessionKHR)
         vkGetDeviceProcAddr(device, "vkCreateVideoSessionKHR");
     pfn_vkDestroyVideoSessionKHR = (PFN_vkDestroyVideoSessionKHR)
@@ -51,7 +57,11 @@ static int loadVideoDeviceFunctions(VkDevice device) {
     pfn_vkCmdEncodeVideoKHR = (PFN_vkCmdEncodeVideoKHR)
         vkGetDeviceProcAddr(device, "vkCmdEncodeVideoKHR");
 
-    return pfn_vkCreateVideoSessionKHR != NULL;
+    // Check all critical functions were loaded
+    return pfn_vkCreateVideoSessionKHR != NULL &&
+           pfn_vkDestroyVideoSessionKHR != NULL &&
+           pfn_vkGetVideoSessionMemoryRequirementsKHR != NULL &&
+           pfn_vkBindVideoSessionMemoryKHR != NULL;
 }
 
 // Wrapper functions that use the dynamically loaded function pointers
