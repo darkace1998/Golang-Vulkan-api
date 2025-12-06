@@ -6,7 +6,15 @@ package vulkan
 #include <string.h>
 
 // Function pointers for video KHR extension functions
-// These need to be loaded dynamically at runtime
+// These need to be loaded dynamically at runtime.
+//
+// IMPORTANT: These are global static pointers and NOT thread-safe during loading.
+// LoadVideoInstanceFunctions/LoadVideoDeviceFunctions must be called from a single
+// thread during initialization before any concurrent video API usage.
+//
+// NOTE: Only one Vulkan instance/device with video support is supported at a time.
+// Calling the load functions multiple times will overwrite previous function pointers.
+// Per-device function pointers are not currently supported.
 static PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR pfn_vkGetPhysicalDeviceVideoCapabilitiesKHR = NULL;
 static PFN_vkCreateVideoSessionKHR pfn_vkCreateVideoSessionKHR = NULL;
 static PFN_vkDestroyVideoSessionKHR pfn_vkDestroyVideoSessionKHR = NULL;
@@ -57,11 +65,19 @@ static int loadVideoDeviceFunctions(VkDevice device) {
     pfn_vkCmdEncodeVideoKHR = (PFN_vkCmdEncodeVideoKHR)
         vkGetDeviceProcAddr(device, "vkCmdEncodeVideoKHR");
 
-    // Check all critical functions were loaded
+    // Validate ALL loaded function pointers - returns false if any function failed to load.
+    // All functions are considered critical for proper video support.
     return pfn_vkCreateVideoSessionKHR != NULL &&
            pfn_vkDestroyVideoSessionKHR != NULL &&
            pfn_vkGetVideoSessionMemoryRequirementsKHR != NULL &&
-           pfn_vkBindVideoSessionMemoryKHR != NULL;
+           pfn_vkBindVideoSessionMemoryKHR != NULL &&
+           pfn_vkCreateVideoSessionParametersKHR != NULL &&
+           pfn_vkDestroyVideoSessionParametersKHR != NULL &&
+           pfn_vkCmdBeginVideoCodingKHR != NULL &&
+           pfn_vkCmdEndVideoCodingKHR != NULL &&
+           pfn_vkCmdControlVideoCodingKHR != NULL &&
+           pfn_vkCmdDecodeVideoKHR != NULL &&
+           pfn_vkCmdEncodeVideoKHR != NULL;
 }
 
 // Wrapper functions that use the dynamically loaded function pointers
@@ -137,44 +153,56 @@ static void call_vkDestroyVideoSessionParametersKHR(
     }
 }
 
-static void call_vkCmdBeginVideoCodingKHR(
+// Command buffer wrapper functions return 1 on success, 0 if function pointer is NULL.
+// Callers should check return value to detect if LoadVideoDeviceFunctions was not called.
+static int call_vkCmdBeginVideoCodingKHR(
     VkCommandBuffer commandBuffer,
     const VkVideoBeginCodingInfoKHR* pBeginInfo) {
-    if (pfn_vkCmdBeginVideoCodingKHR != NULL) {
-        pfn_vkCmdBeginVideoCodingKHR(commandBuffer, pBeginInfo);
+    if (pfn_vkCmdBeginVideoCodingKHR == NULL) {
+        return 0;
     }
+    pfn_vkCmdBeginVideoCodingKHR(commandBuffer, pBeginInfo);
+    return 1;
 }
 
-static void call_vkCmdEndVideoCodingKHR(
+static int call_vkCmdEndVideoCodingKHR(
     VkCommandBuffer commandBuffer,
     const VkVideoEndCodingInfoKHR* pEndCodingInfo) {
-    if (pfn_vkCmdEndVideoCodingKHR != NULL) {
-        pfn_vkCmdEndVideoCodingKHR(commandBuffer, pEndCodingInfo);
+    if (pfn_vkCmdEndVideoCodingKHR == NULL) {
+        return 0;
     }
+    pfn_vkCmdEndVideoCodingKHR(commandBuffer, pEndCodingInfo);
+    return 1;
 }
 
-static void call_vkCmdControlVideoCodingKHR(
+static int call_vkCmdControlVideoCodingKHR(
     VkCommandBuffer commandBuffer,
     const VkVideoCodingControlInfoKHR* pCodingControlInfo) {
-    if (pfn_vkCmdControlVideoCodingKHR != NULL) {
-        pfn_vkCmdControlVideoCodingKHR(commandBuffer, pCodingControlInfo);
+    if (pfn_vkCmdControlVideoCodingKHR == NULL) {
+        return 0;
     }
+    pfn_vkCmdControlVideoCodingKHR(commandBuffer, pCodingControlInfo);
+    return 1;
 }
 
-static void call_vkCmdDecodeVideoKHR(
+static int call_vkCmdDecodeVideoKHR(
     VkCommandBuffer commandBuffer,
     const VkVideoDecodeInfoKHR* pDecodeInfo) {
-    if (pfn_vkCmdDecodeVideoKHR != NULL) {
-        pfn_vkCmdDecodeVideoKHR(commandBuffer, pDecodeInfo);
+    if (pfn_vkCmdDecodeVideoKHR == NULL) {
+        return 0;
     }
+    pfn_vkCmdDecodeVideoKHR(commandBuffer, pDecodeInfo);
+    return 1;
 }
 
-static void call_vkCmdEncodeVideoKHR(
+static int call_vkCmdEncodeVideoKHR(
     VkCommandBuffer commandBuffer,
     const VkVideoEncodeInfoKHR* pEncodeInfo) {
-    if (pfn_vkCmdEncodeVideoKHR != NULL) {
-        pfn_vkCmdEncodeVideoKHR(commandBuffer, pEncodeInfo);
+    if (pfn_vkCmdEncodeVideoKHR == NULL) {
+        return 0;
     }
+    pfn_vkCmdEncodeVideoKHR(commandBuffer, pEncodeInfo);
+    return 1;
 }
 */
 import "C"
@@ -306,14 +334,46 @@ type VideoEncodeInfo struct {
 	}
 }
 
-// LoadVideoInstanceFunctions loads video extension functions that require an instance
-// This must be called after creating a Vulkan instance before using video functions
+// LoadVideoInstanceFunctions loads video extension functions that require a Vulkan instance.
+//
+// This function MUST be called after creating a Vulkan instance and before using any video-related
+// functionality. If this function is not called, all video API calls will fail.
+//
+// IMPORTANT: This function is NOT thread-safe. It must be called from a single thread during
+// initialization before any concurrent video API usage. Only one instance is supported at a time;
+// calling this function again will overwrite previously loaded function pointers.
+//
+// Returns false if the video extension functions could not be loaded (e.g., if the Vulkan
+// implementation does not support the VK_KHR_video_queue extension).
+//
+// Example usage:
+//
+//	instance, _ := vulkan.CreateInstance(...)
+//	if !vulkan.LoadVideoInstanceFunctions(instance) {
+//	    log.Fatal("Failed to load video instance functions - video extensions not supported")
+//	}
 func LoadVideoInstanceFunctions(instance Instance) bool {
 	return C.loadVideoInstanceFunctions(C.VkInstance(instance)) != 0
 }
 
-// LoadVideoDeviceFunctions loads video extension functions that require a device
-// This must be called after creating a logical device before using video functions
+// LoadVideoDeviceFunctions loads video extension functions that require a Vulkan device.
+//
+// This function MUST be called after creating a logical device and before using any video-related
+// functionality. If this function is not called, all video API calls will fail.
+//
+// IMPORTANT: This function is NOT thread-safe. It must be called from a single thread during
+// initialization before any concurrent video API usage. Only one device is supported at a time;
+// calling this function again will overwrite previously loaded function pointers.
+//
+// Returns false if any video extension function could not be loaded. This indicates the device
+// does not fully support the VK_KHR_video_queue extension.
+//
+// Example usage:
+//
+//	device, _ := vulkan.CreateDevice(...)
+//	if !vulkan.LoadVideoDeviceFunctions(device) {
+//	    log.Fatal("Failed to load video device functions - video extensions not supported")
+//	}
 func LoadVideoDeviceFunctions(device Device) bool {
 	return C.loadVideoDeviceFunctions(C.VkDevice(device)) != 0
 }
@@ -573,10 +633,14 @@ type VideoCodingControlInfo struct {
 	Flags uint32
 }
 
-// CmdBeginVideoCoding begins video coding operations in a command buffer
-func CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo) {
-	if commandBuffer == nil || beginInfo == nil {
-		return
+// CmdBeginVideoCoding begins video coding operations in a command buffer.
+// Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+func CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+	if beginInfo == nil {
+		return NewValidationError("beginInfo", "cannot be nil")
 	}
 
 	var cBeginInfo C.VkVideoBeginCodingInfoKHR
@@ -588,7 +652,10 @@ func CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodin
 	cBeginInfo.referenceSlotCount = 0
 	cBeginInfo.pReferenceSlots = nil
 
-	C.call_vkCmdBeginVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cBeginInfo)
+	if C.call_vkCmdBeginVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cBeginInfo) == 0 {
+		return NewVulkanError(ErrorExtensionNotPresent, "CmdBeginVideoCoding", "video extension not loaded - call LoadVideoDeviceFunctions first")
+	}
+	return nil
 }
 
 // VideoBeginCodingInfo contains video begin coding information
@@ -597,10 +664,11 @@ type VideoBeginCodingInfo struct {
 	VideoSessionParameters VideoSessionParameters
 }
 
-// CmdEndVideoCoding ends video coding operations in a command buffer
-func CmdEndVideoCoding(commandBuffer CommandBuffer) {
+// CmdEndVideoCoding ends video coding operations in a command buffer.
+// Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+func CmdEndVideoCoding(commandBuffer CommandBuffer) error {
 	if commandBuffer == nil {
-		return
+		return NewValidationError("commandBuffer", "cannot be nil")
 	}
 
 	var cEndInfo C.VkVideoEndCodingInfoKHR
@@ -608,13 +676,20 @@ func CmdEndVideoCoding(commandBuffer CommandBuffer) {
 	cEndInfo.pNext = nil
 	cEndInfo.flags = 0
 
-	C.call_vkCmdEndVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cEndInfo)
+	if C.call_vkCmdEndVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cEndInfo) == 0 {
+		return NewVulkanError(ErrorExtensionNotPresent, "CmdEndVideoCoding", "video extension not loaded - call LoadVideoDeviceFunctions first")
+	}
+	return nil
 }
 
-// CmdControlVideoCoding controls video coding operations
-func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCodingControlInfo) {
-	if commandBuffer == nil || controlInfo == nil {
-		return
+// CmdControlVideoCoding controls video coding operations.
+// Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCodingControlInfo) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+	if controlInfo == nil {
+		return NewValidationError("controlInfo", "cannot be nil")
 	}
 
 	var cControlInfo C.VkVideoCodingControlInfoKHR
@@ -622,13 +697,20 @@ func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCoding
 	cControlInfo.pNext = nil
 	cControlInfo.flags = C.VkVideoCodingControlFlagsKHR(controlInfo.Flags)
 
-	C.call_vkCmdControlVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cControlInfo)
+	if C.call_vkCmdControlVideoCodingKHR(C.VkCommandBuffer(commandBuffer), &cControlInfo) == 0 {
+		return NewVulkanError(ErrorExtensionNotPresent, "CmdControlVideoCoding", "video extension not loaded - call LoadVideoDeviceFunctions first")
+	}
+	return nil
 }
 
-// CmdDecodeVideo performs video decode operation in a command buffer
-func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) {
-	if commandBuffer == nil || decodeInfo == nil {
-		return
+// CmdDecodeVideo performs video decode operation in a command buffer.
+// Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+	if decodeInfo == nil {
+		return NewValidationError("decodeInfo", "cannot be nil")
 	}
 
 	var cDecodeInfo C.VkVideoDecodeInfoKHR
@@ -657,13 +739,20 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) {
 	cDecodeInfo.referenceSlotCount = 0
 	cDecodeInfo.pReferenceSlots = nil
 
-	C.call_vkCmdDecodeVideoKHR(C.VkCommandBuffer(commandBuffer), &cDecodeInfo)
+	if C.call_vkCmdDecodeVideoKHR(C.VkCommandBuffer(commandBuffer), &cDecodeInfo) == 0 {
+		return NewVulkanError(ErrorExtensionNotPresent, "CmdDecodeVideo", "video extension not loaded - call LoadVideoDeviceFunctions first")
+	}
+	return nil
 }
 
-// CmdEncodeVideo performs video encode operation in a command buffer
-func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) {
-	if commandBuffer == nil || encodeInfo == nil {
-		return
+// CmdEncodeVideo performs video encode operation in a command buffer.
+// Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+	if encodeInfo == nil {
+		return NewValidationError("encodeInfo", "cannot be nil")
 	}
 
 	var cEncodeInfo C.VkVideoEncodeInfoKHR
@@ -692,7 +781,10 @@ func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) {
 	cEncodeInfo.dstBufferOffset = C.VkDeviceSize(encodeInfo.DstBufferOffset)
 	cEncodeInfo.dstBufferRange = C.VkDeviceSize(encodeInfo.DstBufferRange)
 
-	C.call_vkCmdEncodeVideoKHR(C.VkCommandBuffer(commandBuffer), &cEncodeInfo)
+	if C.call_vkCmdEncodeVideoKHR(C.VkCommandBuffer(commandBuffer), &cEncodeInfo) == 0 {
+		return NewVulkanError(ErrorExtensionNotPresent, "CmdEncodeVideo", "video extension not loaded - call LoadVideoDeviceFunctions first")
+	}
+	return nil
 }
 
 // GetSupportedVideoCodecs returns a list of supported video codecs on the system
