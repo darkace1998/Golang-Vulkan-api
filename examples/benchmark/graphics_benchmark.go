@@ -15,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/NVIDIA/go-nvml/pkg/nvml"
 	vulkan "github.com/darkace1998/golang-vulkan-api"
 )
 
@@ -76,7 +75,6 @@ type BenchmarkApp struct {
 	complexityLevel int
 
 	// GPU monitoring
-	nvmlInitialized   bool
 	monitoringEnabled bool
 	statsHistory      []GPUStats
 	powerHistory      []float64
@@ -521,19 +519,13 @@ func (app *BenchmarkApp) createCommandPool() error {
 }
 
 func (app *BenchmarkApp) initGPUMonitoring() {
-	ret := nvml.Init()
-	if ret != nvml.SUCCESS {
-		log.Printf("Failed to initialize NVML: %v", nvml.ErrorString(ret))
-		return
-	}
-	app.nvmlInitialized = true
-	fmt.Println("GPU monitoring initialized")
+	// GPU monitoring without NVIDIA NVML
+	// Basic monitoring only - actual GPU stats from Vulkan device
+	fmt.Println("GPU monitoring initialized (basic mode - no NVIDIA NVML)")
 }
 
 func (app *BenchmarkApp) cleanupGPUMonitoring() {
-	if app.nvmlInitialized {
-		nvml.Shutdown()
-	}
+	// No NVML cleanup needed
 }
 
 func (app *BenchmarkApp) cleanup() {
@@ -563,77 +555,8 @@ func (app *BenchmarkApp) getGPUStats() *GPUStats {
 }
 
 func (app *BenchmarkApp) getNvidiaGPUStats() *GPUStats {
-	if !app.nvmlInitialized {
-		return nil
-	}
-
-	deviceCount, ret := nvml.DeviceGetCount()
-	if ret != nvml.SUCCESS || deviceCount == 0 {
-		return nil
-	}
-
-	device, ret := nvml.DeviceGetHandleByIndex(0)
-	if ret != nvml.SUCCESS {
-		return nil
-	}
-
-	stats := &GPUStats{
-		Vendor:    "NVIDIA",
-		Timestamp: time.Now(),
-	}
-
-	// Get temperature
-	if temp, ret := device.GetTemperature(nvml.TEMPERATURE_GPU); ret == nvml.SUCCESS {
-		stats.Temperature = temp
-
-		// Check for thermal throttling (usually starts around 83°C for most GPUs)
-		if temp >= 83 {
-			stats.ThrottleStatus = true
-		}
-	}
-
-	// Get clock speeds
-	if memoryClock, ret := device.GetClockInfo(nvml.CLOCK_MEM); ret == nvml.SUCCESS {
-		stats.MemoryClock = memoryClock
-	}
-	if graphicsClock, ret := device.GetClockInfo(nvml.CLOCK_GRAPHICS); ret == nvml.SUCCESS {
-		stats.GraphicsClock = graphicsClock
-	}
-
-	// Get memory info
-	if memInfo, ret := device.GetMemoryInfo(); ret == nvml.SUCCESS {
-		stats.MemoryUsed = memInfo.Used
-		stats.MemoryTotal = memInfo.Total
-	}
-
-	// Get utilization
-	if utilization, ret := device.GetUtilizationRates(); ret == nvml.SUCCESS {
-		stats.GPUUtilization = utilization.Gpu
-	}
-
-	// Get power consumption (in milliwatts, convert to watts)
-	if powerDraw, ret := device.GetPowerUsage(); ret == nvml.SUCCESS {
-		stats.PowerUsage = float64(powerDraw) / 1000.0
-	}
-
-	// Get fan speed
-	if fanSpeed, ret := device.GetFanSpeed(); ret == nvml.SUCCESS {
-		stats.FanSpeed = fanSpeed // This is percentage, not RPM
-	}
-
-	// Alternative: Try to get fan speed in RPM if available
-	// NVML doesn't always provide RPM directly, so we might need to estimate
-
-	// Check for performance state throttling
-	if perfState, ret := device.GetPerformanceState(); ret == nvml.SUCCESS {
-		// P0 is maximum performance, higher numbers indicate throttling
-		// P2 and above usually indicate some form of throttling
-		if int(perfState) > 2 {
-			stats.ThrottleStatus = true
-		}
-	}
-
-	return stats
+	// NVIDIA NVML support removed
+	return nil
 }
 
 func (app *BenchmarkApp) getGenericGPUStats() *GPUStats {

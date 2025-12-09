@@ -181,36 +181,78 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 		}
 	}
 
-	var cCreateInfo C.VkDeviceCreateInfo
-	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO
-	cCreateInfo.pNext = nil
-	cCreateInfo.flags = 0
+	// Allocate create info in C memory to avoid Go pointer issues
+	cCreateInfoPtr := (*C.VkDeviceCreateInfo)(C.malloc(C.sizeof_VkDeviceCreateInfo))
+	if cCreateInfoPtr == nil {
+		return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for device create info")
+	}
+	defer C.free(unsafe.Pointer(cCreateInfoPtr))
 
-	// Queue create infos
-	var cQueueCreateInfos []C.VkDeviceQueueCreateInfo
-	var cPriorities [][]C.float
+	// Zero-initialize the entire structure
+	C.memset(unsafe.Pointer(cCreateInfoPtr), 0, C.sizeof_VkDeviceCreateInfo)
+
+	cCreateInfoPtr.sType = C.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO
+	cCreateInfoPtr.pNext = nil
+	cCreateInfoPtr.flags = 0
+
+	// Queue create infos - allocate in C memory
+	var cQueueCreateInfosPtr *C.VkDeviceQueueCreateInfo
+	var cPrioritiesArray []*C.float
+	var cPrioritiesToFree []*C.float // Track allocated priorities for cleanup
+	
 	if len(createInfo.QueueCreateInfos) > 0 {
-		cQueueCreateInfos = make([]C.VkDeviceQueueCreateInfo, len(createInfo.QueueCreateInfos))
-		cPriorities = make([][]C.float, len(createInfo.QueueCreateInfos))
+		cQueueCreateInfosPtr = (*C.VkDeviceQueueCreateInfo)(C.malloc(C.size_t(len(createInfo.QueueCreateInfos)) * C.sizeof_VkDeviceQueueCreateInfo))
+		if cQueueCreateInfosPtr == nil {
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for queue create infos")
+		}
+		defer C.free(unsafe.Pointer(cQueueCreateInfosPtr))
+
+		// Zero-initialize the queue create info structures
+		C.memset(unsafe.Pointer(cQueueCreateInfosPtr), 0, C.size_t(len(createInfo.QueueCreateInfos))*C.sizeof_VkDeviceQueueCreateInfo)
+
+		cPrioritiesArray = make([]*C.float, len(createInfo.QueueCreateInfos))
 
 		for i, qci := range createInfo.QueueCreateInfos {
-			cQueueCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
-			cQueueCreateInfos[i].pNext = nil
-			cQueueCreateInfos[i].flags = 0
-			cQueueCreateInfos[i].queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
-			cQueueCreateInfos[i].queueCount = C.uint32_t(len(qci.QueuePriorities))
+			// Use pointer arithmetic to access array elements (in bytes)
+			offset := uintptr(i) * uintptr(C.sizeof_VkDeviceQueueCreateInfo)
+			cQueueInfo := (*C.VkDeviceQueueCreateInfo)(unsafe.Pointer(uintptr(unsafe.Pointer(cQueueCreateInfosPtr)) + offset))
+			cQueueInfo.sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
+			cQueueInfo.pNext = nil
+			cQueueInfo.flags = 0
+			cQueueInfo.queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
+			cQueueInfo.queueCount = C.uint32_t(len(qci.QueuePriorities))
 
 			if len(qci.QueuePriorities) > 0 {
-				cPriorities[i] = make([]C.float, len(qci.QueuePriorities))
-				for j, priority := range qci.QueuePriorities {
-					cPriorities[i][j] = C.float(priority)
+				cPrioritiesPtr := (*C.float)(C.malloc(C.size_t(len(qci.QueuePriorities)) * C.sizeof_float))
+				if cPrioritiesPtr == nil {
+					// Clean up allocated priorities before returning
+					for _, ptr := range cPrioritiesToFree {
+						C.free(unsafe.Pointer(ptr))
+					}
+					return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for queue priorities")
 				}
-				cQueueCreateInfos[i].pQueuePriorities = &cPriorities[i][0]
+				// Zero-initialize the priorities array
+				C.memset(unsafe.Pointer(cPrioritiesPtr), 0, C.size_t(len(qci.QueuePriorities))*C.sizeof_float)
+				cPrioritiesToFree = append(cPrioritiesToFree, cPrioritiesPtr)
+				cPrioritiesArray[i] = cPrioritiesPtr
+
+				for j, priority := range qci.QueuePriorities {
+					cPriority := (*C.float)(unsafe.Pointer(uintptr(unsafe.Pointer(cPrioritiesPtr)) + uintptr(j)*uintptr(C.sizeof_float)))
+					*cPriority = C.float(priority)
+				}
+				cQueueInfo.pQueuePriorities = cPrioritiesPtr
 			}
 		}
-		cCreateInfo.queueCreateInfoCount = C.uint32_t(len(cQueueCreateInfos))
-		cCreateInfo.pQueueCreateInfos = &cQueueCreateInfos[0]
+		cCreateInfoPtr.queueCreateInfoCount = C.uint32_t(len(createInfo.QueueCreateInfos))
+		cCreateInfoPtr.pQueueCreateInfos = cQueueCreateInfosPtr
 	}
+	
+	// Defer cleanup of priority arrays
+	defer func() {
+		for _, ptr := range cPrioritiesToFree {
+			C.free(unsafe.Pointer(ptr))
+		}
+	}()
 
 	// Enabled layers
 	var cLayers **C.char
@@ -220,8 +262,8 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for layer names")
 		}
 		defer freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
-		cCreateInfo.enabledLayerCount = C.uint32_t(len(createInfo.EnabledLayerNames))
-		cCreateInfo.ppEnabledLayerNames = cLayers
+		cCreateInfoPtr.enabledLayerCount = C.uint32_t(len(createInfo.EnabledLayerNames))
+		cCreateInfoPtr.ppEnabledLayerNames = cLayers
 	}
 
 	// Enabled extensions
@@ -232,19 +274,31 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for extension names")
 		}
 		defer freeStringArray(cExtensions, len(createInfo.EnabledExtensionNames))
-		cCreateInfo.enabledExtensionCount = C.uint32_t(len(createInfo.EnabledExtensionNames))
-		cCreateInfo.ppEnabledExtensionNames = cExtensions
+		cCreateInfoPtr.enabledExtensionCount = C.uint32_t(len(createInfo.EnabledExtensionNames))
+		cCreateInfoPtr.ppEnabledExtensionNames = cExtensions
 	}
 
-	// Enabled features
-	var cFeatures C.VkPhysicalDeviceFeatures
+	// Enabled features - allocate in C memory
+	var cFeaturesPtr *C.VkPhysicalDeviceFeatures
 	if createInfo.EnabledFeatures != nil {
-		cFeatures = physicalDeviceFeaturesToC(createInfo.EnabledFeatures)
-		cCreateInfo.pEnabledFeatures = &cFeatures
+		cFeaturesPtr = (*C.VkPhysicalDeviceFeatures)(C.malloc(C.sizeof_VkPhysicalDeviceFeatures))
+		if cFeaturesPtr == nil {
+			// Clean up priorities before returning
+			for _, ptr := range cPrioritiesToFree {
+				C.free(unsafe.Pointer(ptr))
+			}
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for physical device features")
+		}
+		*cFeaturesPtr = physicalDeviceFeaturesToC(createInfo.EnabledFeatures)
+		cCreateInfoPtr.pEnabledFeatures = cFeaturesPtr
+		
+		// Defer cleanup of features
+		defer C.free(unsafe.Pointer(cFeaturesPtr))
 	}
 
 	var device C.VkDevice
-	result := Result(C.vkCreateDevice(C.VkPhysicalDevice(physicalDevice), &cCreateInfo, nil, &device))
+	result := Result(C.vkCreateDevice(C.VkPhysicalDevice(physicalDevice), cCreateInfoPtr, nil, &device))
+	
 	if result != Success {
 		return nil, NewVulkanError(result, "CreateDevice", "Vulkan device creation failed")
 	}
