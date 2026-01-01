@@ -26,18 +26,18 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 ## High Priority
 
 ### Graphics Pipeline Creation (Critical Missing Feature)
-- [ ] Implement `CreateGraphicsPipelines` function with complete `VkGraphicsPipelineCreateInfo`:
-  - [ ] Add `GraphicsPipelineCreateInfo` struct with all fields
-  - [ ] Add `PipelineVertexInputStateCreateInfo` for vertex input descriptions
-  - [ ] Add `PipelineInputAssemblyStateCreateInfo` for primitive topology
-  - [ ] Add `PipelineTessellationStateCreateInfo` for tessellation control
-  - [ ] Add `PipelineViewportStateCreateInfo` for viewport/scissor configuration
-  - [ ] Add `PipelineRasterizationStateCreateInfo` with polygon mode, line width, depth bias
-  - [ ] Add `PipelineMultisampleStateCreateInfo` for MSAA settings
-  - [ ] Add `PipelineDepthStencilStateCreateInfo` for depth/stencil testing
-  - [ ] Add `PipelineColorBlendStateCreateInfo` with blend attachments
-  - [ ] Add `PipelineDynamicStateCreateInfo` for dynamic state configuration
-  - [ ] Implement `VertexInputBindingDescription` and `VertexInputAttributeDescription`
+- [x] Implement `CreateGraphicsPipelines` function with complete `VkGraphicsPipelineCreateInfo`:
+  - [x] Add `GraphicsPipelineCreateInfo` struct with all fields
+  - [x] Add `PipelineVertexInputStateCreateInfo` for vertex input descriptions
+  - [x] Add `PipelineInputAssemblyStateCreateInfo` for primitive topology
+  - [x] Add `PipelineTessellationStateCreateInfo` for tessellation control
+  - [x] Add `PipelineViewportStateCreateInfo` for viewport/scissor configuration
+  - [x] Add `PipelineRasterizationStateCreateInfo` with polygon mode, line width, depth bias
+  - [x] Add `PipelineMultisampleStateCreateInfo` for MSAA settings
+  - [x] Add `PipelineDepthStencilStateCreateInfo` for depth/stencil testing
+  - [x] Add `PipelineColorBlendStateCreateInfo` with blend attachments
+  - [x] Add `PipelineDynamicStateCreateInfo` for dynamic state configuration
+  - [x] Implement `VertexInputBindingDescription` and `VertexInputAttributeDescription`
 
 ### Framebuffer Management
 - [ ] Implement `CreateFramebuffer` with `VkFramebufferCreateInfo`
