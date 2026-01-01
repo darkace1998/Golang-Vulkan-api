@@ -855,7 +855,7 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 			// Create a default attachment for one color attachment
 			defaultAttachment := make([]C.VkPipelineColorBlendAttachmentState, 1)
 			defaultAttachment[0].blendEnable = C.VK_FALSE
-			defaultAttachment[0].colorWriteMask = C.VkColorComponentFlags(C.VK_COLOR_COMPONENT_R_BIT | C.VK_COLOR_COMPONENT_G_BIT | C.VK_COLOR_COMPONENT_B_BIT | C.VK_COLOR_COMPONENT_A_BIT)
+			defaultAttachment[0].colorWriteMask = C.VkColorComponentFlags(ColorComponentAll)
 			cBlendAttachmentArrays = append(cBlendAttachmentArrays, defaultAttachment)
 			cColorBlendStates[i].attachmentCount = 1
 			cColorBlendStates[i].pAttachments = &cBlendAttachmentArrays[len(cBlendAttachmentArrays)-1][0]
