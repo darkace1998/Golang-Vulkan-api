@@ -40,12 +40,12 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Implement `VertexInputBindingDescription` and `VertexInputAttributeDescription`
 
 ### Framebuffer Management
-- [ ] Implement `CreateFramebuffer` with `VkFramebufferCreateInfo`
-- [ ] Implement `DestroyFramebuffer`
-- [ ] Add `FramebufferCreateInfo` struct with:
-  - [ ] RenderPass reference
-  - [ ] Attachment image views array
-  - [ ] Width, Height, Layers fields
+- [x] Implement `CreateFramebuffer` with `VkFramebufferCreateInfo`
+- [x] Implement `DestroyFramebuffer`
+- [x] Add `FramebufferCreateInfo` struct with:
+  - [x] RenderPass reference
+  - [x] Attachment image views array
+  - [x] Width, Height, Layers fields
 
 ### Render Pass Enhancements  
 - [ ] Complete subpass implementation in `CreateRenderPass`:

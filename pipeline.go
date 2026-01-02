@@ -915,6 +915,86 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	return pipelines, nil
 }
 
+// ============================================================================
+// Framebuffer Management
+// ============================================================================
+
+// FramebufferCreateInfo contains framebuffer creation information
+type FramebufferCreateInfo struct {
+	RenderPass  RenderPass
+	Attachments []ImageView
+	Width       uint32
+	Height      uint32
+	Layers      uint32
+}
+
+// CreateFramebuffer creates a framebuffer
+func CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Framebuffer, error) {
+	// Input validation
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+	if createInfo.RenderPass == nil {
+		return nil, NewValidationError("RenderPass", "cannot be nil")
+	}
+	if createInfo.Width == 0 {
+		return nil, NewValidationError("Width", "cannot be zero")
+	}
+	if createInfo.Height == 0 {
+		return nil, NewValidationError("Height", "cannot be zero")
+	}
+	if createInfo.Layers == 0 {
+		return nil, NewValidationError("Layers", "cannot be zero")
+	}
+	// Validate attachments are not nil
+	for _, attachment := range createInfo.Attachments {
+		if attachment == nil {
+			return nil, NewValidationError("Attachments", "contains nil attachment")
+		}
+	}
+
+	var cCreateInfo C.VkFramebufferCreateInfo
+	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO
+	cCreateInfo.pNext = nil
+	cCreateInfo.flags = 0
+	cCreateInfo.renderPass = C.VkRenderPass(createInfo.RenderPass)
+	cCreateInfo.width = C.uint32_t(createInfo.Width)
+	cCreateInfo.height = C.uint32_t(createInfo.Height)
+	cCreateInfo.layers = C.uint32_t(createInfo.Layers)
+
+	// Handle attachments
+	var cAttachments []C.VkImageView
+	if len(createInfo.Attachments) > 0 {
+		cAttachments = make([]C.VkImageView, len(createInfo.Attachments))
+		for i, attachment := range createInfo.Attachments {
+			cAttachments[i] = C.VkImageView(attachment)
+		}
+		cCreateInfo.attachmentCount = C.uint32_t(len(cAttachments))
+		cCreateInfo.pAttachments = &cAttachments[0]
+	} else {
+		cCreateInfo.attachmentCount = 0
+		cCreateInfo.pAttachments = nil
+	}
+
+	var framebuffer C.VkFramebuffer
+	result := Result(C.vkCreateFramebuffer(C.VkDevice(device), &cCreateInfo, nil, &framebuffer))
+	if result != Success {
+		return nil, NewVulkanError(result, "CreateFramebuffer", "Vulkan framebuffer creation failed")
+	}
+
+	return Framebuffer(framebuffer), nil
+}
+
+// DestroyFramebuffer destroys a framebuffer
+func DestroyFramebuffer(device Device, framebuffer Framebuffer) {
+	if device != nil && framebuffer != nil {
+		C.vkDestroyFramebuffer(C.VkDevice(device), C.VkFramebuffer(framebuffer), nil)
+	}
+}
+
 // Additional utility functions for common operations
 
 // GetAPIVersion returns the supported Vulkan API version
