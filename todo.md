@@ -71,12 +71,12 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 - [x] Implement `ResetDescriptorPool`
 
 ### Memory Management
-- [ ] Add automatic memory type selection for common use cases
-- [ ] Implement memory pool management for efficient allocations
-- [ ] Add staging buffer helpers for host-to-device transfers
-- [ ] Implement `FlushMappedMemoryRanges` for non-coherent memory
-- [ ] Implement `InvalidateMappedMemoryRanges` for non-coherent memory
-- [ ] Add `VkMappedMemoryRange` struct and handling
+- [x] Add automatic memory type selection for common use cases
+- [x] Implement memory pool management for efficient allocations
+- [x] Add staging buffer helpers for host-to-device transfers
+- [x] Implement `FlushMappedMemoryRanges` for non-coherent memory
+- [x] Implement `InvalidateMappedMemoryRanges` for non-coherent memory
+- [x] Add `VkMappedMemoryRange` struct and handling
 
 ---
 
