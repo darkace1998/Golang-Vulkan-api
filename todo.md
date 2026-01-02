@@ -222,75 +222,75 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 ## Video Codec Features
 
 ### Extension Loading Improvements
-- [ ] Add per-device function pointer storage (currently global/static):
-  - [ ] Create `VideoDeviceFunctions` struct to hold per-device pointers
-  - [ ] Return function pointers from `LoadVideoDeviceFunctions` instead of storing globally
-  - [ ] Make video API calls use device-specific function pointers
-- [ ] Add thread-safe loading with mutex protection
+- [x] Add per-device function pointer storage (currently global/static):
+  - [x] Create `VideoDeviceFunctions` struct to hold per-device pointers
+  - [x] Return function pointers from `LoadVideoDeviceFunctions` instead of storing globally
+  - [x] Make video API calls use device-specific function pointers
+- [x] Add thread-safe loading with mutex protection
 
 ### Encoding Session Helpers
-- [ ] Add H.264 encoding session setup:
-  - [ ] Create `CreateH264EncodeSession` helper function
-  - [ ] Add `H264EncodeSessionCreateInfo` with common defaults
-  - [ ] Add H.264 specific profile structures (`StdVideoH264ProfileIdc`, etc.)
-  - [ ] Implement rate control helpers (`VK_VIDEO_ENCODE_RATE_CONTROL_MODE_*`)
-  - [ ] Add SPS/PPS parameter handling
-- [ ] Implement H.265 encoding session setup:
-  - [ ] Create `CreateH265EncodeSession` helper function
-  - [ ] Add `H265EncodeSessionCreateInfo` with common defaults
-  - [ ] Add H.265 specific profile structures (`StdVideoH265ProfileIdc`, etc.)
-  - [ ] Implement VPS/SPS/PPS parameter handling
-- [ ] Add AV1 encoding session setup:
-  - [ ] Create `CreateAV1EncodeSession` helper function
-  - [ ] Add AV1 specific profile structures
-  - [ ] Implement sequence header handling
+- [x] Add H.264 encoding session setup:
+  - [x] Create `CreateH264EncodeSession` helper function
+  - [x] Add `H264EncodeSessionCreateInfo` with common defaults
+  - [x] Add H.264 specific profile structures (`H264Profile`, `H264Level`)
+  - [x] Implement rate control helpers (`VideoEncodeRateControlMode`)
+  - [x] Add SPS/PPS parameter handling
+- [x] Implement H.265 encoding session setup:
+  - [x] Create `CreateH265EncodeSession` helper function
+  - [x] Add `H265EncodeSessionCreateInfo` with common defaults
+  - [x] Add H.265 specific profile structures (`H265Profile`, `H265Level`)
+  - [x] Implement VPS/SPS/PPS parameter handling
+- [x] Add AV1 encoding session setup:
+  - [x] Create `CreateAV1EncodeSession` helper function
+  - [x] Add AV1 specific profile structures (`AV1Profile`, `AV1Level`)
+  - [x] Implement sequence header handling
 
 ### Decoding Session Helpers
-- [ ] Add H.264 decoding session setup:
-  - [ ] Create `CreateH264DecodeSession` helper function
-  - [ ] Add `H264DecodeSessionCreateInfo` with common defaults
-  - [ ] Implement SPS/PPS parsing helpers
-- [ ] Implement H.265 decoding session setup:
-  - [ ] Create `CreateH265DecodeSession` helper function
-  - [ ] Implement VPS/SPS/PPS parsing helpers
-- [ ] Add AV1 decoding session setup:
-  - [ ] Create `CreateAV1DecodeSession` helper function
-  - [ ] Implement sequence header parsing helpers
+- [x] Add H.264 decoding session setup:
+  - [x] Create `CreateH264DecodeSession` helper function
+  - [x] Add `H264DecodeSessionCreateInfo` with common defaults
+  - [x] Implement SPS/PPS parsing helpers
+- [x] Implement H.265 decoding session setup:
+  - [x] Create `CreateH265DecodeSession` helper function
+  - [x] Implement VPS/SPS/PPS parsing helpers
+- [x] Add AV1 decoding session setup:
+  - [x] Create `CreateAV1DecodeSession` helper function
+  - [x] Implement sequence header parsing helpers
 
 ### Reference Picture Management
-- [ ] Implement DPB (Decoded Picture Buffer) management:
-  - [ ] Add `DPBSlot` struct for tracking reference pictures
-  - [ ] Add `DPBManager` helper class for DPB state management
-  - [ ] Implement reference picture marking (H.264/H.265)
-  - [ ] Add POC (Picture Order Count) calculation helpers
-- [ ] Add reference picture list construction:
-  - [ ] Implement `VkVideoReferenceSlotInfoKHR` helpers
-  - [ ] Add reference picture list reordering support
+- [x] Implement DPB (Decoded Picture Buffer) management:
+  - [x] Add `DPBSlot` struct for tracking reference pictures
+  - [x] Add `DPBManager` helper class for DPB state management
+  - [x] Implement reference picture marking (H.264/H.265)
+  - [x] Add POC (Picture Order Count) calculation helpers
+- [x] Add reference picture list construction:
+  - [x] Implement `VkVideoReferenceSlotInfoKHR` helpers
+  - [x] Add reference picture list reordering support
 
 ### Video Common
-- [ ] Add video format capability queries:
-  - [ ] Implement `GetVideoCapabilities` enhancement with codec-specific capabilities
-  - [ ] Add `VideoDecodeCapabilitiesKHR` handling
-  - [ ] Add `VideoEncodeCapabilitiesKHR` handling
-  - [ ] Add format-profile compatibility queries
-- [ ] Implement video profile listing helpers:
-  - [ ] Create `EnumerateVideoProfiles` function
-  - [ ] Add profile-format compatibility matrix
-- [ ] Add video session parameter update support:
-  - [ ] Implement `UpdateVideoSessionParametersKHR`
-  - [ ] Add incremental parameter update handling
-- [ ] Implement video coding control flags:
-  - [ ] Add `VideoCodingControlFlagsKHR` helpers
-  - [ ] Implement reset, encode params, rate control commands
-- [ ] Add video queue family detection:
-  - [ ] Create `FindVideoDecodeQueueFamily` helper
-  - [ ] Create `FindVideoEncodeQueueFamily` helper
+- [x] Add video format capability queries:
+  - [x] Implement `GetVideoCapabilities` enhancement with codec-specific capabilities
+  - [x] Add `VideoDecodeCapabilitiesKHR` handling
+  - [x] Add `VideoEncodeCapabilitiesKHR` handling
+  - [x] Add format-profile compatibility queries (`GetVideoFormatProperties`)
+- [x] Implement video profile listing helpers:
+  - [x] Create `EnumerateVideoProfiles` function
+  - [x] Add profile-format compatibility matrix
+- [x] Add video session parameter update support:
+  - [x] Implement `UpdateVideoSessionParametersKHR`
+  - [x] Add incremental parameter update handling
+- [x] Implement video coding control flags:
+  - [x] Add `VideoCodingControlFlagsKHR` helpers
+  - [x] Implement reset, encode params, rate control commands
+- [x] Add video queue family detection:
+  - [x] Create `FindVideoDecodeQueueFamily` helper
+  - [x] Create `FindVideoEncodeQueueFamily` helper
 
 ### Video Picture Resources
-- [ ] Add `VideoPictureResourceInfoKHR` creation helpers
-- [ ] Implement video image view requirements
-- [ ] Add YUV format handling (NV12, P010, etc.)
-- [ ] Implement video decode output picture setup
+- [x] Add `VideoPictureResourceInfoKHR` creation helpers
+- [x] Implement video image view requirements
+- [x] Add YUV format handling (NV12, P010, etc.)
+- [x] Implement video decode output picture setup
 
 ---
 
