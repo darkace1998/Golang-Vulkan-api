@@ -106,14 +106,14 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Add `DeviceGroupDeviceCreateInfo`
 
 ### Swapchain Support (Essential for Rendering)
-- [ ] Implement `CreateSwapchainKHR` with `VkSwapchainCreateInfoKHR`:
-  - [ ] Add `SwapchainCreateInfoKHR` struct
-  - [ ] Handle surface, minImageCount, imageFormat, imageExtent, etc.
-- [ ] Implement `DestroySwapchainKHR`
-- [ ] Implement `GetSwapchainImagesKHR`
-- [ ] Implement `AcquireNextImageKHR`
-- [ ] Implement `QueuePresentKHR` with `VkPresentInfoKHR`
-- [ ] Add `PresentInfoKHR` struct
+- [x] Implement `CreateSwapchainKHR` with `VkSwapchainCreateInfoKHR`:
+  - [x] Add `SwapchainCreateInfoKHR` struct
+  - [x] Handle surface, minImageCount, imageFormat, imageExtent, etc.
+- [x] Implement `DestroySwapchainKHR`
+- [x] Implement `GetSwapchainImagesKHR`
+- [x] Implement `AcquireNextImageKHR`
+- [x] Implement `QueuePresentKHR` with `VkPresentInfoKHR`
+- [x] Add `PresentInfoKHR` struct
 
 ### Command Buffers
 - [ ] Add secondary command buffer support:
