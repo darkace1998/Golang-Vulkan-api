@@ -48,15 +48,15 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Width, Height, Layers fields
 
 ### Render Pass Enhancements  
-- [ ] Complete subpass implementation in `CreateRenderPass`:
-  - [ ] Handle `pInputAttachments` array properly
-  - [ ] Handle `pColorAttachments` array properly
-  - [ ] Handle `pResolveAttachments` array properly  
-  - [ ] Handle `pDepthStencilAttachment` properly
-  - [ ] Handle `pPreserveAttachments` array properly
-- [ ] Implement clear values support in `CmdBeginRenderPass`
-- [ ] Add `CmdNextSubpass` for multi-subpass render passes
-- [ ] Add `CmdExecuteCommands` for secondary command buffer execution
+- [x] Complete subpass implementation in `CreateRenderPass`:
+  - [x] Handle `pInputAttachments` array properly
+  - [x] Handle `pColorAttachments` array properly
+  - [x] Handle `pResolveAttachments` array properly  
+  - [x] Handle `pDepthStencilAttachment` properly
+  - [x] Handle `pPreserveAttachments` array properly
+- [x] Implement clear values support in `CmdBeginRenderPass`
+- [x] Add `CmdNextSubpass` for multi-subpass render passes
+- [x] Add `CmdExecuteCommands` for secondary command buffer execution
 
 ### Descriptor Set Operations (Critical Missing)
 - [ ] Implement `CreateDescriptorPool` (partially exists in descriptors.go)

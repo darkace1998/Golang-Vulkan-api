@@ -215,6 +215,14 @@ func DestroyPipelineLayout(device Device, pipelineLayout PipelineLayout) {
 
 // CreateRenderPass creates a render pass
 func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPass, error) {
+	// Input validation
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkRenderPassCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -239,13 +247,104 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 		cCreateInfo.pAttachments = &cAttachments[0]
 	}
 
-	// Note: Subpass implementation simplified for this basic version
-	// Full implementation would handle all attachment references properly
+	// Subpasses - store all attachment reference arrays for the lifetime of the call
+	var cSubpasses []C.VkSubpassDescription
+	var allInputAttachments [][]C.VkAttachmentReference
+	var allColorAttachments [][]C.VkAttachmentReference
+	var allResolveAttachments [][]C.VkAttachmentReference
+	var allDepthStencilAttachments []C.VkAttachmentReference
+	var allPreserveAttachments [][]C.uint32_t
+
+	if len(createInfo.Subpasses) > 0 {
+		cSubpasses = make([]C.VkSubpassDescription, len(createInfo.Subpasses))
+		allInputAttachments = make([][]C.VkAttachmentReference, len(createInfo.Subpasses))
+		allColorAttachments = make([][]C.VkAttachmentReference, len(createInfo.Subpasses))
+		allResolveAttachments = make([][]C.VkAttachmentReference, len(createInfo.Subpasses))
+		allDepthStencilAttachments = make([]C.VkAttachmentReference, len(createInfo.Subpasses))
+		allPreserveAttachments = make([][]C.uint32_t, len(createInfo.Subpasses))
+
+		for i, subpass := range createInfo.Subpasses {
+			cSubpasses[i].flags = 0
+			cSubpasses[i].pipelineBindPoint = C.VkPipelineBindPoint(subpass.PipelineBindPoint)
+
+			// Input attachments
+			if len(subpass.InputAttachments) > 0 {
+				allInputAttachments[i] = make([]C.VkAttachmentReference, len(subpass.InputAttachments))
+				for j, ref := range subpass.InputAttachments {
+					allInputAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
+					allInputAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
+				}
+				cSubpasses[i].inputAttachmentCount = C.uint32_t(len(allInputAttachments[i]))
+				cSubpasses[i].pInputAttachments = &allInputAttachments[i][0]
+			}
+
+			// Color attachments
+			if len(subpass.ColorAttachments) > 0 {
+				allColorAttachments[i] = make([]C.VkAttachmentReference, len(subpass.ColorAttachments))
+				for j, ref := range subpass.ColorAttachments {
+					allColorAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
+					allColorAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
+				}
+				cSubpasses[i].colorAttachmentCount = C.uint32_t(len(allColorAttachments[i]))
+				cSubpasses[i].pColorAttachments = &allColorAttachments[i][0]
+			}
+
+			// Resolve attachments (must match color attachment count if provided)
+			if len(subpass.ResolveAttachments) > 0 {
+				// Validate that resolve attachments count matches color attachments count
+				if len(subpass.ResolveAttachments) != len(subpass.ColorAttachments) {
+					return nil, NewValidationError("ResolveAttachments", "count must match ColorAttachments count")
+				}
+				allResolveAttachments[i] = make([]C.VkAttachmentReference, len(subpass.ResolveAttachments))
+				for j, ref := range subpass.ResolveAttachments {
+					allResolveAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
+					allResolveAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
+				}
+				cSubpasses[i].pResolveAttachments = &allResolveAttachments[i][0]
+			}
+
+			// Depth/stencil attachment
+			if subpass.DepthStencilAttachment != nil {
+				allDepthStencilAttachments[i].attachment = C.uint32_t(subpass.DepthStencilAttachment.Attachment)
+				allDepthStencilAttachments[i].layout = C.VkImageLayout(subpass.DepthStencilAttachment.Layout)
+				cSubpasses[i].pDepthStencilAttachment = &allDepthStencilAttachments[i]
+			}
+
+			// Preserve attachments
+			if len(subpass.PreserveAttachments) > 0 {
+				allPreserveAttachments[i] = make([]C.uint32_t, len(subpass.PreserveAttachments))
+				for j, att := range subpass.PreserveAttachments {
+					allPreserveAttachments[i][j] = C.uint32_t(att)
+				}
+				cSubpasses[i].preserveAttachmentCount = C.uint32_t(len(allPreserveAttachments[i]))
+				cSubpasses[i].pPreserveAttachments = &allPreserveAttachments[i][0]
+			}
+		}
+		cCreateInfo.subpassCount = C.uint32_t(len(cSubpasses))
+		cCreateInfo.pSubpasses = &cSubpasses[0]
+	}
+
+	// Subpass dependencies
+	var cDependencies []C.VkSubpassDependency
+	if len(createInfo.Dependencies) > 0 {
+		cDependencies = make([]C.VkSubpassDependency, len(createInfo.Dependencies))
+		for i, dep := range createInfo.Dependencies {
+			cDependencies[i].srcSubpass = C.uint32_t(dep.SrcSubpass)
+			cDependencies[i].dstSubpass = C.uint32_t(dep.DstSubpass)
+			cDependencies[i].srcStageMask = C.VkPipelineStageFlags(dep.SrcStageMask)
+			cDependencies[i].dstStageMask = C.VkPipelineStageFlags(dep.DstStageMask)
+			cDependencies[i].srcAccessMask = C.VkAccessFlags(dep.SrcAccessMask)
+			cDependencies[i].dstAccessMask = C.VkAccessFlags(dep.DstAccessMask)
+			cDependencies[i].dependencyFlags = 0
+		}
+		cCreateInfo.dependencyCount = C.uint32_t(len(cDependencies))
+		cCreateInfo.pDependencies = &cDependencies[0]
+	}
 
 	var renderPass C.VkRenderPass
 	result := Result(C.vkCreateRenderPass(C.VkDevice(device), &cCreateInfo, nil, &renderPass))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateRenderPass", "Vulkan render pass creation failed")
 	}
 
 	return RenderPass(renderPass), nil

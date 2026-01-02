@@ -5,6 +5,8 @@ package vulkan
 */
 import "C"
 
+import "unsafe"
+
 // ClearColorValue represents a clear color value
 type ClearColorValue struct {
 	Float32 [4]float32
@@ -19,9 +21,11 @@ type ClearDepthStencilValue struct {
 }
 
 // ClearValue represents a clear value union
+// Set IsDepthStencil to true when clearing depth/stencil attachments
 type ClearValue struct {
-	Color        ClearColorValue
-	DepthStencil ClearDepthStencilValue
+	Color          ClearColorValue
+	DepthStencil   ClearDepthStencilValue
+	IsDepthStencil bool // Flag to indicate this is a depth/stencil clear value
 }
 
 // RenderPassBeginInfo contains render pass begin information
@@ -80,9 +84,27 @@ func CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginI
 	cBeginInfo.renderArea.extent.width = C.uint32_t(beginInfo.RenderArea.Extent.Width)
 	cBeginInfo.renderArea.extent.height = C.uint32_t(beginInfo.RenderArea.Extent.Height)
 
-	// For simplicity, skip clear values for now - can be added later
-	cBeginInfo.clearValueCount = 0
-	cBeginInfo.pClearValues = nil
+	// Handle clear values
+	var cClearValues []C.VkClearValue
+	if len(beginInfo.ClearValues) > 0 {
+		cClearValues = make([]C.VkClearValue, len(beginInfo.ClearValues))
+		for i, cv := range beginInfo.ClearValues {
+			// VkClearValue is a union - use IsDepthStencil flag to determine which to use
+			if cv.IsDepthStencil {
+				// Use depth/stencil clear value - VkClearDepthStencilValue has depth (float32) followed by stencil (uint32)
+				*(*float32)(unsafe.Pointer(&cClearValues[i])) = cv.DepthStencil.Depth
+				*(*uint32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cClearValues[i])) + unsafe.Sizeof(cv.DepthStencil.Depth))) = cv.DepthStencil.Stencil
+			} else {
+				// Use color clear value - VkClearColorValue is a union, use float32 array
+				*(*[4]float32)(unsafe.Pointer(&cClearValues[i])) = cv.Color.Float32
+			}
+		}
+		cBeginInfo.clearValueCount = C.uint32_t(len(cClearValues))
+		cBeginInfo.pClearValues = &cClearValues[0]
+	} else {
+		cBeginInfo.clearValueCount = 0
+		cBeginInfo.pClearValues = nil
+	}
 
 	C.vkCmdBeginRenderPass(C.VkCommandBuffer(commandBuffer), &cBeginInfo, C.VkSubpassContents(contents))
 }
@@ -90,6 +112,25 @@ func CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginI
 // CmdEndRenderPass ends a render pass
 func CmdEndRenderPass(commandBuffer CommandBuffer) {
 	C.vkCmdEndRenderPass(C.VkCommandBuffer(commandBuffer))
+}
+
+// CmdNextSubpass advances to the next subpass in a render pass
+func CmdNextSubpass(commandBuffer CommandBuffer, contents SubpassContents) {
+	C.vkCmdNextSubpass(C.VkCommandBuffer(commandBuffer), C.VkSubpassContents(contents))
+}
+
+// CmdExecuteCommands executes secondary command buffers from a primary command buffer
+func CmdExecuteCommands(commandBuffer CommandBuffer, commandBuffers []CommandBuffer) {
+	if len(commandBuffers) == 0 {
+		return
+	}
+
+	cCommandBuffers := make([]C.VkCommandBuffer, len(commandBuffers))
+	for i, cb := range commandBuffers {
+		cCommandBuffers[i] = C.VkCommandBuffer(cb)
+	}
+
+	C.vkCmdExecuteCommands(C.VkCommandBuffer(commandBuffer), C.uint32_t(len(cCommandBuffers)), &cCommandBuffers[0])
 }
 
 // CmdBindPipeline binds a pipeline
