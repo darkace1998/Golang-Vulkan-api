@@ -192,30 +192,30 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 - [x] Add proper push constant range validation
 
 ### Render Pass Commands
-- [ ] Implement `CmdClearAttachments`
-- [ ] Implement `CmdClearColorImage`
-- [ ] Implement `CmdClearDepthStencilImage`
+- [x] Implement `CmdClearAttachments`
+- [x] Implement `CmdClearColorImage`
+- [x] Implement `CmdClearDepthStencilImage`
 
 ### Pipeline Cache
-- [ ] Implement `CreatePipelineCache`
-- [ ] Implement `DestroyPipelineCache`
-- [ ] Implement `GetPipelineCacheData`
-- [ ] Implement `MergePipelineCaches`
+- [x] Implement `CreatePipelineCache`
+- [x] Implement `DestroyPipelineCache`
+- [x] Implement `GetPipelineCacheData`
+- [x] Implement `MergePipelineCaches`
 
 ### Buffer View
-- [ ] Implement `CreateBufferView`
-- [ ] Implement `DestroyBufferView`
-- [ ] Add `BufferViewCreateInfo` struct
+- [x] Implement `CreateBufferView`
+- [x] Implement `DestroyBufferView`
+- [x] Add `BufferViewCreateInfo` struct
 
 ### Format Queries
-- [ ] Implement `GetPhysicalDeviceFormatProperties`
-- [ ] Implement `GetPhysicalDeviceImageFormatProperties`
-- [ ] Add `FormatProperties` struct
-- [ ] Add `ImageFormatProperties` struct
+- [x] Implement `GetPhysicalDeviceFormatProperties`
+- [x] Implement `GetPhysicalDeviceImageFormatProperties`
+- [x] Add `FormatProperties` struct
+- [x] Add `ImageFormatProperties` struct
 
 ### Sparse Resources
-- [ ] Implement `GetPhysicalDeviceSparseImageFormatProperties`
-- [ ] Implement `GetImageSparseMemoryRequirements`
+- [x] Implement `GetPhysicalDeviceSparseImageFormatProperties`
+- [x] Implement `GetImageSparseMemoryRequirements`
 
 ---
 
