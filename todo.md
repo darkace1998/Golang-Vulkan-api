@@ -165,17 +165,17 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Add `BufferCopy` struct improvements
 
 ### Query Operations
-- [ ] Implement query pool creation and management:
-  - [ ] Implement `CreateQueryPool` with `VkQueryPoolCreateInfo`
-  - [ ] Implement `DestroyQueryPool`
-  - [ ] Add `QueryPoolCreateInfo` struct
-  - [ ] Add `QueryType` enum (Occlusion, PipelineStatistics, Timestamp)
-- [ ] Add query commands:
-  - [ ] Implement `CmdBeginQuery`, `CmdEndQuery`
-  - [ ] Implement `CmdResetQueryPool`
-  - [ ] Implement `CmdWriteTimestamp`
-  - [ ] Implement `CmdCopyQueryPoolResults`
-  - [ ] Implement `GetQueryPoolResults`
+- [x] Implement query pool creation and management:
+  - [x] Implement `CreateQueryPool` with `VkQueryPoolCreateInfo`
+  - [x] Implement `DestroyQueryPool`
+  - [x] Add `QueryPoolCreateInfo` struct
+  - [x] Add `QueryType` enum (Occlusion, PipelineStatistics, Timestamp)
+- [x] Add query commands:
+  - [x] Implement `CmdBeginQuery`, `CmdEndQuery`
+  - [x] Implement `CmdResetQueryPool`
+  - [x] Implement `CmdWriteTimestamp`
+  - [x] Implement `CmdCopyQueryPoolResults`
+  - [x] Implement `GetQueryPoolResults`
 
 ---
 
