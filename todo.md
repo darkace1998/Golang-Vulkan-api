@@ -116,16 +116,16 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 - [x] Add `PresentInfoKHR` struct
 
 ### Command Buffers
-- [ ] Add secondary command buffer support:
-  - [ ] Add `CommandBufferInheritanceInfo` struct
-  - [ ] Update `CommandBufferBeginInfo` with inheritance info
-  - [ ] Add `CmdExecuteCommands` function
-- [ ] Add command pool management:
-  - [ ] Implement `ResetCommandPool`
-  - [ ] Implement `TrimCommandPool` (Vulkan 1.1+)
-- [ ] Implement multi-threaded command buffer recording helpers:
-  - [ ] Add per-thread command pool allocation pattern
-  - [ ] Add command buffer batching utilities
+- [x] Add secondary command buffer support:
+  - [x] Add `CommandBufferInheritanceInfo` struct
+  - [x] Update `CommandBufferBeginInfo` with inheritance info
+  - [x] Add `CmdExecuteCommands` function
+- [x] Add command pool management:
+  - [x] Implement `ResetCommandPool`
+  - [x] Implement `TrimCommandPool` (Vulkan 1.1+)
+- [x] Implement multi-threaded command buffer recording helpers:
+  - [x] Add per-thread command pool allocation pattern
+  - [x] Add command buffer batching utilities
 
 ### Synchronization
 - [ ] Add timeline semaphore support (Vulkan 1.2+):
