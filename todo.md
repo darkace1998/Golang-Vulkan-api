@@ -59,16 +59,16 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 - [x] Add `CmdExecuteCommands` for secondary command buffer execution
 
 ### Descriptor Set Operations (Critical Missing)
-- [ ] Implement `CreateDescriptorPool` (partially exists in descriptors.go)
-- [ ] Implement `DestroyDescriptorPool`
-- [ ] Implement `AllocateDescriptorSets` with `VkDescriptorSetAllocateInfo`
-- [ ] Implement `FreeDescriptorSets`
-- [ ] Implement `UpdateDescriptorSets` with:
-  - [ ] `VkWriteDescriptorSet` support
-  - [ ] `VkCopyDescriptorSet` support
-  - [ ] `DescriptorBufferInfo` for buffer descriptors
-  - [ ] `DescriptorImageInfo` for image/sampler descriptors
-- [ ] Implement `ResetDescriptorPool`
+- [x] Implement `CreateDescriptorPool` (partially exists in descriptors.go)
+- [x] Implement `DestroyDescriptorPool`
+- [x] Implement `AllocateDescriptorSets` with `VkDescriptorSetAllocateInfo`
+- [x] Implement `FreeDescriptorSets`
+- [x] Implement `UpdateDescriptorSets` with:
+  - [x] `VkWriteDescriptorSet` support
+  - [x] `VkCopyDescriptorSet` support
+  - [x] `DescriptorBufferInfo` for buffer descriptors
+  - [x] `DescriptorImageInfo` for image/sampler descriptors
+- [x] Implement `ResetDescriptorPool`
 
 ### Memory Management
 - [ ] Add automatic memory type selection for common use cases
