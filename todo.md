@@ -128,20 +128,21 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Add command buffer batching utilities
 
 ### Synchronization
-- [ ] Add timeline semaphore support (Vulkan 1.2+):
-  - [ ] Add `SemaphoreTypeCreateInfo` struct
-  - [ ] Add `SemaphoreType` enum (`Binary`, `Timeline`)
-  - [ ] Implement `WaitSemaphores` with `VkSemaphoreWaitInfo`
-  - [ ] Implement `SignalSemaphore` with `VkSemaphoreSignalInfo`
-  - [ ] Implement `GetSemaphoreCounterValue`
-- [ ] Implement event objects:
-  - [ ] Implement `CreateEvent` with `VkEventCreateInfo`
-  - [ ] Implement `DestroyEvent`
-  - [ ] Implement `SetEvent`, `ResetEvent`, `GetEventStatus`
-  - [ ] Implement `CmdSetEvent`, `CmdResetEvent`, `CmdWaitEvents`
-- [ ] Implement queue family ownership transfers:
-  - [ ] Add `BufferMemoryBarrier` with queue family transfer
-  - [ ] Add `ImageMemoryBarrier` with queue family transfer
+- [x] Add timeline semaphore support (Vulkan 1.2+):
+  - [x] Add `SemaphoreTypeCreateInfo` struct
+  - [x] Add `SemaphoreType` enum (`Binary`, `Timeline`)
+  - [x] Implement `WaitSemaphores` with `VkSemaphoreWaitInfo`
+  - [x] Implement `SignalSemaphore` with `VkSemaphoreSignalInfo`
+  - [x] Implement `GetSemaphoreCounterValue`
+- [x] Implement event objects:
+  - [x] Implement `CreateEvent` with `VkEventCreateInfo`
+  - [x] Implement `DestroyEvent`
+  - [x] Implement `SetEvent`, `ResetEvent`, `GetEventStatus`
+  - [x] Implement `CmdSetEvent`, `CmdResetEvent`, `CmdWaitEvents`
+- [x] Implement queue family ownership transfers:
+  - [x] Add `BufferMemoryBarrier` with queue family transfer
+  - [x] Add `ImageMemoryBarrier` with queue family transfer
+  - [x] Add `CmdPipelineBarrier` with full memory barrier support
 
 ### Resource Operations
 - [ ] Add sparse memory binding support:
