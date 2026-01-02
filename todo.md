@@ -188,8 +188,8 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 - [x] Implement `CmdDrawIndexedIndirectCount` (Vulkan 1.2+)
 
 ### Push Constants
-- [ ] Implement `CmdPushConstants`
-- [ ] Add proper push constant range validation
+- [x] Implement `CmdPushConstants`
+- [x] Add proper push constant range validation
 
 ### Render Pass Commands
 - [ ] Implement `CmdClearAttachments`

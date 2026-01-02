@@ -387,3 +387,55 @@ func CmdBindDescriptorSets(commandBuffer CommandBuffer, pipelineBindPoint Pipeli
 		pDynamicOffsets,
 	)
 }
+
+// CmdPushConstants updates push constant values
+// stageFlags specifies the shader stages that will use the push constants
+// offset is the start offset of the push constant range to update (must be a multiple of 4)
+// data is the actual data to upload (size must be a multiple of 4)
+func CmdPushConstants(commandBuffer CommandBuffer, layout PipelineLayout, stageFlags ShaderStageFlags, offset uint32, data []byte) {
+	// Input validation
+	if commandBuffer == nil {
+		return // Invalid command buffer
+	}
+	if layout == nil {
+		return // Invalid pipeline layout
+	}
+	if len(data) == 0 {
+		return // No data to push
+	}
+
+	// Vulkan requires offset and size to be multiples of 4
+	if offset%4 != 0 {
+		return // Offset must be a multiple of 4
+	}
+	if len(data)%4 != 0 {
+		return // Size must be a multiple of 4
+	}
+
+	// Maximum push constant size is typically 128 bytes (minimum guaranteed by Vulkan spec)
+	// Some implementations support more, but we validate against the common limit
+	const maxPushConstantSize = 256 // Conservative limit
+	if len(data) > maxPushConstantSize {
+		return // Data too large
+	}
+
+	C.vkCmdPushConstants(
+		C.VkCommandBuffer(commandBuffer),
+		C.VkPipelineLayout(layout),
+		C.VkShaderStageFlags(stageFlags),
+		C.uint32_t(offset),
+		C.uint32_t(len(data)),
+		unsafe.Pointer(&data[0]),
+	)
+}
+
+// CmdPushConstantsTyped is a generic helper for pushing typed data as push constants
+// This is a convenience wrapper around CmdPushConstants for common use cases
+func CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLayout, stageFlags ShaderStageFlags, offset uint32, value *T) {
+	if value == nil {
+		return
+	}
+	size := unsafe.Sizeof(*value)
+	data := unsafe.Slice((*byte)(unsafe.Pointer(value)), size)
+	CmdPushConstants(commandBuffer, layout, stageFlags, offset, data)
+}
