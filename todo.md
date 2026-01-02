@@ -145,24 +145,24 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
   - [x] Add `CmdPipelineBarrier` with full memory barrier support
 
 ### Resource Operations
-- [ ] Add sparse memory binding support:
-  - [ ] Implement `QueueBindSparse`
-  - [ ] Add `BindSparseInfo` struct
-  - [ ] Add `SparseMemoryBind`, `SparseBufferMemoryBindInfo`, `SparseImageMemoryBindInfo`
-- [ ] Implement image layout transition helpers:
-  - [ ] Add helper function for common transitions (undefined -> transfer_dst, etc.)
-  - [ ] Add `CmdPipelineBarrier` with full memory barrier support
-- [ ] Implement image operations:
-  - [ ] Add `CmdBlitImage` for image blitting
-  - [ ] Add `CmdResolveImage` for MSAA resolve
-  - [ ] Add `CmdCopyBufferToImage`
-  - [ ] Add `CmdCopyImageToBuffer`
-  - [ ] Add `CmdCopyImage`
-- [ ] Add buffer operations:
-  - [ ] Implement `CmdFillBuffer`
-  - [ ] Implement `CmdUpdateBuffer`
-  - [ ] Implement `CmdCopyBuffer` (exists but may need enhancement)
-  - [ ] Add `BufferCopy` struct improvements
+- [x] Add sparse memory binding support:
+  - [x] Implement `QueueBindSparse`
+  - [x] Add `BindSparseInfo` struct
+  - [x] Add `SparseMemoryBind`, `SparseBufferMemoryBindInfo`, `SparseImageMemoryBindInfo`
+- [x] Implement image layout transition helpers:
+  - [x] Add helper function for common transitions (undefined -> transfer_dst, etc.)
+  - [x] Add `CmdPipelineBarrier` with full memory barrier support
+- [x] Implement image operations:
+  - [x] Add `CmdBlitImage` for image blitting
+  - [x] Add `CmdResolveImage` for MSAA resolve
+  - [x] Add `CmdCopyBufferToImage`
+  - [x] Add `CmdCopyImageToBuffer`
+  - [x] Add `CmdCopyImage`
+- [x] Add buffer operations:
+  - [x] Implement `CmdFillBuffer`
+  - [x] Implement `CmdUpdateBuffer`
+  - [x] Implement `CmdCopyBuffer` (exists but may need enhancement)
+  - [x] Add `BufferCopy` struct improvements
 
 ### Query Operations
 - [ ] Implement query pool creation and management:
