@@ -182,10 +182,10 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 ## Missing Vulkan Functions
 
 ### Drawing Commands
-- [ ] Implement `CmdDrawIndirect`
-- [ ] Implement `CmdDrawIndexedIndirect`
-- [ ] Implement `CmdDrawIndirectCount` (Vulkan 1.2+)
-- [ ] Implement `CmdDrawIndexedIndirectCount` (Vulkan 1.2+)
+- [x] Implement `CmdDrawIndirect`
+- [x] Implement `CmdDrawIndexedIndirect`
+- [x] Implement `CmdDrawIndirectCount` (Vulkan 1.2+)
+- [x] Implement `CmdDrawIndexedIndirectCount` (Vulkan 1.2+)
 
 ### Push Constants
 - [ ] Implement `CmdPushConstants`

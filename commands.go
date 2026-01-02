@@ -247,6 +247,46 @@ func CmdDrawIndexed(commandBuffer CommandBuffer, indexCount, instanceCount, firs
 	C.vkCmdDrawIndexed(C.VkCommandBuffer(commandBuffer), C.uint32_t(indexCount), C.uint32_t(instanceCount), C.uint32_t(firstIndex), C.int32_t(vertexOffset), C.uint32_t(firstInstance))
 }
 
+// CmdDrawIndirect records an indirect draw command
+// The draw parameters are read from a buffer at the specified offset
+// stride specifies the byte stride between successive draw parameter structures
+func CmdDrawIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil {
+		return
+	}
+	C.vkCmdDrawIndirect(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
+}
+
+// CmdDrawIndexedIndirect records an indexed indirect draw command
+// The draw parameters are read from a buffer at the specified offset
+// stride specifies the byte stride between successive draw parameter structures
+func CmdDrawIndexedIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil {
+		return
+	}
+	C.vkCmdDrawIndexedIndirect(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
+}
+
+// CmdDrawIndirectCount records an indirect draw command with draw count from a buffer (Vulkan 1.2+)
+// The draw count is read from countBuffer at countBufferOffset
+// maxDrawCount specifies the maximum number of draws that will be executed
+func CmdDrawIndirectCount(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil || countBuffer == nil {
+		return
+	}
+	C.vkCmdDrawIndirectCount(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
+}
+
+// CmdDrawIndexedIndirectCount records an indexed indirect draw command with draw count from a buffer (Vulkan 1.2+)
+// The draw count is read from countBuffer at countBufferOffset
+// maxDrawCount specifies the maximum number of draws that will be executed
+func CmdDrawIndexedIndirectCount(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil || countBuffer == nil {
+		return
+	}
+	C.vkCmdDrawIndexedIndirectCount(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
+}
+
 // CmdCopyBuffer copies data between buffers
 func CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, regions []BufferCopy) {
 	// Input validation
