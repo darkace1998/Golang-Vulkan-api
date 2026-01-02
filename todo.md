@@ -83,27 +83,27 @@ A comprehensive list of improvements, features, and tasks for the Vulkan Go bind
 ## Core API Improvements
 
 ### Instance & Device
-- [ ] Add validation layer message callback support (`VK_EXT_debug_utils`):
-  - [ ] Implement `CreateDebugUtilsMessengerEXT`
-  - [ ] Implement `DestroyDebugUtilsMessengerEXT`
-  - [ ] Add `DebugUtilsMessengerCreateInfoEXT` struct
-  - [ ] Add `DebugUtilsMessengerCallbackDataEXT` struct
-  - [ ] Implement Go callback wrapper for debug messages
-- [ ] Implement surface creation for windowing integration:
-  - [ ] Add `VK_KHR_surface` extension support
-  - [ ] Add `DestroySurfaceKHR`
-  - [ ] Add `GetPhysicalDeviceSurfaceSupportKHR`
-  - [ ] Add `GetPhysicalDeviceSurfaceCapabilitiesKHR`
-  - [ ] Add `GetPhysicalDeviceSurfaceFormatsKHR`
-  - [ ] Add `GetPhysicalDeviceSurfacePresentModesKHR`
-- [ ] Add physical device feature version checks:
-  - [ ] Implement `GetPhysicalDeviceFeatures2` (Vulkan 1.1+)
-  - [ ] Add `PhysicalDeviceVulkan11Features` struct
-  - [ ] Add `PhysicalDeviceVulkan12Features` struct
-  - [ ] Add `PhysicalDeviceVulkan13Features` struct
-- [ ] Implement device group support for multi-GPU:
-  - [ ] Add `EnumeratePhysicalDeviceGroups`
-  - [ ] Add `DeviceGroupDeviceCreateInfo`
+- [x] Add validation layer message callback support (`VK_EXT_debug_utils`):
+  - [x] Implement `CreateDebugUtilsMessengerEXT`
+  - [x] Implement `DestroyDebugUtilsMessengerEXT`
+  - [x] Add `DebugUtilsMessengerCreateInfoEXT` struct
+  - [x] Add `DebugUtilsMessengerCallbackDataEXT` struct
+  - [x] Implement Go callback wrapper for debug messages
+- [x] Implement surface creation for windowing integration:
+  - [x] Add `VK_KHR_surface` extension support
+  - [x] Add `DestroySurfaceKHR`
+  - [x] Add `GetPhysicalDeviceSurfaceSupportKHR`
+  - [x] Add `GetPhysicalDeviceSurfaceCapabilitiesKHR`
+  - [x] Add `GetPhysicalDeviceSurfaceFormatsKHR`
+  - [x] Add `GetPhysicalDeviceSurfacePresentModesKHR`
+- [x] Add physical device feature version checks:
+  - [x] Implement `GetPhysicalDeviceFeatures2` (Vulkan 1.1+)
+  - [x] Add `PhysicalDeviceVulkan11Features` struct
+  - [x] Add `PhysicalDeviceVulkan12Features` struct
+  - [x] Add `PhysicalDeviceVulkan13Features` struct
+- [x] Implement device group support for multi-GPU:
+  - [x] Add `EnumeratePhysicalDeviceGroups`
+  - [x] Add `DeviceGroupDeviceCreateInfo`
 
 ### Swapchain Support (Essential for Rendering)
 - [ ] Implement `CreateSwapchainKHR` with `VkSwapchainCreateInfoKHR`:
