@@ -38,8 +38,43 @@ const (
 
 // CommandBufferBeginInfo contains command buffer begin information
 type CommandBufferBeginInfo struct {
-	Flags CommandBufferUsageFlags
+	Flags           CommandBufferUsageFlags
+	InheritanceInfo *CommandBufferInheritanceInfo
 }
+
+// CommandBufferInheritanceInfo contains inheritance info for secondary command buffers
+type CommandBufferInheritanceInfo struct {
+	RenderPass           RenderPass
+	Subpass              uint32
+	Framebuffer          Framebuffer
+	OcclusionQueryEnable bool
+	QueryFlags           QueryControlFlags
+	PipelineStatistics   QueryPipelineStatisticFlags
+}
+
+// QueryControlFlags represents query control flags
+type QueryControlFlags uint32
+
+const (
+	QueryControlPreciseBit QueryControlFlags = C.VK_QUERY_CONTROL_PRECISE_BIT
+)
+
+// QueryPipelineStatisticFlags represents query pipeline statistic flags
+type QueryPipelineStatisticFlags uint32
+
+const (
+	QueryPipelineStatisticInputAssemblyVerticesBit                   QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT
+	QueryPipelineStatisticInputAssemblyPrimitivesBit                 QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT
+	QueryPipelineStatisticVertexShaderInvocationsBit                 QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT
+	QueryPipelineStatisticGeometryShaderInvocationsBit               QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT
+	QueryPipelineStatisticGeometryShaderPrimitivesBit                QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT
+	QueryPipelineStatisticClippingInvocationsBit                     QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT
+	QueryPipelineStatisticClippingPrimitivesBit                      QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT
+	QueryPipelineStatisticFragmentShaderInvocationsBit               QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
+	QueryPipelineStatisticTessellationControlShaderPatchesBit        QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT
+	QueryPipelineStatisticTessellationEvaluationShaderInvocationsBit QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT
+	QueryPipelineStatisticComputeShaderInvocationsBit                QueryPipelineStatisticFlags = C.VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT
+)
 
 // CommandBufferUsageFlags represents command buffer usage flags
 type CommandBufferUsageFlags uint32
@@ -163,7 +198,26 @@ func BeginCommandBuffer(commandBuffer CommandBuffer, beginInfo *CommandBufferBeg
 	cBeginInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
 	cBeginInfo.pNext = nil
 	cBeginInfo.flags = C.VkCommandBufferUsageFlags(beginInfo.Flags)
-	cBeginInfo.pInheritanceInfo = nil
+
+	// Handle inheritance info for secondary command buffers
+	var cInheritanceInfo C.VkCommandBufferInheritanceInfo
+	if beginInfo.InheritanceInfo != nil {
+		cInheritanceInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO
+		cInheritanceInfo.pNext = nil
+		cInheritanceInfo.renderPass = C.VkRenderPass(beginInfo.InheritanceInfo.RenderPass)
+		cInheritanceInfo.subpass = C.uint32_t(beginInfo.InheritanceInfo.Subpass)
+		cInheritanceInfo.framebuffer = C.VkFramebuffer(beginInfo.InheritanceInfo.Framebuffer)
+		if beginInfo.InheritanceInfo.OcclusionQueryEnable {
+			cInheritanceInfo.occlusionQueryEnable = C.VK_TRUE
+		} else {
+			cInheritanceInfo.occlusionQueryEnable = C.VK_FALSE
+		}
+		cInheritanceInfo.queryFlags = C.VkQueryControlFlags(beginInfo.InheritanceInfo.QueryFlags)
+		cInheritanceInfo.pipelineStatistics = C.VkQueryPipelineStatisticFlags(beginInfo.InheritanceInfo.PipelineStatistics)
+		cBeginInfo.pInheritanceInfo = &cInheritanceInfo
+	} else {
+		cBeginInfo.pInheritanceInfo = nil
+	}
 
 	result := Result(C.vkBeginCommandBuffer(C.VkCommandBuffer(commandBuffer), &cBeginInfo))
 	if result != Success {
@@ -342,4 +396,200 @@ func ResetFences(device Device, fences []Fence) error {
 // GetFenceStatus gets fence status
 func GetFenceStatus(device Device, fence Fence) Result {
 	return Result(C.vkGetFenceStatus(C.VkDevice(device), C.VkFence(fence)))
+}
+
+// ============================================================================
+// Command Pool Management
+// ============================================================================
+
+// CommandPoolResetFlags represents command pool reset flags
+type CommandPoolResetFlags uint32
+
+const (
+	CommandPoolResetReleaseResourcesBit CommandPoolResetFlags = C.VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT
+)
+
+// ResetCommandPool resets a command pool
+func ResetCommandPool(device Device, commandPool CommandPool, flags CommandPoolResetFlags) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if commandPool == nil {
+		return NewValidationError("commandPool", "cannot be nil")
+	}
+
+	result := Result(C.vkResetCommandPool(C.VkDevice(device), C.VkCommandPool(commandPool), C.VkCommandPoolResetFlags(flags)))
+	if result != Success {
+		return NewVulkanError(result, "ResetCommandPool", "Vulkan command pool reset failed")
+	}
+	return nil
+}
+
+// TrimCommandPool trims a command pool (Vulkan 1.1+)
+// This allows the implementation to reclaim unused memory from the command pool
+func TrimCommandPool(device Device, commandPool CommandPool) {
+	if device == nil || commandPool == nil {
+		return
+	}
+	C.vkTrimCommandPool(C.VkDevice(device), C.VkCommandPool(commandPool), 0)
+}
+
+// ============================================================================
+// Multi-threaded Command Buffer Recording Helpers
+// ============================================================================
+
+// ThreadLocalCommandPool represents a command pool for thread-local use
+type ThreadLocalCommandPool struct {
+	Device         Device
+	CommandPool    CommandPool
+	CommandBuffers []CommandBuffer
+}
+
+// CreateThreadLocalCommandPool creates a command pool optimized for thread-local use
+// Uses TRANSIENT and RESET_COMMAND_BUFFER flags for efficient per-frame recording
+func CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+
+	commandPool, err := CreateCommandPool(device, &CommandPoolCreateInfo{
+		Flags:            CommandPoolCreateTransientBit | CommandPoolCreateResetCommandBufferBit,
+		QueueFamilyIndex: queueFamilyIndex,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &ThreadLocalCommandPool{
+		Device:         device,
+		CommandPool:    commandPool,
+		CommandBuffers: make([]CommandBuffer, 0),
+	}, nil
+}
+
+// AllocatePrimaryCommandBuffer allocates a primary command buffer from the pool
+func (pool *ThreadLocalCommandPool) AllocatePrimaryCommandBuffer() (CommandBuffer, error) {
+	if pool == nil {
+		return nil, NewValidationError("pool", "cannot be nil")
+	}
+
+	commandBuffers, err := AllocateCommandBuffers(pool.Device, &CommandBufferAllocateInfo{
+		CommandPool:        pool.CommandPool,
+		Level:              CommandBufferLevelPrimary,
+		CommandBufferCount: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pool.CommandBuffers = append(pool.CommandBuffers, commandBuffers[0])
+	return commandBuffers[0], nil
+}
+
+// AllocateSecondaryCommandBuffer allocates a secondary command buffer from the pool
+func (pool *ThreadLocalCommandPool) AllocateSecondaryCommandBuffer() (CommandBuffer, error) {
+	if pool == nil {
+		return nil, NewValidationError("pool", "cannot be nil")
+	}
+
+	commandBuffers, err := AllocateCommandBuffers(pool.Device, &CommandBufferAllocateInfo{
+		CommandPool:        pool.CommandPool,
+		Level:              CommandBufferLevelSecondary,
+		CommandBufferCount: 1,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pool.CommandBuffers = append(pool.CommandBuffers, commandBuffers[0])
+	return commandBuffers[0], nil
+}
+
+// Reset resets the command pool and clears tracked command buffers
+func (pool *ThreadLocalCommandPool) Reset() error {
+	if pool == nil {
+		return NewValidationError("pool", "cannot be nil")
+	}
+
+	err := ResetCommandPool(pool.Device, pool.CommandPool, 0)
+	if err != nil {
+		return err
+	}
+
+	// Clear tracked command buffers (allow GC if batch size varies significantly)
+	pool.CommandBuffers = make([]CommandBuffer, 0)
+	return nil
+}
+
+// Destroy destroys the thread-local command pool
+func (pool *ThreadLocalCommandPool) Destroy() {
+	if pool != nil && pool.Device != nil && pool.CommandPool != nil {
+		DestroyCommandPool(pool.Device, pool.CommandPool)
+		pool.CommandPool = nil
+		pool.CommandBuffers = nil
+	}
+}
+
+// CommandBufferBatch helps batch command buffers for submission
+type CommandBufferBatch struct {
+	CommandBuffers   []CommandBuffer
+	WaitSemaphores   []Semaphore
+	WaitDstStageMask []PipelineStageFlags
+	SignalSemaphores []Semaphore
+}
+
+// NewCommandBufferBatch creates a new command buffer batch
+func NewCommandBufferBatch() *CommandBufferBatch {
+	return &CommandBufferBatch{
+		CommandBuffers:   make([]CommandBuffer, 0),
+		WaitSemaphores:   make([]Semaphore, 0),
+		WaitDstStageMask: make([]PipelineStageFlags, 0),
+		SignalSemaphores: make([]Semaphore, 0),
+	}
+}
+
+// AddCommandBuffer adds a command buffer to the batch
+func (batch *CommandBufferBatch) AddCommandBuffer(cb CommandBuffer) {
+	if batch != nil && cb != nil {
+		batch.CommandBuffers = append(batch.CommandBuffers, cb)
+	}
+}
+
+// AddWaitSemaphore adds a wait semaphore with its stage mask
+func (batch *CommandBufferBatch) AddWaitSemaphore(semaphore Semaphore, stageMask PipelineStageFlags) {
+	if batch != nil && semaphore != nil {
+		batch.WaitSemaphores = append(batch.WaitSemaphores, semaphore)
+		batch.WaitDstStageMask = append(batch.WaitDstStageMask, stageMask)
+	}
+}
+
+// AddSignalSemaphore adds a signal semaphore
+func (batch *CommandBufferBatch) AddSignalSemaphore(semaphore Semaphore) {
+	if batch != nil && semaphore != nil {
+		batch.SignalSemaphores = append(batch.SignalSemaphores, semaphore)
+	}
+}
+
+// ToSubmitInfo converts the batch to a SubmitInfo
+func (batch *CommandBufferBatch) ToSubmitInfo() SubmitInfo {
+	if batch == nil {
+		return SubmitInfo{}
+	}
+	return SubmitInfo{
+		WaitSemaphores:   batch.WaitSemaphores,
+		WaitDstStageMask: batch.WaitDstStageMask,
+		CommandBuffers:   batch.CommandBuffers,
+		SignalSemaphores: batch.SignalSemaphores,
+	}
+}
+
+// Clear clears the batch for reuse
+func (batch *CommandBufferBatch) Clear() {
+	if batch != nil {
+		// Allow GC of underlying arrays if batch size varies significantly
+		batch.CommandBuffers = make([]CommandBuffer, 0)
+		batch.WaitSemaphores = make([]Semaphore, 0)
+		batch.WaitDstStageMask = make([]PipelineStageFlags, 0)
+		batch.SignalSemaphores = make([]Semaphore, 0)
+	}
 }

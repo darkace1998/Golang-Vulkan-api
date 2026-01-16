@@ -697,3 +697,388 @@ func GetPhysicalDeviceQueueFamilyProperties(physicalDevice PhysicalDevice) []Que
 
 	return properties
 }
+
+// ============================================================================
+// Instance & Device Enhancements
+// ============================================================================
+
+// DebugUtilsMessageSeverityFlags represents debug message severity levels
+type DebugUtilsMessageSeverityFlags uint32
+
+const (
+	DebugUtilsMessageSeverityVerbose DebugUtilsMessageSeverityFlags = C.VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+	DebugUtilsMessageSeverityInfo    DebugUtilsMessageSeverityFlags = C.VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT
+	DebugUtilsMessageSeverityWarning DebugUtilsMessageSeverityFlags = C.VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+	DebugUtilsMessageSeverityError   DebugUtilsMessageSeverityFlags = C.VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT
+)
+
+// DebugUtilsMessageTypeFlags represents debug message types
+type DebugUtilsMessageTypeFlags uint32
+
+const (
+	DebugUtilsMessageTypeGeneral     DebugUtilsMessageTypeFlags = C.VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+	DebugUtilsMessageTypeValidation  DebugUtilsMessageTypeFlags = C.VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
+	DebugUtilsMessageTypePerformance DebugUtilsMessageTypeFlags = C.VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT
+)
+
+// DebugUtilsMessengerCallbackData contains data passed to debug callback
+type DebugUtilsMessengerCallbackData struct {
+	MessageIDName   string
+	MessageIDNumber int32
+	Message         string
+}
+
+// DebugUtilsMessengerCreateInfo contains debug messenger creation information
+type DebugUtilsMessengerCreateInfo struct {
+	MessageSeverity DebugUtilsMessageSeverityFlags
+	MessageType     DebugUtilsMessageTypeFlags
+}
+
+// SurfaceCapabilities describes the capabilities of a surface
+type SurfaceCapabilities struct {
+	MinImageCount           uint32
+	MaxImageCount           uint32
+	CurrentExtent           Extent2D
+	MinImageExtent          Extent2D
+	MaxImageExtent          Extent2D
+	MaxImageArrayLayers     uint32
+	SupportedTransforms     uint32
+	CurrentTransform        uint32
+	SupportedCompositeAlpha uint32
+	SupportedUsageFlags     ImageUsageFlags
+}
+
+// SurfaceFormat describes a surface format and color space
+type SurfaceFormat struct {
+	Format     Format
+	ColorSpace uint32
+}
+
+// PresentMode represents presentation modes
+type PresentMode uint32
+
+const (
+	PresentModeImmediate   PresentMode = C.VK_PRESENT_MODE_IMMEDIATE_KHR
+	PresentModeMailbox     PresentMode = C.VK_PRESENT_MODE_MAILBOX_KHR
+	PresentModeFIFO        PresentMode = C.VK_PRESENT_MODE_FIFO_KHR
+	PresentModeFIFORelaxed PresentMode = C.VK_PRESENT_MODE_FIFO_RELAXED_KHR
+)
+
+// DestroySurface destroys a surface
+func DestroySurface(instance Instance, surface Surface) {
+	if instance == nil || surface == nil {
+		return
+	}
+	C.vkDestroySurfaceKHR(C.VkInstance(instance), C.VkSurfaceKHR(surface), nil)
+}
+
+// GetPhysicalDeviceSurfaceSupport queries if a queue family supports presentation
+func GetPhysicalDeviceSurfaceSupport(physicalDevice PhysicalDevice, queueFamilyIndex uint32, surface Surface) (bool, error) {
+	if physicalDevice == nil {
+		return false, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if surface == nil {
+		return false, NewValidationError("surface", "cannot be nil")
+	}
+
+	var supported C.VkBool32
+	result := Result(C.vkGetPhysicalDeviceSurfaceSupportKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.uint32_t(queueFamilyIndex),
+		C.VkSurfaceKHR(surface),
+		&supported,
+	))
+	if result != Success {
+		return false, NewVulkanError(result, "GetPhysicalDeviceSurfaceSupport", "Vulkan surface support query failed")
+	}
+
+	return supported == C.VK_TRUE, nil
+}
+
+// GetPhysicalDeviceSurfaceCapabilities gets surface capabilities
+func GetPhysicalDeviceSurfaceCapabilities(physicalDevice PhysicalDevice, surface Surface) (SurfaceCapabilities, error) {
+	if physicalDevice == nil {
+		return SurfaceCapabilities{}, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if surface == nil {
+		return SurfaceCapabilities{}, NewValidationError("surface", "cannot be nil")
+	}
+
+	var cCaps C.VkSurfaceCapabilitiesKHR
+	result := Result(C.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.VkSurfaceKHR(surface),
+		&cCaps,
+	))
+	if result != Success {
+		return SurfaceCapabilities{}, NewVulkanError(result, "GetPhysicalDeviceSurfaceCapabilities", "Vulkan surface capabilities query failed")
+	}
+
+	return SurfaceCapabilities{
+		MinImageCount: uint32(cCaps.minImageCount),
+		MaxImageCount: uint32(cCaps.maxImageCount),
+		CurrentExtent: Extent2D{
+			Width:  uint32(cCaps.currentExtent.width),
+			Height: uint32(cCaps.currentExtent.height),
+		},
+		MinImageExtent: Extent2D{
+			Width:  uint32(cCaps.minImageExtent.width),
+			Height: uint32(cCaps.minImageExtent.height),
+		},
+		MaxImageExtent: Extent2D{
+			Width:  uint32(cCaps.maxImageExtent.width),
+			Height: uint32(cCaps.maxImageExtent.height),
+		},
+		MaxImageArrayLayers:     uint32(cCaps.maxImageArrayLayers),
+		SupportedTransforms:     uint32(cCaps.supportedTransforms),
+		CurrentTransform:        uint32(cCaps.currentTransform),
+		SupportedCompositeAlpha: uint32(cCaps.supportedCompositeAlpha),
+		SupportedUsageFlags:     ImageUsageFlags(cCaps.supportedUsageFlags),
+	}, nil
+}
+
+// GetPhysicalDeviceSurfaceFormats gets surface formats
+func GetPhysicalDeviceSurfaceFormats(physicalDevice PhysicalDevice, surface Surface) ([]SurfaceFormat, error) {
+	if physicalDevice == nil {
+		return nil, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if surface == nil {
+		return nil, NewValidationError("surface", "cannot be nil")
+	}
+
+	var formatCount C.uint32_t
+	result := Result(C.vkGetPhysicalDeviceSurfaceFormatsKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.VkSurfaceKHR(surface),
+		&formatCount,
+		nil,
+	))
+	if result != Success {
+		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfaceFormats", "Vulkan surface formats query failed")
+	}
+
+	if formatCount == 0 {
+		return []SurfaceFormat{}, nil
+	}
+
+	cFormats := make([]C.VkSurfaceFormatKHR, formatCount)
+	result = Result(C.vkGetPhysicalDeviceSurfaceFormatsKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.VkSurfaceKHR(surface),
+		&formatCount,
+		&cFormats[0],
+	))
+	if result != Success {
+		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfaceFormats", "Vulkan surface formats query failed")
+	}
+
+	formats := make([]SurfaceFormat, formatCount)
+	for i := range formats {
+		formats[i] = SurfaceFormat{
+			Format:     Format(cFormats[i].format),
+			ColorSpace: uint32(cFormats[i].colorSpace),
+		}
+	}
+
+	return formats, nil
+}
+
+// GetPhysicalDeviceSurfacePresentModes gets surface present modes
+func GetPhysicalDeviceSurfacePresentModes(physicalDevice PhysicalDevice, surface Surface) ([]PresentMode, error) {
+	if physicalDevice == nil {
+		return nil, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if surface == nil {
+		return nil, NewValidationError("surface", "cannot be nil")
+	}
+
+	var modeCount C.uint32_t
+	result := Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.VkSurfaceKHR(surface),
+		&modeCount,
+		nil,
+	))
+	if result != Success {
+		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfacePresentModes", "Vulkan present modes query failed")
+	}
+
+	if modeCount == 0 {
+		return []PresentMode{}, nil
+	}
+
+	cModes := make([]C.VkPresentModeKHR, modeCount)
+	result = Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
+		C.VkPhysicalDevice(physicalDevice),
+		C.VkSurfaceKHR(surface),
+		&modeCount,
+		&cModes[0],
+	))
+	if result != Success {
+		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfacePresentModes", "Vulkan present modes query failed")
+	}
+
+	modes := make([]PresentMode, modeCount)
+	for i := range modes {
+		modes[i] = PresentMode(cModes[i])
+	}
+
+	return modes, nil
+}
+
+// PhysicalDeviceVulkan11Features contains Vulkan 1.1 features
+type PhysicalDeviceVulkan11Features struct {
+	StorageBuffer16BitAccess           bool
+	UniformAndStorageBuffer16BitAccess bool
+	StoragePushConstant16              bool
+	StorageInputOutput16               bool
+	Multiview                          bool
+	MultiviewGeometryShader            bool
+	MultiviewTessellationShader        bool
+	VariablePointersStorageBuffer      bool
+	VariablePointers                   bool
+	ProtectedMemory                    bool
+	SamplerYcbcrConversion             bool
+	ShaderDrawParameters               bool
+}
+
+// PhysicalDeviceVulkan12Features contains Vulkan 1.2 features
+type PhysicalDeviceVulkan12Features struct {
+	SamplerMirrorClampToEdge                           bool
+	DrawIndirectCount                                  bool
+	StorageBuffer8BitAccess                            bool
+	UniformAndStorageBuffer8BitAccess                  bool
+	StoragePushConstant8                               bool
+	ShaderBufferInt64Atomics                           bool
+	ShaderSharedInt64Atomics                           bool
+	ShaderFloat16                                      bool
+	ShaderInt8                                         bool
+	DescriptorIndexing                                 bool
+	ShaderInputAttachmentArrayDynamicIndexing          bool
+	ShaderUniformTexelBufferArrayDynamicIndexing       bool
+	ShaderStorageTexelBufferArrayDynamicIndexing       bool
+	ShaderUniformBufferArrayNonUniformIndexing         bool
+	ShaderSampledImageArrayNonUniformIndexing          bool
+	ShaderStorageBufferArrayNonUniformIndexing         bool
+	ShaderStorageImageArrayNonUniformIndexing          bool
+	ShaderInputAttachmentArrayNonUniformIndexing       bool
+	ShaderUniformTexelBufferArrayNonUniformIndexing    bool
+	ShaderStorageTexelBufferArrayNonUniformIndexing    bool
+	DescriptorBindingUniformBufferUpdateAfterBind      bool
+	DescriptorBindingSampledImageUpdateAfterBind       bool
+	DescriptorBindingStorageImageUpdateAfterBind       bool
+	DescriptorBindingStorageBufferUpdateAfterBind      bool
+	DescriptorBindingUniformTexelBufferUpdateAfterBind bool
+	DescriptorBindingStorageTexelBufferUpdateAfterBind bool
+	DescriptorBindingUpdateUnusedWhilePending          bool
+	DescriptorBindingPartiallyBound                    bool
+	DescriptorBindingVariableDescriptorCount           bool
+	RuntimeDescriptorArray                             bool
+	SamplerFilterMinmax                                bool
+	ScalarBlockLayout                                  bool
+	ImagelessFramebuffer                               bool
+	UniformBufferStandardLayout                        bool
+	ShaderSubgroupExtendedTypes                        bool
+	SeparateDepthStencilLayouts                        bool
+	HostQueryReset                                     bool
+	TimelineSemaphore                                  bool
+	BufferDeviceAddress                                bool
+	BufferDeviceAddressCaptureReplay                   bool
+	BufferDeviceAddressMultiDevice                     bool
+	VulkanMemoryModel                                  bool
+	VulkanMemoryModelDeviceScope                       bool
+	VulkanMemoryModelAvailabilityVisibilityChains      bool
+	ShaderOutputViewportIndex                          bool
+	ShaderOutputLayer                                  bool
+	SubgroupBroadcastDynamicId                         bool
+}
+
+// PhysicalDeviceVulkan13Features contains Vulkan 1.3 features
+type PhysicalDeviceVulkan13Features struct {
+	RobustImageAccess                                  bool
+	InlineUniformBlock                                 bool
+	DescriptorBindingInlineUniformBlockUpdateAfterBind bool
+	PipelineCreationCacheControl                       bool
+	PrivateData                                        bool
+	ShaderDemoteToHelperInvocation                     bool
+	ShaderTerminateInvocation                          bool
+	SubgroupSizeControl                                bool
+	ComputeFullSubgroups                               bool
+	Synchronization2                                   bool
+	TextureCompressionASTC_HDR                         bool
+	ShaderZeroInitializeWorkgroupMemory                bool
+	DynamicRendering                                   bool
+	ShaderIntegerDotProduct                            bool
+	Maintenance4                                       bool
+}
+
+// GetPhysicalDeviceFeatures2 gets extended physical device features (Vulkan 1.1+)
+func GetPhysicalDeviceFeatures2(physicalDevice PhysicalDevice) (PhysicalDeviceFeatures, error) {
+	if physicalDevice == nil {
+		return PhysicalDeviceFeatures{}, NewValidationError("physicalDevice", "cannot be nil")
+	}
+
+	var cFeatures2 C.VkPhysicalDeviceFeatures2
+	cFeatures2.sType = C.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2
+	cFeatures2.pNext = nil
+
+	C.vkGetPhysicalDeviceFeatures2(C.VkPhysicalDevice(physicalDevice), &cFeatures2)
+
+	return physicalDeviceFeaturesFromC(&cFeatures2.features), nil
+}
+
+// PhysicalDeviceGroupProperties contains physical device group information
+type PhysicalDeviceGroupProperties struct {
+	PhysicalDeviceCount uint32
+	PhysicalDevices     []PhysicalDevice
+	SubsetAllocation    bool
+}
+
+// EnumeratePhysicalDeviceGroups enumerates physical device groups for multi-GPU
+func EnumeratePhysicalDeviceGroups(instance Instance) ([]PhysicalDeviceGroupProperties, error) {
+	if instance == nil {
+		return nil, NewValidationError("instance", "cannot be nil")
+	}
+
+	var groupCount C.uint32_t
+	result := Result(C.vkEnumeratePhysicalDeviceGroups(C.VkInstance(instance), &groupCount, nil))
+	if result != Success {
+		return nil, NewVulkanError(result, "EnumeratePhysicalDeviceGroups", "Vulkan device group enumeration failed")
+	}
+
+	if groupCount == 0 {
+		return []PhysicalDeviceGroupProperties{}, nil
+	}
+
+	cGroups := make([]C.VkPhysicalDeviceGroupProperties, groupCount)
+	for i := range cGroups {
+		cGroups[i].sType = C.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES
+		cGroups[i].pNext = nil
+	}
+
+	result = Result(C.vkEnumeratePhysicalDeviceGroups(C.VkInstance(instance), &groupCount, &cGroups[0]))
+	if result != Success {
+		return nil, NewVulkanError(result, "EnumeratePhysicalDeviceGroups", "Vulkan device group enumeration failed")
+	}
+
+	groups := make([]PhysicalDeviceGroupProperties, groupCount)
+	for i := range groups {
+		deviceCount := uint32(cGroups[i].physicalDeviceCount)
+		devices := make([]PhysicalDevice, deviceCount)
+		for j := uint32(0); j < deviceCount; j++ {
+			devices[j] = PhysicalDevice(cGroups[i].physicalDevices[j])
+		}
+		groups[i] = PhysicalDeviceGroupProperties{
+			PhysicalDeviceCount: deviceCount,
+			PhysicalDevices:     devices,
+			SubsetAllocation:    cGroups[i].subsetAllocation == C.VK_TRUE,
+		}
+	}
+
+	return groups, nil
+}
+
+// DeviceGroupDeviceCreateInfo contains device group creation information
+type DeviceGroupDeviceCreateInfo struct {
+	PhysicalDevices []PhysicalDevice
+}

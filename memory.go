@@ -174,6 +174,22 @@ const (
 	FormatD16UnormS8Uint      Format = C.VK_FORMAT_D16_UNORM_S8_UINT
 	FormatD24UnormS8Uint      Format = C.VK_FORMAT_D24_UNORM_S8_UINT
 	FormatD32SfloatS8Uint     Format = C.VK_FORMAT_D32_SFLOAT_S8_UINT
+	// Additional pack32 formats
+	FormatA2R10G10B10UnormPack32 Format = C.VK_FORMAT_A2R10G10B10_UNORM_PACK32
+	FormatA2B10G10R10UnormPack32 Format = C.VK_FORMAT_A2B10G10R10_UNORM_PACK32
+	// YCbCr formats for video
+	FormatG8B8G8R8422Unorm                      Format = C.VK_FORMAT_G8B8G8R8_422_UNORM
+	FormatB8G8R8G8422Unorm                      Format = C.VK_FORMAT_B8G8R8G8_422_UNORM
+	FormatG8B8R83Plane420Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM
+	FormatG8B8R82Plane420Unorm                  Format = C.VK_FORMAT_G8_B8R8_2PLANE_420_UNORM
+	FormatG8B8R83Plane422Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM
+	FormatG8B8R82Plane422Unorm                  Format = C.VK_FORMAT_G8_B8R8_2PLANE_422_UNORM
+	FormatG8B8R83Plane444Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM
+	FormatG10X6B10X6G10X6R10X6422Unorm4Pack16   Format = C.VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16
+	FormatG10X6B10X6R10X62Plane420Unorm3Pack16  Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16
+	FormatG10X6B10X6R10X62Plane422Unorm3Pack16  Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16
+	FormatG16B16R162Plane420Unorm               Format = C.VK_FORMAT_G16_B16R16_2PLANE_420_UNORM
+	FormatG16B16R162Plane422Unorm               Format = C.VK_FORMAT_G16_B16R16_2PLANE_422_UNORM
 )
 
 // ImageTiling represents image tiling modes
@@ -386,4 +402,352 @@ func FindMemoryType(memProperties PhysicalDeviceMemoryProperties, typeFilter uin
 		}
 	}
 	return 0, false
+}
+
+// ============================================================================
+// Memory Management Enhancements
+// ============================================================================
+
+// MappedMemoryRange describes a mapped memory range for flush/invalidate operations
+type MappedMemoryRange struct {
+	Memory DeviceMemory
+	Offset DeviceSize
+	Size   DeviceSize
+}
+
+// FlushMappedMemoryRanges flushes mapped memory ranges to make host writes visible to device
+// This is required for non-coherent memory after the host writes to mapped memory
+func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
+	// Input validation
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if len(memoryRanges) == 0 {
+		return nil // Nothing to flush
+	}
+
+	cRanges := make([]C.VkMappedMemoryRange, len(memoryRanges))
+	for i, r := range memoryRanges {
+		if r.Memory == nil {
+			return NewValidationError("Memory", "memory handle cannot be nil")
+		}
+		cRanges[i].sType = C.VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE
+		cRanges[i].pNext = nil
+		cRanges[i].memory = C.VkDeviceMemory(r.Memory)
+		cRanges[i].offset = C.VkDeviceSize(r.Offset)
+		cRanges[i].size = C.VkDeviceSize(r.Size)
+	}
+
+	result := Result(C.vkFlushMappedMemoryRanges(C.VkDevice(device), C.uint32_t(len(cRanges)), &cRanges[0]))
+	if result != Success {
+		return NewVulkanError(result, "FlushMappedMemoryRanges", "Vulkan flush mapped memory ranges failed")
+	}
+
+	return nil
+}
+
+// InvalidateMappedMemoryRanges invalidates mapped memory ranges to make device writes visible to host
+// This is required for non-coherent memory before the host reads from mapped memory
+func InvalidateMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
+	// Input validation
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if len(memoryRanges) == 0 {
+		return nil // Nothing to invalidate
+	}
+
+	cRanges := make([]C.VkMappedMemoryRange, len(memoryRanges))
+	for i, r := range memoryRanges {
+		if r.Memory == nil {
+			return NewValidationError("Memory", "memory handle cannot be nil")
+		}
+		cRanges[i].sType = C.VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE
+		cRanges[i].pNext = nil
+		cRanges[i].memory = C.VkDeviceMemory(r.Memory)
+		cRanges[i].offset = C.VkDeviceSize(r.Offset)
+		cRanges[i].size = C.VkDeviceSize(r.Size)
+	}
+
+	result := Result(C.vkInvalidateMappedMemoryRanges(C.VkDevice(device), C.uint32_t(len(cRanges)), &cRanges[0]))
+	if result != Success {
+		return NewVulkanError(result, "InvalidateMappedMemoryRanges", "Vulkan invalidate mapped memory ranges failed")
+	}
+
+	return nil
+}
+
+// MemoryUsage represents common memory usage patterns for automatic memory type selection
+type MemoryUsage int
+
+const (
+	// MemoryUsageGPUOnly - Memory that is only accessible by the GPU (fastest for GPU operations)
+	MemoryUsageGPUOnly MemoryUsage = iota
+	// MemoryUsageCPUOnly - Memory that is only accessible by the CPU (for staging)
+	MemoryUsageCPUOnly
+	// MemoryUsageCPUToGPU - Memory for CPU-to-GPU data transfer (upload)
+	MemoryUsageCPUToGPU
+	// MemoryUsageGPUToCPU - Memory for GPU-to-CPU data transfer (readback)
+	MemoryUsageGPUToCPU
+)
+
+// FindMemoryTypeForUsage finds a suitable memory type based on common usage patterns
+// This provides automatic memory type selection for common use cases
+func FindMemoryTypeForUsage(memProperties PhysicalDeviceMemoryProperties, typeFilter uint32, usage MemoryUsage) (uint32, bool) {
+	var requiredFlags MemoryPropertyFlags
+	var preferredFlags MemoryPropertyFlags
+
+	switch usage {
+	case MemoryUsageGPUOnly:
+		// Device local memory for GPU-only access (textures, GPU-only buffers)
+		requiredFlags = MemoryPropertyDeviceLocalBit
+		preferredFlags = 0
+	case MemoryUsageCPUOnly:
+		// Host visible + coherent for CPU-only staging buffers
+		requiredFlags = MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit
+		preferredFlags = 0
+	case MemoryUsageCPUToGPU:
+		// Host visible + coherent, prefer device local for unified memory architectures
+		requiredFlags = MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit
+		preferredFlags = MemoryPropertyDeviceLocalBit
+	case MemoryUsageGPUToCPU:
+		// Host visible + cached for efficient readback
+		requiredFlags = MemoryPropertyHostVisibleBit
+		preferredFlags = MemoryPropertyHostCachedBit
+	default:
+		return 0, false
+	}
+
+	// First try to find memory with both required and preferred flags
+	if preferredFlags != 0 {
+		for i := uint32(0); i < memProperties.MemoryTypeCount; i++ {
+			flags := memProperties.MemoryTypes[i].PropertyFlags
+			if (typeFilter&(1<<i)) != 0 && (flags&(requiredFlags|preferredFlags)) == (requiredFlags|preferredFlags) {
+				return i, true
+			}
+		}
+	}
+
+	// Fall back to just required flags
+	for i := uint32(0); i < memProperties.MemoryTypeCount; i++ {
+		if (typeFilter&(1<<i)) != 0 && (memProperties.MemoryTypes[i].PropertyFlags&requiredFlags) == requiredFlags {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
+// StagingBuffer represents a staging buffer for host-to-device transfers
+type StagingBuffer struct {
+	Buffer Buffer
+	Memory DeviceMemory
+	Size   DeviceSize
+	Data   unsafe.Pointer // Mapped pointer (nil if not mapped)
+}
+
+// CreateStagingBuffer creates a staging buffer for host-to-device transfers
+// The buffer is created with TRANSFER_SRC usage and host-visible, coherent memory
+func CreateStagingBuffer(device Device, physicalDevice PhysicalDevice, size DeviceSize) (*StagingBuffer, error) {
+	// Input validation
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if physicalDevice == nil {
+		return nil, NewValidationError("physicalDevice", "cannot be nil")
+	}
+	if size == 0 {
+		return nil, NewValidationError("size", "cannot be zero")
+	}
+
+	// Create the staging buffer
+	buffer, err := CreateBuffer(device, &BufferCreateInfo{
+		Size:        size,
+		Usage:       BufferUsageTransferSrcBit,
+		SharingMode: SharingModeExclusive,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get memory requirements
+	memReqs := GetBufferMemoryRequirements(device, buffer)
+
+	// Find suitable memory type
+	memProps := GetPhysicalDeviceMemoryProperties(physicalDevice)
+	memTypeIndex, found := FindMemoryTypeForUsage(memProps, memReqs.MemoryTypeBits, MemoryUsageCPUToGPU)
+	if !found {
+		DestroyBuffer(device, buffer)
+		return nil, NewValidationError("memory", "no suitable memory type found for staging buffer")
+	}
+
+	// Allocate memory
+	memory, err := AllocateMemory(device, &MemoryAllocateInfo{
+		AllocationSize:  memReqs.Size,
+		MemoryTypeIndex: memTypeIndex,
+	})
+	if err != nil {
+		DestroyBuffer(device, buffer)
+		return nil, err
+	}
+
+	// Bind memory to buffer
+	err = BindBufferMemory(device, buffer, memory, 0)
+	if err != nil {
+		FreeMemory(device, memory)
+		DestroyBuffer(device, buffer)
+		return nil, err
+	}
+
+	// Map the memory for easy access
+	data, err := MapMemory(device, memory, 0, size, 0)
+	if err != nil {
+		FreeMemory(device, memory)
+		DestroyBuffer(device, buffer)
+		return nil, err
+	}
+
+	return &StagingBuffer{
+		Buffer: buffer,
+		Memory: memory,
+		Size:   size,
+		Data:   data,
+	}, nil
+}
+
+// DestroyStagingBuffer destroys a staging buffer and frees its memory
+func DestroyStagingBuffer(device Device, stagingBuffer *StagingBuffer) {
+	if device == nil || stagingBuffer == nil {
+		return
+	}
+
+	if stagingBuffer.Data != nil {
+		UnmapMemory(device, stagingBuffer.Memory)
+	}
+	if stagingBuffer.Memory != nil {
+		FreeMemory(device, stagingBuffer.Memory)
+	}
+	if stagingBuffer.Buffer != nil {
+		DestroyBuffer(device, stagingBuffer.Buffer)
+	}
+}
+
+// CopyDataToStagingBuffer copies data to a staging buffer
+func CopyDataToStagingBuffer(stagingBuffer *StagingBuffer, data []byte) error {
+	if stagingBuffer == nil {
+		return NewValidationError("stagingBuffer", "cannot be nil")
+	}
+	if stagingBuffer.Data == nil {
+		return NewValidationError("stagingBuffer.Data", "buffer is not mapped")
+	}
+	if len(data) == 0 {
+		return nil // Nothing to copy
+	}
+	if DeviceSize(len(data)) > stagingBuffer.Size {
+		return NewValidationError("data", "data size exceeds staging buffer size")
+	}
+
+	// Copy data to the mapped memory
+	C.memcpy(stagingBuffer.Data, unsafe.Pointer(&data[0]), C.size_t(len(data)))
+	return nil
+}
+
+// DefaultMemoryAlignment is the default alignment for memory pool allocations
+const DefaultMemoryAlignment DeviceSize = 256
+
+// MemoryPool represents a simple memory pool for efficient allocations
+type MemoryPool struct {
+	Device          Device
+	Memory          DeviceMemory
+	Size            DeviceSize
+	MemoryTypeIndex uint32
+	Offset          DeviceSize // Current allocation offset
+	Alignment       DeviceSize // Minimum allocation alignment
+}
+
+// isPowerOfTwo checks if a value is a power of two
+func isPowerOfTwo(n DeviceSize) bool {
+	return n > 0 && (n&(n-1)) == 0
+}
+
+// CreateMemoryPool creates a memory pool for efficient sub-allocations
+func CreateMemoryPool(device Device, size DeviceSize, memoryTypeIndex uint32, alignment DeviceSize) (*MemoryPool, error) {
+	// Input validation
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if size == 0 {
+		return nil, NewValidationError("size", "cannot be zero")
+	}
+	if alignment == 0 {
+		alignment = DefaultMemoryAlignment
+	}
+	if !isPowerOfTwo(alignment) {
+		return nil, NewValidationError("alignment", "must be a power of two")
+	}
+
+	// Allocate the pool memory
+	memory, err := AllocateMemory(device, &MemoryAllocateInfo{
+		AllocationSize:  size,
+		MemoryTypeIndex: memoryTypeIndex,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &MemoryPool{
+		Device:          device,
+		Memory:          memory,
+		Size:            size,
+		MemoryTypeIndex: memoryTypeIndex,
+		Offset:          0,
+		Alignment:       alignment,
+	}, nil
+}
+
+// Allocate allocates memory from the pool
+// Returns the offset within the pool memory, or an error if there's not enough space
+func (pool *MemoryPool) Allocate(size DeviceSize, alignment DeviceSize) (DeviceSize, error) {
+	if pool == nil {
+		return 0, NewValidationError("pool", "cannot be nil")
+	}
+	if size == 0 {
+		return 0, NewValidationError("size", "cannot be zero")
+	}
+
+	// Use pool's default alignment if not specified
+	if alignment == 0 {
+		alignment = pool.Alignment
+	}
+	if !isPowerOfTwo(alignment) {
+		return 0, NewValidationError("alignment", "must be a power of two")
+	}
+
+	// Align the current offset
+	alignedOffset := (pool.Offset + alignment - 1) & ^(alignment - 1)
+
+	// Check if there's enough space
+	if alignedOffset+size > pool.Size {
+		return 0, NewValidationError("size", "not enough space in memory pool")
+	}
+
+	// Update the pool offset
+	pool.Offset = alignedOffset + size
+
+	return alignedOffset, nil
+}
+
+// Reset resets the pool for reuse (does not free memory)
+func (pool *MemoryPool) Reset() {
+	if pool != nil {
+		pool.Offset = 0
+	}
+}
+
+// Destroy destroys the memory pool and frees its memory
+func (pool *MemoryPool) Destroy() {
+	if pool != nil && pool.Device != nil && pool.Memory != nil {
+		FreeMemory(pool.Device, pool.Memory)
+		pool.Memory = nil
+	}
 }
