@@ -38,11 +38,11 @@ type QueryPoolCreateInfo struct {
 type QueryResultFlags uint32
 
 const (
-	QueryResult64Bit               QueryResultFlags = C.VK_QUERY_RESULT_64_BIT
-	QueryResultWait                QueryResultFlags = C.VK_QUERY_RESULT_WAIT_BIT
-	QueryResultWithAvailability    QueryResultFlags = C.VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
-	QueryResultPartial             QueryResultFlags = C.VK_QUERY_RESULT_PARTIAL_BIT
-	QueryResultWithStatusKHR       QueryResultFlags = 0x00000010 // VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
+	QueryResult64Bit            QueryResultFlags = C.VK_QUERY_RESULT_64_BIT
+	QueryResultWait             QueryResultFlags = C.VK_QUERY_RESULT_WAIT_BIT
+	QueryResultWithAvailability QueryResultFlags = C.VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
+	QueryResultPartial          QueryResultFlags = C.VK_QUERY_RESULT_PARTIAL_BIT
+	QueryResultWithStatusKHR    QueryResultFlags = 0x00000010 // VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
 )
 
 // ============================================================================

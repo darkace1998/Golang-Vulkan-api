@@ -62,9 +62,9 @@ import (
 // VideoDeviceFunctions holds per-device video function pointers
 // This provides thread-safe access to video extension functions
 type VideoDeviceFunctions struct {
-	device     Device
-	loaded     bool
-	loadMutex  sync.RWMutex
+	device    Device
+	loaded    bool
+	loadMutex sync.RWMutex
 }
 
 // videoDeviceFunctionsMap provides per-device function pointer storage
@@ -137,22 +137,22 @@ func LoadVideoFormatFunctions(instance Instance) bool {
 type VideoEncodeRateControlMode uint32
 
 const (
-	VideoEncodeRateControlModeDefault VideoEncodeRateControlMode = 0
+	VideoEncodeRateControlModeDefault  VideoEncodeRateControlMode = 0
 	VideoEncodeRateControlModeDisabled VideoEncodeRateControlMode = 1
-	VideoEncodeRateControlModeCBR VideoEncodeRateControlMode = 2
-	VideoEncodeRateControlModeVBR VideoEncodeRateControlMode = 3
+	VideoEncodeRateControlModeCBR      VideoEncodeRateControlMode = 2
+	VideoEncodeRateControlModeVBR      VideoEncodeRateControlMode = 3
 )
 
 // VideoEncodeRateControlInfo contains rate control configuration
 type VideoEncodeRateControlInfo struct {
-	Mode                VideoEncodeRateControlMode
-	LayerCount          uint32
-	AverageBitrate      uint64
-	MaxBitrate          uint64
-	FrameRateNumerator  uint32
+	Mode                 VideoEncodeRateControlMode
+	LayerCount           uint32
+	AverageBitrate       uint64
+	MaxBitrate           uint64
+	FrameRateNumerator   uint32
 	FrameRateDenominator uint32
-	VirtualBufferSize   uint64
-	InitialBufferFill   uint64
+	VirtualBufferSize    uint64
+	InitialBufferFill    uint64
 }
 
 // --------------------------------
@@ -195,35 +195,35 @@ const (
 
 // H264EncodeSessionCreateInfo contains configuration for H.264 encode session
 type H264EncodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	Profile            H264Profile
-	Level              H264Level
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	Profile             H264Profile
+	Level               H264Level
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	RateControl        *VideoEncodeRateControlInfo
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	RateControl         *VideoEncodeRateControlInfo
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultH264EncodeSessionCreateInfo returns a default H.264 encode session configuration
 func DefaultH264EncodeSessionCreateInfo(width, height uint32) *H264EncodeSessionCreateInfo {
 	return &H264EncodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		Profile:            H264ProfileHigh,
-		Level:              H264Level4_1,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        5,
+		Width:               width,
+		Height:              height,
+		Profile:             H264ProfileHigh,
+		Level:               H264Level4_1,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         5,
 		MaxActiveReferences: 2,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -244,13 +244,13 @@ func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateI
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -264,11 +264,11 @@ func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateI
 type H265Profile uint32
 
 const (
-	H265ProfileMain    H265Profile = 1
-	H265ProfileMain10  H265Profile = 2
+	H265ProfileMain             H265Profile = 1
+	H265ProfileMain10           H265Profile = 2
 	H265ProfileMainStillPicture H265Profile = 3
-	H265ProfileRext    H265Profile = 4
-	H265ProfileSCC     H265Profile = 9
+	H265ProfileRext             H265Profile = 4
+	H265ProfileSCC              H265Profile = 9
 )
 
 // H265Level represents H.265/HEVC levels
@@ -292,35 +292,35 @@ const (
 
 // H265EncodeSessionCreateInfo contains configuration for H.265 encode session
 type H265EncodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	Profile            H265Profile
-	Level              H265Level
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	Profile             H265Profile
+	Level               H265Level
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	RateControl        *VideoEncodeRateControlInfo
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	RateControl         *VideoEncodeRateControlInfo
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultH265EncodeSessionCreateInfo returns a default H.265 encode session configuration
 func DefaultH265EncodeSessionCreateInfo(width, height uint32) *H265EncodeSessionCreateInfo {
 	return &H265EncodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		Profile:            H265ProfileMain,
-		Level:              H265Level5_1,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        5,
+		Width:               width,
+		Height:              height,
+		Profile:             H265ProfileMain,
+		Level:               H265Level5_1,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         5,
 		MaxActiveReferences: 2,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -341,13 +341,13 @@ func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateI
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -361,8 +361,8 @@ func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateI
 type AV1Profile uint32
 
 const (
-	AV1ProfileMain AV1Profile = 0
-	AV1ProfileHigh AV1Profile = 1
+	AV1ProfileMain         AV1Profile = 0
+	AV1ProfileHigh         AV1Profile = 1
 	AV1ProfileProfessional AV1Profile = 2
 )
 
@@ -388,35 +388,35 @@ const (
 
 // AV1EncodeSessionCreateInfo contains configuration for AV1 encode session
 type AV1EncodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	Profile            AV1Profile
-	Level              AV1Level
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	Profile             AV1Profile
+	Level               AV1Level
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	RateControl        *VideoEncodeRateControlInfo
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	RateControl         *VideoEncodeRateControlInfo
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultAV1EncodeSessionCreateInfo returns a default AV1 encode session configuration
 func DefaultAV1EncodeSessionCreateInfo(width, height uint32) *AV1EncodeSessionCreateInfo {
 	return &AV1EncodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		Profile:            AV1ProfileMain,
-		Level:              AV1Level5_0,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        8,
+		Width:               width,
+		Height:              height,
+		Profile:             AV1ProfileMain,
+		Level:               AV1Level5_0,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         8,
 		MaxActiveReferences: 3,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -437,13 +437,13 @@ func CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInf
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -455,30 +455,30 @@ func CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInf
 
 // H264DecodeSessionCreateInfo contains configuration for H.264 decode session
 type H264DecodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultH264DecodeSessionCreateInfo returns a default H.264 decode session configuration
 func DefaultH264DecodeSessionCreateInfo(width, height uint32) *H264DecodeSessionCreateInfo {
 	return &H264DecodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        17,
+		Width:               width,
+		Height:              height,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         17,
 		MaxActiveReferences: 16,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -499,13 +499,13 @@ func CreateH264DecodeSession(device Device, createInfo *H264DecodeSessionCreateI
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -513,30 +513,30 @@ func CreateH264DecodeSession(device Device, createInfo *H264DecodeSessionCreateI
 
 // H265DecodeSessionCreateInfo contains configuration for H.265 decode session
 type H265DecodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultH265DecodeSessionCreateInfo returns a default H.265 decode session configuration
 func DefaultH265DecodeSessionCreateInfo(width, height uint32) *H265DecodeSessionCreateInfo {
 	return &H265DecodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        17,
+		Width:               width,
+		Height:              height,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         17,
 		MaxActiveReferences: 16,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -557,13 +557,13 @@ func CreateH265DecodeSession(device Device, createInfo *H265DecodeSessionCreateI
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -571,30 +571,30 @@ func CreateH265DecodeSession(device Device, createInfo *H265DecodeSessionCreateI
 
 // AV1DecodeSessionCreateInfo contains configuration for AV1 decode session
 type AV1DecodeSessionCreateInfo struct {
-	Width              uint32
-	Height             uint32
-	ChromaSubsampling  VideoChromaSubsampling
-	LumaBitDepth       VideoComponentBitDepth
-	ChromaBitDepth     VideoComponentBitDepth
-	MaxDpbSlots        uint32
+	Width               uint32
+	Height              uint32
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
 	MaxActiveReferences uint32
-	QueueFamilyIndex   uint32
-	PictureFormat      Format
-	ReferenceFormat    Format
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
 }
 
 // DefaultAV1DecodeSessionCreateInfo returns a default AV1 decode session configuration
 func DefaultAV1DecodeSessionCreateInfo(width, height uint32) *AV1DecodeSessionCreateInfo {
 	return &AV1DecodeSessionCreateInfo{
-		Width:              width,
-		Height:             height,
-		ChromaSubsampling:  VideoChromaSubsampling420,
-		LumaBitDepth:       VideoComponentBitDepth8,
-		ChromaBitDepth:     VideoComponentBitDepth8,
-		MaxDpbSlots:        8,
+		Width:               width,
+		Height:              height,
+		ChromaSubsampling:   VideoChromaSubsampling420,
+		LumaBitDepth:        VideoComponentBitDepth8,
+		ChromaBitDepth:      VideoComponentBitDepth8,
+		MaxDpbSlots:         8,
 		MaxActiveReferences: 7,
-		PictureFormat:      FormatG8B8R82Plane420Unorm,
-		ReferenceFormat:    FormatG8B8R82Plane420Unorm,
+		PictureFormat:       FormatG8B8R82Plane420Unorm,
+		ReferenceFormat:     FormatG8B8R82Plane420Unorm,
 	}
 }
 
@@ -615,13 +615,13 @@ func CreateAV1DecodeSession(device Device, createInfo *AV1DecodeSessionCreateInf
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
-		VideoProfile:        videoProfile,
-		PictureFormat:       createInfo.PictureFormat,
-		MaxCodedExtent:      Extent2D{Width: createInfo.Width, Height: createInfo.Height},
+		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          createInfo.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
 		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:         createInfo.MaxDpbSlots,
-		MaxActiveReferences: createInfo.MaxActiveReferences,
+		MaxDpbSlots:            createInfo.MaxDpbSlots,
+		MaxActiveReferences:    createInfo.MaxActiveReferences,
 	}
 
 	return CreateVideoSession(device, sessionCreateInfo)
@@ -633,21 +633,21 @@ func CreateAV1DecodeSession(device Device, createInfo *AV1DecodeSessionCreateInf
 
 // DPBSlot represents a slot in the decoded picture buffer
 type DPBSlot struct {
-	SlotIndex     int32
-	ImageView     ImageView
-	ImageLayout   ImageLayout
-	IsReference   bool
+	SlotIndex         int32
+	ImageView         ImageView
+	ImageLayout       ImageLayout
+	IsReference       bool
 	PictureOrderCount int32
-	FrameNum      int32
-	IsLongTerm    bool
+	FrameNum          int32
+	IsLongTerm        bool
 }
 
 // DPBManager manages the decoded picture buffer for video decode/encode
 type DPBManager struct {
-	slots       []DPBSlot
-	maxSlots    uint32
-	currentPOC  int32
-	frameNum    int32
+	slots      []DPBSlot
+	maxSlots   uint32
+	currentPOC int32
+	frameNum   int32
 }
 
 // CreateDPBManager creates a new DPB manager with the specified number of slots
@@ -796,8 +796,8 @@ func FindVideoEncodeQueueFamily(physicalDevice PhysicalDevice) (uint32, bool) {
 type VideoCodingControlFlags uint32
 
 const (
-	VideoCodingControlResetBit VideoCodingControlFlags = 0x00000001
-	VideoCodingControlEncodeBit VideoCodingControlFlags = 0x00000002
+	VideoCodingControlResetBit              VideoCodingControlFlags = 0x00000001
+	VideoCodingControlEncodeBit             VideoCodingControlFlags = 0x00000002
 	VideoCodingControlEncodeQualityLevelBit VideoCodingControlFlags = 0x00000004
 )
 
@@ -949,13 +949,13 @@ func UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSes
 type YUVFormat uint32
 
 const (
-	YUVFormatNV12   YUVFormat = 0 // 4:2:0, 8-bit, semi-planar
-	YUVFormatP010   YUVFormat = 1 // 4:2:0, 10-bit, semi-planar
-	YUVFormatP016   YUVFormat = 2 // 4:2:0, 16-bit, semi-planar
-	YUVFormatYUY2   YUVFormat = 3 // 4:2:2, 8-bit, packed
-	YUVFormatY210   YUVFormat = 4 // 4:2:2, 10-bit, packed
-	YUVFormatY410   YUVFormat = 5 // 4:4:4, 10-bit, packed
-	YUVFormatAYUV   YUVFormat = 6 // 4:4:4, 8-bit, packed
+	YUVFormatNV12 YUVFormat = 0 // 4:2:0, 8-bit, semi-planar
+	YUVFormatP010 YUVFormat = 1 // 4:2:0, 10-bit, semi-planar
+	YUVFormatP016 YUVFormat = 2 // 4:2:0, 16-bit, semi-planar
+	YUVFormatYUY2 YUVFormat = 3 // 4:2:2, 8-bit, packed
+	YUVFormatY210 YUVFormat = 4 // 4:2:2, 10-bit, packed
+	YUVFormatY410 YUVFormat = 5 // 4:4:4, 10-bit, packed
+	YUVFormatAYUV YUVFormat = 6 // 4:4:4, 8-bit, packed
 )
 
 // YUVFormatToVulkanFormat converts a YUV format to the corresponding Vulkan format

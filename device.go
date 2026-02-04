@@ -199,7 +199,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	var cQueueCreateInfosPtr *C.VkDeviceQueueCreateInfo
 	var cPrioritiesArray []*C.float
 	var cPrioritiesToFree []*C.float // Track allocated priorities for cleanup
-	
+
 	if len(createInfo.QueueCreateInfos) > 0 {
 		cQueueCreateInfosPtr = (*C.VkDeviceQueueCreateInfo)(C.malloc(C.size_t(len(createInfo.QueueCreateInfos)) * C.sizeof_VkDeviceQueueCreateInfo))
 		if cQueueCreateInfosPtr == nil {
@@ -248,7 +248,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 		cCreateInfoPtr.queueCreateInfoCount = C.uint32_t(len(createInfo.QueueCreateInfos))
 		cCreateInfoPtr.pQueueCreateInfos = cQueueCreateInfosPtr
 	}
-	
+
 	// Defer cleanup of priority arrays
 	defer func() {
 		for _, ptr := range cPrioritiesToFree {
@@ -289,14 +289,14 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 		}
 		*cFeaturesPtr = physicalDeviceFeaturesToC(createInfo.EnabledFeatures)
 		cCreateInfoPtr.pEnabledFeatures = cFeaturesPtr
-		
+
 		// Defer cleanup of features
 		defer C.free(unsafe.Pointer(cFeaturesPtr))
 	}
 
 	var device C.VkDevice
 	result := Result(C.vkCreateDevice(C.VkPhysicalDevice(physicalDevice), cCreateInfoPtr, nil, &device))
-	
+
 	if result != Success {
 		return nil, NewVulkanError(result, "CreateDevice", "Vulkan device creation failed")
 	}

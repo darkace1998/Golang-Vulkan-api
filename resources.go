@@ -517,11 +517,11 @@ type SparseImageMemoryBindInfo struct {
 
 // BindSparseInfo describes a sparse binding operation
 type BindSparseInfo struct {
-	WaitSemaphores       []Semaphore
-	BufferBinds          []SparseBufferMemoryBindInfo
-	ImageOpaqueBinds     []SparseImageOpaqueMemoryBindInfo
-	ImageBinds           []SparseImageMemoryBindInfo
-	SignalSemaphores     []Semaphore
+	WaitSemaphores   []Semaphore
+	BufferBinds      []SparseBufferMemoryBindInfo
+	ImageOpaqueBinds []SparseImageOpaqueMemoryBindInfo
+	ImageBinds       []SparseImageMemoryBindInfo
+	SignalSemaphores []Semaphore
 }
 
 // QueueBindSparse binds sparse resources on a queue
@@ -548,14 +548,14 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 
 	// We need to keep these slices alive for the duration of the call
 	type bindInfoArrays struct {
-		waitSemaphores              []C.VkSemaphore
-		signalSemaphores            []C.VkSemaphore
-		bufferBindInfos             []C.VkSparseBufferMemoryBindInfo
-		imageOpaqueBindInfos        []C.VkSparseImageOpaqueMemoryBindInfo
-		imageBindInfos              []C.VkSparseImageMemoryBindInfo
-		sparseMemoryBinds           [][]C.VkSparseMemoryBind
+		waitSemaphores               []C.VkSemaphore
+		signalSemaphores             []C.VkSemaphore
+		bufferBindInfos              []C.VkSparseBufferMemoryBindInfo
+		imageOpaqueBindInfos         []C.VkSparseImageOpaqueMemoryBindInfo
+		imageBindInfos               []C.VkSparseImageMemoryBindInfo
+		sparseMemoryBinds            [][]C.VkSparseMemoryBind
 		sparseImageOpaqueMemoryBinds [][]C.VkSparseMemoryBind
-		sparseImageMemoryBinds      [][]C.VkSparseImageMemoryBind
+		sparseImageMemoryBinds       [][]C.VkSparseImageMemoryBind
 	}
 	arrays := make([]bindInfoArrays, len(bindInfos))
 
