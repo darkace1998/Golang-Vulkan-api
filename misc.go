@@ -43,8 +43,10 @@ func CmdClearAttachments(commandBuffer CommandBuffer, attachments []ClearAttachm
 		cAttachments[i].colorAttachment = C.uint32_t(att.ColorAttachment)
 		// Set clear value based on aspect
 		if att.ClearValue.IsDepthStencil {
-			*(*float32)(unsafe.Pointer(&cAttachments[i].clearValue)) = att.ClearValue.DepthStencil.Depth
-			*(*uint32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cAttachments[i].clearValue)) + unsafe.Sizeof(att.ClearValue.DepthStencil.Depth))) = att.ClearValue.DepthStencil.Stencil
+			// Use C struct field sizes for correct offset calculation to match VkClearDepthStencilValue layout
+			cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cAttachments[i].clearValue))
+			cDepthStencil.depth = C.float(att.ClearValue.DepthStencil.Depth)
+			cDepthStencil.stencil = C.uint32_t(att.ClearValue.DepthStencil.Stencil)
 		} else {
 			*(*[4]float32)(unsafe.Pointer(&cAttachments[i].clearValue)) = att.ClearValue.Color.Float32
 		}

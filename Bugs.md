@@ -4,7 +4,7 @@ This document tracks identified bugs and potential issues in the codebase discov
 
 ---
 
-## Bug #1: Unsafe Union Field Handling in CmdClearAttachments
+## Bug #1: Unsafe Union Field Handling in CmdClearAttachments - **FIXED**
 
 **Channel Operation JIT**: Memory layout operations for clear values
 
@@ -27,9 +27,18 @@ The use of `unsafe.Sizeof(att.ClearValue.DepthStencil.Depth)` (a Go float32) to 
 - **Type**: Potential Memory Corruption
 - If C struct padding differs from Go's float32 size, the stencil value would be written to the wrong offset
 
+### Fix Applied
+Changed to use direct C struct field access via `C.VkClearDepthStencilValue` pointer cast:
+```go
+cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cAttachments[i].clearValue))
+cDepthStencil.depth = C.float(att.ClearValue.DepthStencil.Depth)
+cDepthStencil.stencil = C.uint32_t(att.ClearValue.DepthStencil.Stencil)
+```
+This ensures proper C struct layout is used for field access.
+
 ---
 
-## Bug #2: Memory Leak on Allocation Failure in CreateDevice
+## Bug #2: Memory Leak on Allocation Failure in CreateDevice - **FIXED**
 
 **Channel Operation JIT**: C memory allocation for queue priorities
 
@@ -55,9 +64,12 @@ if cPrioritiesPtr == nil {
 - **Type**: Memory Leak
 - C memory may not be freed in certain failure scenarios
 
+### Fix Applied
+The issue was actually a **double-free bug** - the manual cleanup at line 287-289 (in the features allocation error path) would free memory that the defer at lines 251-255 would also try to free. Removed the redundant manual cleanup since the defer already handles it properly.
+
 ---
 
-## Bug #3: Unsafe Pointer Arithmetic for Array Indexing
+## Bug #3: Unsafe Pointer Arithmetic for Array Indexing - **FIXED**
 
 **Channel Operation JIT**: Queue creation info array indexing
 
@@ -80,12 +92,20 @@ While this works in practice for properly aligned structures on most platforms, 
 - **Type**: Potential Misalignment
 - Could cause issues on platforms with strict alignment requirements
 
+### Fix Applied
+Changed to use Go's `unsafe.Slice` for safe slice-based indexing:
+```go
+cQueueInfos := unsafe.Slice(cQueueCreateInfosPtr, len(createInfo.QueueCreateInfos))
+// ... then use cQueueInfos[i] for array access
+```
+Also applied the same fix to the priority array access using `unsafe.Slice(cPrioritiesPtr, len(qci.QueuePriorities))`.
+
 ---
 
 ## Summary
 
-| Bug # | Location | Severity | Type |
-|-------|----------|----------|------|
-| 1 | misc.go:46-49 | High | Memory Corruption |
-| 2 | device.go:226-232 | Medium | Memory Leak |
-| 3 | device.go:217-218 | Medium | Unsafe Access |
+| Bug # | Location | Severity | Type | Status |
+|-------|----------|----------|------|--------|
+| 1 | misc.go:46-49 | High | Memory Corruption | **FIXED** |
+| 2 | device.go:226-232 | Medium | Memory Leak | **FIXED** |
+| 3 | device.go:217-218 | Medium | Unsafe Access | **FIXED** |

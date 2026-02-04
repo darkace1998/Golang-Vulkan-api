@@ -91,9 +91,10 @@ func CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginI
 		for i, cv := range beginInfo.ClearValues {
 			// VkClearValue is a union - use IsDepthStencil flag to determine which to use
 			if cv.IsDepthStencil {
-				// Use depth/stencil clear value - VkClearDepthStencilValue has depth (float32) followed by stencil (uint32)
-				*(*float32)(unsafe.Pointer(&cClearValues[i])) = cv.DepthStencil.Depth
-				*(*uint32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cClearValues[i])) + unsafe.Sizeof(cv.DepthStencil.Depth))) = cv.DepthStencil.Stencil
+				// Use C struct for correct offset calculation to match VkClearDepthStencilValue layout
+				cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cClearValues[i]))
+				cDepthStencil.depth = C.float(cv.DepthStencil.Depth)
+				cDepthStencil.stencil = C.uint32_t(cv.DepthStencil.Stencil)
 			} else {
 				// Use color clear value - VkClearColorValue is a union, use float32 array
 				*(*[4]float32)(unsafe.Pointer(&cClearValues[i])) = cv.Color.Float32

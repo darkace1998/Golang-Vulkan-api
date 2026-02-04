@@ -212,15 +212,16 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 
 		cPrioritiesArray = make([]*C.float, len(createInfo.QueueCreateInfos))
 
+		// Create a Go slice backed by the C array for safe indexed access
+		cQueueInfos := unsafe.Slice(cQueueCreateInfosPtr, len(createInfo.QueueCreateInfos))
+
 		for i, qci := range createInfo.QueueCreateInfos {
-			// Use pointer arithmetic to access array elements (in bytes)
-			offset := uintptr(i) * uintptr(C.sizeof_VkDeviceQueueCreateInfo)
-			cQueueInfo := (*C.VkDeviceQueueCreateInfo)(unsafe.Pointer(uintptr(unsafe.Pointer(cQueueCreateInfosPtr)) + offset))
-			cQueueInfo.sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
-			cQueueInfo.pNext = nil
-			cQueueInfo.flags = 0
-			cQueueInfo.queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
-			cQueueInfo.queueCount = C.uint32_t(len(qci.QueuePriorities))
+			// Use slice indexing for safe array access (avoids manual pointer arithmetic)
+			cQueueInfos[i].sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
+			cQueueInfos[i].pNext = nil
+			cQueueInfos[i].flags = 0
+			cQueueInfos[i].queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
+			cQueueInfos[i].queueCount = C.uint32_t(len(qci.QueuePriorities))
 
 			if len(qci.QueuePriorities) > 0 {
 				cPrioritiesPtr := (*C.float)(C.malloc(C.size_t(len(qci.QueuePriorities)) * C.sizeof_float))
@@ -236,11 +237,12 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 				cPrioritiesToFree = append(cPrioritiesToFree, cPrioritiesPtr)
 				cPrioritiesArray[i] = cPrioritiesPtr
 
+				// Use slice for safe priority array access
+				cPriorities := unsafe.Slice(cPrioritiesPtr, len(qci.QueuePriorities))
 				for j, priority := range qci.QueuePriorities {
-					cPriority := (*C.float)(unsafe.Pointer(uintptr(unsafe.Pointer(cPrioritiesPtr)) + uintptr(j)*uintptr(C.sizeof_float)))
-					*cPriority = C.float(priority)
+					cPriorities[j] = C.float(priority)
 				}
-				cQueueInfo.pQueuePriorities = cPrioritiesPtr
+				cQueueInfos[i].pQueuePriorities = cPrioritiesPtr
 			}
 		}
 		cCreateInfoPtr.queueCreateInfoCount = C.uint32_t(len(createInfo.QueueCreateInfos))
@@ -283,10 +285,6 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	if createInfo.EnabledFeatures != nil {
 		cFeaturesPtr = (*C.VkPhysicalDeviceFeatures)(C.malloc(C.sizeof_VkPhysicalDeviceFeatures))
 		if cFeaturesPtr == nil {
-			// Clean up priorities before returning
-			for _, ptr := range cPrioritiesToFree {
-				C.free(unsafe.Pointer(ptr))
-			}
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for physical device features")
 		}
 		*cFeaturesPtr = physicalDeviceFeaturesToC(createInfo.EnabledFeatures)
