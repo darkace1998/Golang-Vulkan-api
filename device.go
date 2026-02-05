@@ -126,59 +126,73 @@ const (
 	MemoryHeapMultiInstanceBit MemoryHeapFlags = C.VK_MEMORY_HEAP_MULTI_INSTANCE_BIT
 )
 
-// CreateDevice creates a logical device
-func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (Device, error) {
-	// Input validation
+// validateDeviceCreateInfo validates the device create info
+func validateDeviceCreateInfo(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) error {
 	if physicalDevice == nil {
-		return nil, NewValidationError("physicalDevice", "cannot be nil")
+		return NewValidationError("physicalDevice", "cannot be nil")
 	}
 	if createInfo == nil {
-		return nil, NewValidationError("createInfo", "cannot be nil")
+		return NewValidationError("createInfo", "cannot be nil")
 	}
+	if err := validateQueueCreateInfos(createInfo.QueueCreateInfos); err != nil {
+		return err
+	}
+	if err := validateDeviceLayersAndExtensions(createInfo); err != nil {
+		return err
+	}
+	return nil
+}
 
-	// Validate queue create infos
-	const maxQueues = 16 // Reasonable limit for queue families
-	if len(createInfo.QueueCreateInfos) > maxQueues {
-		return nil, NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
+// validateQueueCreateInfos validates queue create infos
+func validateQueueCreateInfos(queueCreateInfos []DeviceQueueCreateInfo) error {
+	const maxQueues = 16
+	if len(queueCreateInfos) > maxQueues {
+		return NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
 	}
-	for i, qci := range createInfo.QueueCreateInfos {
+	for _, qci := range queueCreateInfos {
 		if len(qci.QueuePriorities) == 0 {
-			return nil, NewValidationError("QueueCreateInfos", "queue family must have at least one queue")
+			return NewValidationError("QueueCreateInfos", "queue family must have at least one queue")
 		}
 		const maxQueuesPerFamily = 16
 		if len(qci.QueuePriorities) > maxQueuesPerFamily {
-			return nil, NewValidationError("QueueCreateInfos", "queue family exceeds maximum of 16 queues")
+			return NewValidationError("QueueCreateInfos", "queue family exceeds maximum of 16 queues")
 		}
-		// Validate queue priorities are in range [0.0, 1.0]
-		for j, priority := range qci.QueuePriorities {
+		for _, priority := range qci.QueuePriorities {
 			if priority < 0.0 || priority > 1.0 {
-				return nil, NewValidationError("QueueCreateInfos", "queue priority must be between 0.0 and 1.0")
+				return NewValidationError("QueueCreateInfos", "queue priority must be between 0.0 and 1.0")
 			}
-			_ = j // avoid unused variable
 		}
-		_ = i // avoid unused variable
 	}
+	return nil
+}
 
-	// Validate layers (reuse same validation as CreateInstance)
+// validateDeviceLayersAndExtensions validates layers and extensions
+func validateDeviceLayersAndExtensions(createInfo *DeviceCreateInfo) error {
 	const maxLayers = 64
 	if len(createInfo.EnabledLayerNames) > maxLayers {
-		return nil, NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
+		return NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
 	}
 	for _, layer := range createInfo.EnabledLayerNames {
 		if len(layer) > 256 {
-			return nil, NewValidationError("EnabledLayerNames", "layer name exceeds maximum length of 256 characters")
+			return NewValidationError("EnabledLayerNames", "layer name exceeds maximum length of 256 characters")
 		}
 	}
-
-	// Validate extensions
 	const maxExtensions = 256
 	if len(createInfo.EnabledExtensionNames) > maxExtensions {
-		return nil, NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
+		return NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
 	}
 	for _, ext := range createInfo.EnabledExtensionNames {
 		if len(ext) > 256 {
-			return nil, NewValidationError("EnabledExtensionNames", "extension name exceeds maximum length of 256 characters")
+			return NewValidationError("EnabledExtensionNames", "extension name exceeds maximum length of 256 characters")
 		}
+	}
+	return nil
+}
+
+// CreateDevice creates a logical device
+func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (Device, error) {
+	if err := validateDeviceCreateInfo(physicalDevice, createInfo); err != nil {
+		return nil, err
 	}
 
 	// Allocate create info in C memory to avoid Go pointer issues

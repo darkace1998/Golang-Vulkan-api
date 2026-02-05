@@ -680,25 +680,285 @@ type GraphicsPipelineCreateInfo struct {
 	BasePipelineIndex  int32
 }
 
+// graphicsPipelineBuilder holds state needed for building graphics pipelines
+type graphicsPipelineBuilder struct {
+	cNames                 []*C.char
+	cStageArrays           [][]C.VkPipelineShaderStageCreateInfo
+	cBindingArrays         [][]C.VkVertexInputBindingDescription
+	cAttributeArrays       [][]C.VkVertexInputAttributeDescription
+	cViewportArrays        [][]C.VkViewport
+	cScissorArrays         [][]C.VkRect2D
+	cBlendAttachmentArrays [][]C.VkPipelineColorBlendAttachmentState
+	cDynamicStateArrays    [][]C.VkDynamicState
+	cSampleMaskArrays      [][]C.VkSampleMask
+}
+
+// setupShaderStages configures shader stages for a pipeline
+func (b *graphicsPipelineBuilder) setupShaderStages(cInfo *C.VkGraphicsPipelineCreateInfo, stages []PipelineShaderStageCreateInfo) {
+	if len(stages) == 0 {
+		return
+	}
+	cStages := make([]C.VkPipelineShaderStageCreateInfo, len(stages))
+	for j, stage := range stages {
+		cStages[j].sType = C.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+		cStages[j].pNext = nil
+		cStages[j].flags = 0
+		cStages[j].stage = C.VkShaderStageFlagBits(stage.Stage)
+		cStages[j].module = C.VkShaderModule(stage.Module)
+		cName := C.CString(stage.Name)
+		b.cNames = append(b.cNames, cName)
+		cStages[j].pName = cName
+		cStages[j].pSpecializationInfo = nil
+	}
+	b.cStageArrays = append(b.cStageArrays, cStages)
+	cInfo.stageCount = C.uint32_t(len(cStages))
+	cInfo.pStages = &b.cStageArrays[len(b.cStageArrays)-1][0]
+}
+
+// setupVertexInputState configures vertex input state for a pipeline
+func (b *graphicsPipelineBuilder) setupVertexInputState(cState *C.VkPipelineVertexInputStateCreateInfo, info *PipelineVertexInputStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info == nil {
+		return
+	}
+	if len(info.VertexBindingDescriptions) > 0 {
+		cBindings := make([]C.VkVertexInputBindingDescription, len(info.VertexBindingDescriptions))
+		for j, binding := range info.VertexBindingDescriptions {
+			cBindings[j].binding = C.uint32_t(binding.Binding)
+			cBindings[j].stride = C.uint32_t(binding.Stride)
+			cBindings[j].inputRate = C.VkVertexInputRate(binding.InputRate)
+		}
+		b.cBindingArrays = append(b.cBindingArrays, cBindings)
+		cState.vertexBindingDescriptionCount = C.uint32_t(len(cBindings))
+		cState.pVertexBindingDescriptions = &b.cBindingArrays[len(b.cBindingArrays)-1][0]
+	}
+	if len(info.VertexAttributeDescriptions) > 0 {
+		cAttributes := make([]C.VkVertexInputAttributeDescription, len(info.VertexAttributeDescriptions))
+		for j, attr := range info.VertexAttributeDescriptions {
+			cAttributes[j].location = C.uint32_t(attr.Location)
+			cAttributes[j].binding = C.uint32_t(attr.Binding)
+			cAttributes[j].format = C.VkFormat(attr.Format)
+			cAttributes[j].offset = C.uint32_t(attr.Offset)
+		}
+		b.cAttributeArrays = append(b.cAttributeArrays, cAttributes)
+		cState.vertexAttributeDescriptionCount = C.uint32_t(len(cAttributes))
+		cState.pVertexAttributeDescriptions = &b.cAttributeArrays[len(b.cAttributeArrays)-1][0]
+	}
+}
+
+// setupViewportState configures viewport state for a pipeline
+func (b *graphicsPipelineBuilder) setupViewportState(cState *C.VkPipelineViewportStateCreateInfo, info *PipelineViewportStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info == nil {
+		cState.viewportCount = 1
+		cState.pViewports = nil
+		cState.scissorCount = 1
+		cState.pScissors = nil
+		return
+	}
+	if len(info.Viewports) > 0 {
+		cViewports := make([]C.VkViewport, len(info.Viewports))
+		for j, vp := range info.Viewports {
+			cViewports[j].x = C.float(vp.X)
+			cViewports[j].y = C.float(vp.Y)
+			cViewports[j].width = C.float(vp.Width)
+			cViewports[j].height = C.float(vp.Height)
+			cViewports[j].minDepth = C.float(vp.MinDepth)
+			cViewports[j].maxDepth = C.float(vp.MaxDepth)
+		}
+		b.cViewportArrays = append(b.cViewportArrays, cViewports)
+		cState.viewportCount = C.uint32_t(len(cViewports))
+		cState.pViewports = &b.cViewportArrays[len(b.cViewportArrays)-1][0]
+	} else {
+		cState.viewportCount = 1
+		cState.pViewports = nil
+	}
+	if len(info.Scissors) > 0 {
+		cScissors := make([]C.VkRect2D, len(info.Scissors))
+		for j, sc := range info.Scissors {
+			cScissors[j].offset.x = C.int32_t(sc.Offset.X)
+			cScissors[j].offset.y = C.int32_t(sc.Offset.Y)
+			cScissors[j].extent.width = C.uint32_t(sc.Extent.Width)
+			cScissors[j].extent.height = C.uint32_t(sc.Extent.Height)
+		}
+		b.cScissorArrays = append(b.cScissorArrays, cScissors)
+		cState.scissorCount = C.uint32_t(len(cScissors))
+		cState.pScissors = &b.cScissorArrays[len(b.cScissorArrays)-1][0]
+	} else {
+		cState.scissorCount = 1
+		cState.pScissors = nil
+	}
+}
+
+// setupRasterizationState configures rasterization state for a pipeline
+func setupRasterizationState(cState *C.VkPipelineRasterizationStateCreateInfo, info *PipelineRasterizationStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info != nil {
+		cState.depthClampEnable = boolToVkBool32(info.DepthClampEnable)
+		cState.rasterizerDiscardEnable = boolToVkBool32(info.RasterizerDiscardEnable)
+		cState.polygonMode = C.VkPolygonMode(info.PolygonMode)
+		cState.cullMode = C.VkCullModeFlags(info.CullMode)
+		cState.frontFace = C.VkFrontFace(info.FrontFace)
+		cState.depthBiasEnable = boolToVkBool32(info.DepthBiasEnable)
+		cState.depthBiasConstantFactor = C.float(info.DepthBiasConstantFactor)
+		cState.depthBiasClamp = C.float(info.DepthBiasClamp)
+		cState.depthBiasSlopeFactor = C.float(info.DepthBiasSlopeFactor)
+		cState.lineWidth = C.float(info.LineWidth)
+	} else {
+		cState.depthClampEnable = C.VK_FALSE
+		cState.rasterizerDiscardEnable = C.VK_FALSE
+		cState.polygonMode = C.VK_POLYGON_MODE_FILL
+		cState.cullMode = C.VkCullModeFlags(C.VK_CULL_MODE_BACK_BIT)
+		cState.frontFace = C.VK_FRONT_FACE_COUNTER_CLOCKWISE
+		cState.depthBiasEnable = C.VK_FALSE
+		cState.lineWidth = 1.0
+	}
+}
+
+// setupMultisampleState configures multisample state for a pipeline
+func (b *graphicsPipelineBuilder) setupMultisampleState(cState *C.VkPipelineMultisampleStateCreateInfo, info *PipelineMultisampleStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info != nil {
+		cState.rasterizationSamples = C.VkSampleCountFlagBits(info.RasterizationSamples)
+		cState.sampleShadingEnable = boolToVkBool32(info.SampleShadingEnable)
+		cState.minSampleShading = C.float(info.MinSampleShading)
+		if len(info.SampleMask) > 0 {
+			cSampleMask := make([]C.VkSampleMask, len(info.SampleMask))
+			for j, mask := range info.SampleMask {
+				cSampleMask[j] = C.VkSampleMask(mask)
+			}
+			b.cSampleMaskArrays = append(b.cSampleMaskArrays, cSampleMask)
+			cState.pSampleMask = &b.cSampleMaskArrays[len(b.cSampleMaskArrays)-1][0]
+		}
+		cState.alphaToCoverageEnable = boolToVkBool32(info.AlphaToCoverageEnable)
+		cState.alphaToOneEnable = boolToVkBool32(info.AlphaToOneEnable)
+	} else {
+		cState.rasterizationSamples = C.VK_SAMPLE_COUNT_1_BIT
+		cState.sampleShadingEnable = C.VK_FALSE
+		cState.minSampleShading = 1.0
+		cState.pSampleMask = nil
+		cState.alphaToCoverageEnable = C.VK_FALSE
+		cState.alphaToOneEnable = C.VK_FALSE
+	}
+}
+
+// setupDepthStencilState configures depth stencil state for a pipeline
+func setupDepthStencilState(cState *C.VkPipelineDepthStencilStateCreateInfo, info *PipelineDepthStencilStateCreateInfo) bool {
+	if info == nil {
+		return false
+	}
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	cState.depthTestEnable = boolToVkBool32(info.DepthTestEnable)
+	cState.depthWriteEnable = boolToVkBool32(info.DepthWriteEnable)
+	cState.depthCompareOp = C.VkCompareOp(info.DepthCompareOp)
+	cState.depthBoundsTestEnable = boolToVkBool32(info.DepthBoundsTestEnable)
+	cState.stencilTestEnable = boolToVkBool32(info.StencilTestEnable)
+	cState.front.failOp = C.VkStencilOp(info.Front.FailOp)
+	cState.front.passOp = C.VkStencilOp(info.Front.PassOp)
+	cState.front.depthFailOp = C.VkStencilOp(info.Front.DepthFailOp)
+	cState.front.compareOp = C.VkCompareOp(info.Front.CompareOp)
+	cState.front.compareMask = C.uint32_t(info.Front.CompareMask)
+	cState.front.writeMask = C.uint32_t(info.Front.WriteMask)
+	cState.front.reference = C.uint32_t(info.Front.Reference)
+	cState.back.failOp = C.VkStencilOp(info.Back.FailOp)
+	cState.back.passOp = C.VkStencilOp(info.Back.PassOp)
+	cState.back.depthFailOp = C.VkStencilOp(info.Back.DepthFailOp)
+	cState.back.compareOp = C.VkCompareOp(info.Back.CompareOp)
+	cState.back.compareMask = C.uint32_t(info.Back.CompareMask)
+	cState.back.writeMask = C.uint32_t(info.Back.WriteMask)
+	cState.back.reference = C.uint32_t(info.Back.Reference)
+	cState.minDepthBounds = C.float(info.MinDepthBounds)
+	cState.maxDepthBounds = C.float(info.MaxDepthBounds)
+	return true
+}
+
+// setupColorBlendState configures color blend state for a pipeline
+func (b *graphicsPipelineBuilder) setupColorBlendState(cState *C.VkPipelineColorBlendStateCreateInfo, info *PipelineColorBlendStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info != nil {
+		cState.logicOpEnable = boolToVkBool32(info.LogicOpEnable)
+		cState.logicOp = C.VkLogicOp(info.LogicOp)
+		if len(info.Attachments) > 0 {
+			cBlendAttachments := make([]C.VkPipelineColorBlendAttachmentState, len(info.Attachments))
+			for j, att := range info.Attachments {
+				cBlendAttachments[j].blendEnable = boolToVkBool32(att.BlendEnable)
+				cBlendAttachments[j].srcColorBlendFactor = C.VkBlendFactor(att.SrcColorBlendFactor)
+				cBlendAttachments[j].dstColorBlendFactor = C.VkBlendFactor(att.DstColorBlendFactor)
+				cBlendAttachments[j].colorBlendOp = C.VkBlendOp(att.ColorBlendOp)
+				cBlendAttachments[j].srcAlphaBlendFactor = C.VkBlendFactor(att.SrcAlphaBlendFactor)
+				cBlendAttachments[j].dstAlphaBlendFactor = C.VkBlendFactor(att.DstAlphaBlendFactor)
+				cBlendAttachments[j].alphaBlendOp = C.VkBlendOp(att.AlphaBlendOp)
+				cBlendAttachments[j].colorWriteMask = C.VkColorComponentFlags(att.ColorWriteMask)
+			}
+			b.cBlendAttachmentArrays = append(b.cBlendAttachmentArrays, cBlendAttachments)
+			cState.attachmentCount = C.uint32_t(len(cBlendAttachments))
+			cState.pAttachments = &b.cBlendAttachmentArrays[len(b.cBlendAttachmentArrays)-1][0]
+		}
+		for j := 0; j < 4; j++ {
+			cState.blendConstants[j] = C.float(info.BlendConstants[j])
+		}
+	} else {
+		cState.logicOpEnable = C.VK_FALSE
+		cState.logicOp = C.VK_LOGIC_OP_COPY
+		defaultAttachment := make([]C.VkPipelineColorBlendAttachmentState, 1)
+		defaultAttachment[0].blendEnable = C.VK_FALSE
+		defaultAttachment[0].colorWriteMask = C.VkColorComponentFlags(ColorComponentAll)
+		b.cBlendAttachmentArrays = append(b.cBlendAttachmentArrays, defaultAttachment)
+		cState.attachmentCount = 1
+		cState.pAttachments = &b.cBlendAttachmentArrays[len(b.cBlendAttachmentArrays)-1][0]
+	}
+}
+
+// setupDynamicState configures dynamic state for a pipeline
+func (b *graphicsPipelineBuilder) setupDynamicState(cState *C.VkPipelineDynamicStateCreateInfo, info *PipelineDynamicStateCreateInfo) bool {
+	if info == nil || len(info.DynamicStates) == 0 {
+		return false
+	}
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	cDynStates := make([]C.VkDynamicState, len(info.DynamicStates))
+	for j, ds := range info.DynamicStates {
+		cDynStates[j] = C.VkDynamicState(ds)
+	}
+	b.cDynamicStateArrays = append(b.cDynamicStateArrays, cDynStates)
+	cState.dynamicStateCount = C.uint32_t(len(cDynStates))
+	cState.pDynamicStates = &b.cDynamicStateArrays[len(b.cDynamicStateArrays)-1][0]
+	return true
+}
+
+// freeNames frees all C strings allocated by the builder
+func (b *graphicsPipelineBuilder) freeNames() {
+	for _, cName := range b.cNames {
+		if cName != nil {
+			C.free(unsafe.Pointer(cName))
+		}
+	}
+}
+
 // CreateGraphicsPipelines creates graphics pipelines
 func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createInfos []GraphicsPipelineCreateInfo) ([]Pipeline, error) {
 	if len(createInfos) == 0 {
 		return nil, nil
 	}
 
+	builder := &graphicsPipelineBuilder{}
+	defer builder.freeNames()
+
 	cCreateInfos := make([]C.VkGraphicsPipelineCreateInfo, len(createInfos))
 	cPipelines := make([]C.VkPipeline, len(createInfos))
-
-	// Storage for C strings and arrays that need to stay alive during the API call
-	var cNames []*C.char
-	var cStageArrays [][]C.VkPipelineShaderStageCreateInfo
-	var cBindingArrays [][]C.VkVertexInputBindingDescription
-	var cAttributeArrays [][]C.VkVertexInputAttributeDescription
-	var cViewportArrays [][]C.VkViewport
-	var cScissorArrays [][]C.VkRect2D
-	var cBlendAttachmentArrays [][]C.VkPipelineColorBlendAttachmentState
-	var cDynamicStateArrays [][]C.VkDynamicState
-	var cSampleMaskArrays [][]C.VkSampleMask
 
 	// Storage for state structs
 	cVertexInputStates := make([]C.VkPipelineVertexInputStateCreateInfo, len(createInfos))
@@ -717,262 +977,45 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 		cCreateInfos[i].flags = 0
 
 		// Shader stages
-		if len(info.Stages) > 0 {
-			cStages := make([]C.VkPipelineShaderStageCreateInfo, len(info.Stages))
-			for j, stage := range info.Stages {
-				cStages[j].sType = C.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
-				cStages[j].pNext = nil
-				cStages[j].flags = 0
-				cStages[j].stage = C.VkShaderStageFlagBits(stage.Stage)
-				cStages[j].module = C.VkShaderModule(stage.Module)
-				cName := C.CString(stage.Name)
-				cNames = append(cNames, cName)
-				cStages[j].pName = cName
-				cStages[j].pSpecializationInfo = nil
-			}
-			cStageArrays = append(cStageArrays, cStages)
-			cCreateInfos[i].stageCount = C.uint32_t(len(cStages))
-			cCreateInfos[i].pStages = &cStageArrays[len(cStageArrays)-1][0]
-		}
+		builder.setupShaderStages(&cCreateInfos[i], info.Stages)
 
 		// Vertex input state
-		cVertexInputStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO
-		cVertexInputStates[i].pNext = nil
-		cVertexInputStates[i].flags = 0
-		if info.VertexInputState != nil {
-			if len(info.VertexInputState.VertexBindingDescriptions) > 0 {
-				cBindings := make([]C.VkVertexInputBindingDescription, len(info.VertexInputState.VertexBindingDescriptions))
-				for j, binding := range info.VertexInputState.VertexBindingDescriptions {
-					cBindings[j].binding = C.uint32_t(binding.Binding)
-					cBindings[j].stride = C.uint32_t(binding.Stride)
-					cBindings[j].inputRate = C.VkVertexInputRate(binding.InputRate)
-				}
-				cBindingArrays = append(cBindingArrays, cBindings)
-				cVertexInputStates[i].vertexBindingDescriptionCount = C.uint32_t(len(cBindings))
-				cVertexInputStates[i].pVertexBindingDescriptions = &cBindingArrays[len(cBindingArrays)-1][0]
-			}
-			if len(info.VertexInputState.VertexAttributeDescriptions) > 0 {
-				cAttributes := make([]C.VkVertexInputAttributeDescription, len(info.VertexInputState.VertexAttributeDescriptions))
-				for j, attr := range info.VertexInputState.VertexAttributeDescriptions {
-					cAttributes[j].location = C.uint32_t(attr.Location)
-					cAttributes[j].binding = C.uint32_t(attr.Binding)
-					cAttributes[j].format = C.VkFormat(attr.Format)
-					cAttributes[j].offset = C.uint32_t(attr.Offset)
-				}
-				cAttributeArrays = append(cAttributeArrays, cAttributes)
-				cVertexInputStates[i].vertexAttributeDescriptionCount = C.uint32_t(len(cAttributes))
-				cVertexInputStates[i].pVertexAttributeDescriptions = &cAttributeArrays[len(cAttributeArrays)-1][0]
-			}
-		}
+		builder.setupVertexInputState(&cVertexInputStates[i], info.VertexInputState)
 		cCreateInfos[i].pVertexInputState = &cVertexInputStates[i]
 
 		// Input assembly state
-		cInputAssemblyStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
-		cInputAssemblyStates[i].pNext = nil
-		cInputAssemblyStates[i].flags = 0
-		if info.InputAssemblyState != nil {
-			cInputAssemblyStates[i].topology = C.VkPrimitiveTopology(info.InputAssemblyState.Topology)
-			cInputAssemblyStates[i].primitiveRestartEnable = boolToVkBool32(info.InputAssemblyState.PrimitiveRestartEnable)
-		} else {
-			cInputAssemblyStates[i].topology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-			cInputAssemblyStates[i].primitiveRestartEnable = C.VK_FALSE
-		}
+		setupInputAssemblyState(&cInputAssemblyStates[i], info.InputAssemblyState)
 		cCreateInfos[i].pInputAssemblyState = &cInputAssemblyStates[i]
 
 		// Tessellation state (optional)
 		if info.TessellationState != nil {
-			cTessellationStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO
-			cTessellationStates[i].pNext = nil
-			cTessellationStates[i].flags = 0
-			cTessellationStates[i].patchControlPoints = C.uint32_t(info.TessellationState.PatchControlPoints)
+			setupTessellationState(&cTessellationStates[i], info.TessellationState)
 			cCreateInfos[i].pTessellationState = &cTessellationStates[i]
 		}
 
 		// Viewport state
-		cViewportStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO
-		cViewportStates[i].pNext = nil
-		cViewportStates[i].flags = 0
-		if info.ViewportState != nil {
-			if len(info.ViewportState.Viewports) > 0 {
-				cViewports := make([]C.VkViewport, len(info.ViewportState.Viewports))
-				for j, vp := range info.ViewportState.Viewports {
-					cViewports[j].x = C.float(vp.X)
-					cViewports[j].y = C.float(vp.Y)
-					cViewports[j].width = C.float(vp.Width)
-					cViewports[j].height = C.float(vp.Height)
-					cViewports[j].minDepth = C.float(vp.MinDepth)
-					cViewports[j].maxDepth = C.float(vp.MaxDepth)
-				}
-				cViewportArrays = append(cViewportArrays, cViewports)
-				cViewportStates[i].viewportCount = C.uint32_t(len(cViewports))
-				cViewportStates[i].pViewports = &cViewportArrays[len(cViewportArrays)-1][0]
-			} else {
-				// Dynamic viewport - set count to 1 but no pointer
-				cViewportStates[i].viewportCount = 1
-				cViewportStates[i].pViewports = nil
-			}
-			if len(info.ViewportState.Scissors) > 0 {
-				cScissors := make([]C.VkRect2D, len(info.ViewportState.Scissors))
-				for j, sc := range info.ViewportState.Scissors {
-					cScissors[j].offset.x = C.int32_t(sc.Offset.X)
-					cScissors[j].offset.y = C.int32_t(sc.Offset.Y)
-					cScissors[j].extent.width = C.uint32_t(sc.Extent.Width)
-					cScissors[j].extent.height = C.uint32_t(sc.Extent.Height)
-				}
-				cScissorArrays = append(cScissorArrays, cScissors)
-				cViewportStates[i].scissorCount = C.uint32_t(len(cScissors))
-				cViewportStates[i].pScissors = &cScissorArrays[len(cScissorArrays)-1][0]
-			} else {
-				// Dynamic scissor - set count to 1 but no pointer
-				cViewportStates[i].scissorCount = 1
-				cViewportStates[i].pScissors = nil
-			}
-		} else {
-			// Default viewport state for dynamic viewport/scissor
-			cViewportStates[i].viewportCount = 1
-			cViewportStates[i].pViewports = nil
-			cViewportStates[i].scissorCount = 1
-			cViewportStates[i].pScissors = nil
-		}
+		builder.setupViewportState(&cViewportStates[i], info.ViewportState)
 		cCreateInfos[i].pViewportState = &cViewportStates[i]
 
 		// Rasterization state
-		cRasterizationStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO
-		cRasterizationStates[i].pNext = nil
-		cRasterizationStates[i].flags = 0
-		if info.RasterizationState != nil {
-			cRasterizationStates[i].depthClampEnable = boolToVkBool32(info.RasterizationState.DepthClampEnable)
-			cRasterizationStates[i].rasterizerDiscardEnable = boolToVkBool32(info.RasterizationState.RasterizerDiscardEnable)
-			cRasterizationStates[i].polygonMode = C.VkPolygonMode(info.RasterizationState.PolygonMode)
-			cRasterizationStates[i].cullMode = C.VkCullModeFlags(info.RasterizationState.CullMode)
-			cRasterizationStates[i].frontFace = C.VkFrontFace(info.RasterizationState.FrontFace)
-			cRasterizationStates[i].depthBiasEnable = boolToVkBool32(info.RasterizationState.DepthBiasEnable)
-			cRasterizationStates[i].depthBiasConstantFactor = C.float(info.RasterizationState.DepthBiasConstantFactor)
-			cRasterizationStates[i].depthBiasClamp = C.float(info.RasterizationState.DepthBiasClamp)
-			cRasterizationStates[i].depthBiasSlopeFactor = C.float(info.RasterizationState.DepthBiasSlopeFactor)
-			cRasterizationStates[i].lineWidth = C.float(info.RasterizationState.LineWidth)
-		} else {
-			// Default rasterization state
-			cRasterizationStates[i].depthClampEnable = C.VK_FALSE
-			cRasterizationStates[i].rasterizerDiscardEnable = C.VK_FALSE
-			cRasterizationStates[i].polygonMode = C.VK_POLYGON_MODE_FILL
-			cRasterizationStates[i].cullMode = C.VkCullModeFlags(C.VK_CULL_MODE_BACK_BIT)
-			cRasterizationStates[i].frontFace = C.VK_FRONT_FACE_COUNTER_CLOCKWISE
-			cRasterizationStates[i].depthBiasEnable = C.VK_FALSE
-			cRasterizationStates[i].lineWidth = 1.0
-		}
+		setupRasterizationState(&cRasterizationStates[i], info.RasterizationState)
 		cCreateInfos[i].pRasterizationState = &cRasterizationStates[i]
 
 		// Multisample state
-		cMultisampleStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO
-		cMultisampleStates[i].pNext = nil
-		cMultisampleStates[i].flags = 0
-		if info.MultisampleState != nil {
-			cMultisampleStates[i].rasterizationSamples = C.VkSampleCountFlagBits(info.MultisampleState.RasterizationSamples)
-			cMultisampleStates[i].sampleShadingEnable = boolToVkBool32(info.MultisampleState.SampleShadingEnable)
-			cMultisampleStates[i].minSampleShading = C.float(info.MultisampleState.MinSampleShading)
-			if len(info.MultisampleState.SampleMask) > 0 {
-				cSampleMask := make([]C.VkSampleMask, len(info.MultisampleState.SampleMask))
-				for j, mask := range info.MultisampleState.SampleMask {
-					cSampleMask[j] = C.VkSampleMask(mask)
-				}
-				cSampleMaskArrays = append(cSampleMaskArrays, cSampleMask)
-				cMultisampleStates[i].pSampleMask = &cSampleMaskArrays[len(cSampleMaskArrays)-1][0]
-			}
-			cMultisampleStates[i].alphaToCoverageEnable = boolToVkBool32(info.MultisampleState.AlphaToCoverageEnable)
-			cMultisampleStates[i].alphaToOneEnable = boolToVkBool32(info.MultisampleState.AlphaToOneEnable)
-		} else {
-			// Default multisample state
-			cMultisampleStates[i].rasterizationSamples = C.VK_SAMPLE_COUNT_1_BIT
-			cMultisampleStates[i].sampleShadingEnable = C.VK_FALSE
-			cMultisampleStates[i].minSampleShading = 1.0
-			cMultisampleStates[i].pSampleMask = nil
-			cMultisampleStates[i].alphaToCoverageEnable = C.VK_FALSE
-			cMultisampleStates[i].alphaToOneEnable = C.VK_FALSE
-		}
+		builder.setupMultisampleState(&cMultisampleStates[i], info.MultisampleState)
 		cCreateInfos[i].pMultisampleState = &cMultisampleStates[i]
 
 		// Depth stencil state (optional)
-		if info.DepthStencilState != nil {
-			cDepthStencilStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
-			cDepthStencilStates[i].pNext = nil
-			cDepthStencilStates[i].flags = 0
-			cDepthStencilStates[i].depthTestEnable = boolToVkBool32(info.DepthStencilState.DepthTestEnable)
-			cDepthStencilStates[i].depthWriteEnable = boolToVkBool32(info.DepthStencilState.DepthWriteEnable)
-			cDepthStencilStates[i].depthCompareOp = C.VkCompareOp(info.DepthStencilState.DepthCompareOp)
-			cDepthStencilStates[i].depthBoundsTestEnable = boolToVkBool32(info.DepthStencilState.DepthBoundsTestEnable)
-			cDepthStencilStates[i].stencilTestEnable = boolToVkBool32(info.DepthStencilState.StencilTestEnable)
-			cDepthStencilStates[i].front.failOp = C.VkStencilOp(info.DepthStencilState.Front.FailOp)
-			cDepthStencilStates[i].front.passOp = C.VkStencilOp(info.DepthStencilState.Front.PassOp)
-			cDepthStencilStates[i].front.depthFailOp = C.VkStencilOp(info.DepthStencilState.Front.DepthFailOp)
-			cDepthStencilStates[i].front.compareOp = C.VkCompareOp(info.DepthStencilState.Front.CompareOp)
-			cDepthStencilStates[i].front.compareMask = C.uint32_t(info.DepthStencilState.Front.CompareMask)
-			cDepthStencilStates[i].front.writeMask = C.uint32_t(info.DepthStencilState.Front.WriteMask)
-			cDepthStencilStates[i].front.reference = C.uint32_t(info.DepthStencilState.Front.Reference)
-			cDepthStencilStates[i].back.failOp = C.VkStencilOp(info.DepthStencilState.Back.FailOp)
-			cDepthStencilStates[i].back.passOp = C.VkStencilOp(info.DepthStencilState.Back.PassOp)
-			cDepthStencilStates[i].back.depthFailOp = C.VkStencilOp(info.DepthStencilState.Back.DepthFailOp)
-			cDepthStencilStates[i].back.compareOp = C.VkCompareOp(info.DepthStencilState.Back.CompareOp)
-			cDepthStencilStates[i].back.compareMask = C.uint32_t(info.DepthStencilState.Back.CompareMask)
-			cDepthStencilStates[i].back.writeMask = C.uint32_t(info.DepthStencilState.Back.WriteMask)
-			cDepthStencilStates[i].back.reference = C.uint32_t(info.DepthStencilState.Back.Reference)
-			cDepthStencilStates[i].minDepthBounds = C.float(info.DepthStencilState.MinDepthBounds)
-			cDepthStencilStates[i].maxDepthBounds = C.float(info.DepthStencilState.MaxDepthBounds)
+		if setupDepthStencilState(&cDepthStencilStates[i], info.DepthStencilState) {
 			cCreateInfos[i].pDepthStencilState = &cDepthStencilStates[i]
 		}
 
 		// Color blend state
-		cColorBlendStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO
-		cColorBlendStates[i].pNext = nil
-		cColorBlendStates[i].flags = 0
-		if info.ColorBlendState != nil {
-			cColorBlendStates[i].logicOpEnable = boolToVkBool32(info.ColorBlendState.LogicOpEnable)
-			cColorBlendStates[i].logicOp = C.VkLogicOp(info.ColorBlendState.LogicOp)
-			if len(info.ColorBlendState.Attachments) > 0 {
-				cBlendAttachments := make([]C.VkPipelineColorBlendAttachmentState, len(info.ColorBlendState.Attachments))
-				for j, att := range info.ColorBlendState.Attachments {
-					cBlendAttachments[j].blendEnable = boolToVkBool32(att.BlendEnable)
-					cBlendAttachments[j].srcColorBlendFactor = C.VkBlendFactor(att.SrcColorBlendFactor)
-					cBlendAttachments[j].dstColorBlendFactor = C.VkBlendFactor(att.DstColorBlendFactor)
-					cBlendAttachments[j].colorBlendOp = C.VkBlendOp(att.ColorBlendOp)
-					cBlendAttachments[j].srcAlphaBlendFactor = C.VkBlendFactor(att.SrcAlphaBlendFactor)
-					cBlendAttachments[j].dstAlphaBlendFactor = C.VkBlendFactor(att.DstAlphaBlendFactor)
-					cBlendAttachments[j].alphaBlendOp = C.VkBlendOp(att.AlphaBlendOp)
-					cBlendAttachments[j].colorWriteMask = C.VkColorComponentFlags(att.ColorWriteMask)
-				}
-				cBlendAttachmentArrays = append(cBlendAttachmentArrays, cBlendAttachments)
-				cColorBlendStates[i].attachmentCount = C.uint32_t(len(cBlendAttachments))
-				cColorBlendStates[i].pAttachments = &cBlendAttachmentArrays[len(cBlendAttachmentArrays)-1][0]
-			}
-			for j := 0; j < 4; j++ {
-				cColorBlendStates[i].blendConstants[j] = C.float(info.ColorBlendState.BlendConstants[j])
-			}
-		} else {
-			// Default color blend state - no blending, write all color components
-			cColorBlendStates[i].logicOpEnable = C.VK_FALSE
-			cColorBlendStates[i].logicOp = C.VK_LOGIC_OP_COPY
-			// Create a default attachment for one color attachment
-			defaultAttachment := make([]C.VkPipelineColorBlendAttachmentState, 1)
-			defaultAttachment[0].blendEnable = C.VK_FALSE
-			defaultAttachment[0].colorWriteMask = C.VkColorComponentFlags(ColorComponentAll)
-			cBlendAttachmentArrays = append(cBlendAttachmentArrays, defaultAttachment)
-			cColorBlendStates[i].attachmentCount = 1
-			cColorBlendStates[i].pAttachments = &cBlendAttachmentArrays[len(cBlendAttachmentArrays)-1][0]
-		}
+		builder.setupColorBlendState(&cColorBlendStates[i], info.ColorBlendState)
 		cCreateInfos[i].pColorBlendState = &cColorBlendStates[i]
 
 		// Dynamic state (optional)
-		if info.DynamicState != nil && len(info.DynamicState.DynamicStates) > 0 {
-			cDynamicStates[i].sType = C.VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO
-			cDynamicStates[i].pNext = nil
-			cDynamicStates[i].flags = 0
-			cDynStates := make([]C.VkDynamicState, len(info.DynamicState.DynamicStates))
-			for j, ds := range info.DynamicState.DynamicStates {
-				cDynStates[j] = C.VkDynamicState(ds)
-			}
-			cDynamicStateArrays = append(cDynamicStateArrays, cDynStates)
-			cDynamicStates[i].dynamicStateCount = C.uint32_t(len(cDynStates))
-			cDynamicStates[i].pDynamicStates = &cDynamicStateArrays[len(cDynamicStateArrays)-1][0]
+		if builder.setupDynamicState(&cDynamicStates[i], info.DynamicState) {
 			cCreateInfos[i].pDynamicState = &cDynamicStates[i]
 		}
 
@@ -983,15 +1026,6 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 		cCreateInfos[i].basePipelineHandle = C.VkPipeline(info.BasePipelineHandle)
 		cCreateInfos[i].basePipelineIndex = C.int32_t(info.BasePipelineIndex)
 	}
-
-	// Free all C strings after API call regardless of success/failure
-	defer func() {
-		for _, cName := range cNames {
-			if cName != nil {
-				C.free(unsafe.Pointer(cName))
-			}
-		}
-	}()
 
 	result := Result(C.vkCreateGraphicsPipelines(
 		C.VkDevice(device),
@@ -1012,6 +1046,28 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	}
 
 	return pipelines, nil
+}
+
+// setupInputAssemblyState configures input assembly state
+func setupInputAssemblyState(cState *C.VkPipelineInputAssemblyStateCreateInfo, info *PipelineInputAssemblyStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	if info != nil {
+		cState.topology = C.VkPrimitiveTopology(info.Topology)
+		cState.primitiveRestartEnable = boolToVkBool32(info.PrimitiveRestartEnable)
+	} else {
+		cState.topology = C.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+		cState.primitiveRestartEnable = C.VK_FALSE
+	}
+}
+
+// setupTessellationState configures tessellation state
+func setupTessellationState(cState *C.VkPipelineTessellationStateCreateInfo, info *PipelineTessellationStateCreateInfo) {
+	cState.sType = C.VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO
+	cState.pNext = nil
+	cState.flags = 0
+	cState.patchControlPoints = C.uint32_t(info.PatchControlPoints)
 }
 
 // ============================================================================
