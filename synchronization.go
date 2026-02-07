@@ -303,6 +303,31 @@ type ImageMemoryBarrier struct {
 	SubresourceRange    ImageSubresourceRange
 }
 
+// buildImageMemoryBarriers converts Go ImageMemoryBarrier to C VkImageMemoryBarrier
+func buildImageMemoryBarriers(imageMemoryBarriers []ImageMemoryBarrier) []C.VkImageMemoryBarrier {
+	if len(imageMemoryBarriers) == 0 {
+		return nil
+	}
+	cImageMemoryBarriers := make([]C.VkImageMemoryBarrier, len(imageMemoryBarriers))
+	for i, imb := range imageMemoryBarriers {
+		cImageMemoryBarriers[i].sType = C.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
+		cImageMemoryBarriers[i].pNext = nil
+		cImageMemoryBarriers[i].srcAccessMask = C.VkAccessFlags(imb.SrcAccessMask)
+		cImageMemoryBarriers[i].dstAccessMask = C.VkAccessFlags(imb.DstAccessMask)
+		cImageMemoryBarriers[i].oldLayout = C.VkImageLayout(imb.OldLayout)
+		cImageMemoryBarriers[i].newLayout = C.VkImageLayout(imb.NewLayout)
+		cImageMemoryBarriers[i].srcQueueFamilyIndex = C.uint32_t(imb.SrcQueueFamilyIndex)
+		cImageMemoryBarriers[i].dstQueueFamilyIndex = C.uint32_t(imb.DstQueueFamilyIndex)
+		cImageMemoryBarriers[i].image = C.VkImage(imb.Image)
+		cImageMemoryBarriers[i].subresourceRange.aspectMask = C.VkImageAspectFlags(imb.SubresourceRange.AspectMask)
+		cImageMemoryBarriers[i].subresourceRange.baseMipLevel = C.uint32_t(imb.SubresourceRange.BaseMipLevel)
+		cImageMemoryBarriers[i].subresourceRange.levelCount = C.uint32_t(imb.SubresourceRange.LevelCount)
+		cImageMemoryBarriers[i].subresourceRange.baseArrayLayer = C.uint32_t(imb.SubresourceRange.BaseArrayLayer)
+		cImageMemoryBarriers[i].subresourceRange.layerCount = C.uint32_t(imb.SubresourceRange.LayerCount)
+	}
+	return cImageMemoryBarriers
+}
+
 // DependencyFlags represents dependency flags
 type DependencyFlags uint32
 
@@ -356,26 +381,7 @@ func CmdPipelineBarrierFull(
 	}
 
 	// Convert image memory barriers
-	var cImageMemoryBarriers []C.VkImageMemoryBarrier
-	if len(imageMemoryBarriers) > 0 {
-		cImageMemoryBarriers = make([]C.VkImageMemoryBarrier, len(imageMemoryBarriers))
-		for i, imb := range imageMemoryBarriers {
-			cImageMemoryBarriers[i].sType = C.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
-			cImageMemoryBarriers[i].pNext = nil
-			cImageMemoryBarriers[i].srcAccessMask = C.VkAccessFlags(imb.SrcAccessMask)
-			cImageMemoryBarriers[i].dstAccessMask = C.VkAccessFlags(imb.DstAccessMask)
-			cImageMemoryBarriers[i].oldLayout = C.VkImageLayout(imb.OldLayout)
-			cImageMemoryBarriers[i].newLayout = C.VkImageLayout(imb.NewLayout)
-			cImageMemoryBarriers[i].srcQueueFamilyIndex = C.uint32_t(imb.SrcQueueFamilyIndex)
-			cImageMemoryBarriers[i].dstQueueFamilyIndex = C.uint32_t(imb.DstQueueFamilyIndex)
-			cImageMemoryBarriers[i].image = C.VkImage(imb.Image)
-			cImageMemoryBarriers[i].subresourceRange.aspectMask = C.VkImageAspectFlags(imb.SubresourceRange.AspectMask)
-			cImageMemoryBarriers[i].subresourceRange.baseMipLevel = C.uint32_t(imb.SubresourceRange.BaseMipLevel)
-			cImageMemoryBarriers[i].subresourceRange.levelCount = C.uint32_t(imb.SubresourceRange.LevelCount)
-			cImageMemoryBarriers[i].subresourceRange.baseArrayLayer = C.uint32_t(imb.SubresourceRange.BaseArrayLayer)
-			cImageMemoryBarriers[i].subresourceRange.layerCount = C.uint32_t(imb.SubresourceRange.LayerCount)
-		}
-	}
+	cImageMemoryBarriers := buildImageMemoryBarriers(imageMemoryBarriers)
 
 	// Prepare pointers
 	var pMemoryBarriers *C.VkMemoryBarrier
@@ -456,26 +462,7 @@ func CmdWaitEvents(
 	}
 
 	// Convert image memory barriers
-	var cImageMemoryBarriers []C.VkImageMemoryBarrier
-	if len(imageMemoryBarriers) > 0 {
-		cImageMemoryBarriers = make([]C.VkImageMemoryBarrier, len(imageMemoryBarriers))
-		for i, imb := range imageMemoryBarriers {
-			cImageMemoryBarriers[i].sType = C.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
-			cImageMemoryBarriers[i].pNext = nil
-			cImageMemoryBarriers[i].srcAccessMask = C.VkAccessFlags(imb.SrcAccessMask)
-			cImageMemoryBarriers[i].dstAccessMask = C.VkAccessFlags(imb.DstAccessMask)
-			cImageMemoryBarriers[i].oldLayout = C.VkImageLayout(imb.OldLayout)
-			cImageMemoryBarriers[i].newLayout = C.VkImageLayout(imb.NewLayout)
-			cImageMemoryBarriers[i].srcQueueFamilyIndex = C.uint32_t(imb.SrcQueueFamilyIndex)
-			cImageMemoryBarriers[i].dstQueueFamilyIndex = C.uint32_t(imb.DstQueueFamilyIndex)
-			cImageMemoryBarriers[i].image = C.VkImage(imb.Image)
-			cImageMemoryBarriers[i].subresourceRange.aspectMask = C.VkImageAspectFlags(imb.SubresourceRange.AspectMask)
-			cImageMemoryBarriers[i].subresourceRange.baseMipLevel = C.uint32_t(imb.SubresourceRange.BaseMipLevel)
-			cImageMemoryBarriers[i].subresourceRange.levelCount = C.uint32_t(imb.SubresourceRange.LevelCount)
-			cImageMemoryBarriers[i].subresourceRange.baseArrayLayer = C.uint32_t(imb.SubresourceRange.BaseArrayLayer)
-			cImageMemoryBarriers[i].subresourceRange.layerCount = C.uint32_t(imb.SubresourceRange.LayerCount)
-		}
-	}
+	cImageMemoryBarriers := buildImageMemoryBarriers(imageMemoryBarriers)
 
 	// Prepare pointers
 	var pMemoryBarriers *C.VkMemoryBarrier

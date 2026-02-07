@@ -38,11 +38,11 @@ type QueryPoolCreateInfo struct {
 type QueryResultFlags uint32
 
 const (
-	QueryResult64Bit               QueryResultFlags = C.VK_QUERY_RESULT_64_BIT
-	QueryResultWait                QueryResultFlags = C.VK_QUERY_RESULT_WAIT_BIT
-	QueryResultWithAvailability    QueryResultFlags = C.VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
-	QueryResultPartial             QueryResultFlags = C.VK_QUERY_RESULT_PARTIAL_BIT
-	QueryResultWithStatusKHR       QueryResultFlags = 0x00000010 // VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
+	QueryResult64Bit            QueryResultFlags = C.VK_QUERY_RESULT_64_BIT
+	QueryResultWait             QueryResultFlags = C.VK_QUERY_RESULT_WAIT_BIT
+	QueryResultWithAvailability QueryResultFlags = C.VK_QUERY_RESULT_WITH_AVAILABILITY_BIT
+	QueryResultPartial          QueryResultFlags = C.VK_QUERY_RESULT_PARTIAL_BIT
+	QueryResultWithStatusKHR    QueryResultFlags = 0x00000010 // VK_QUERY_RESULT_WITH_STATUS_BIT_KHR
 )
 
 // ============================================================================
@@ -134,83 +134,61 @@ func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCo
 	return data, nil
 }
 
-// GetQueryPoolResultsUint32 retrieves 32-bit query results
-func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, error) {
+// validateQueryPoolResultsParams validates common parameters for query pool results
+func validateQueryPoolResultsParams(device Device, queryPool QueryPool, queryCount uint32) error {
 	if device == nil {
-		return nil, NewValidationError("device", "cannot be nil")
+		return NewValidationError("device", "cannot be nil")
 	}
 	if queryPool == nil {
-		return nil, NewValidationError("queryPool", "cannot be nil")
+		return NewValidationError("queryPool", "cannot be nil")
 	}
 	if queryCount == 0 {
-		return nil, NewValidationError("queryCount", "must be greater than 0")
+		return NewValidationError("queryCount", "must be greater than 0")
 	}
+	return nil
+}
 
-	// Mask off 64-bit flag to ensure we get 32-bit results
-	flags = flags &^ QueryResult64Bit
-
-	results := make([]uint32, queryCount)
+// GetQueryPoolResultsUint32 retrieves 32-bit query results
+func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, error) {
+	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
+		return nil, err
+	}
+	flags = flags &^ QueryResult64Bit // Mask off 64-bit flag
+	resultCount := queryCount
 	stride := C.VkDeviceSize(4)
 	if flags&QueryResultWithAvailability != 0 {
-		results = make([]uint32, queryCount*2)
+		resultCount = queryCount * 2
 		stride = 8
 	}
-
-	result := Result(C.vkGetQueryPoolResults(
-		C.VkDevice(device),
-		C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery),
-		C.uint32_t(queryCount),
-		C.size_t(len(results)*4),
-		unsafe.Pointer(&results[0]),
-		stride,
-		C.VkQueryResultFlags(flags),
-	))
-
+	results := make([]uint32, resultCount)
+	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
+		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*4),
+		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
 	if result != Success && result != NotReady {
 		return nil, NewVulkanError(result, "GetQueryPoolResultsUint32", "failed to get query pool results")
 	}
-
 	return results, nil
 }
 
 // GetQueryPoolResultsUint64 retrieves 64-bit query results
 func GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, error) {
-	if device == nil {
-		return nil, NewValidationError("device", "cannot be nil")
+	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
+		return nil, err
 	}
-	if queryPool == nil {
-		return nil, NewValidationError("queryPool", "cannot be nil")
-	}
-	if queryCount == 0 {
-		return nil, NewValidationError("queryCount", "must be greater than 0")
-	}
-
-	// Ensure 64-bit flag is set
-	flags = flags | QueryResult64Bit
-
-	results := make([]uint64, queryCount)
+	flags = flags | QueryResult64Bit // Ensure 64-bit flag is set
+	resultCount := queryCount
 	stride := C.VkDeviceSize(8)
 	if flags&QueryResultWithAvailability != 0 {
-		results = make([]uint64, queryCount*2)
+		resultCount = queryCount * 2
 		stride = 16
 	}
-
-	result := Result(C.vkGetQueryPoolResults(
-		C.VkDevice(device),
-		C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery),
-		C.uint32_t(queryCount),
-		C.size_t(len(results)*8),
-		unsafe.Pointer(&results[0]),
-		stride,
-		C.VkQueryResultFlags(flags),
-	))
-
+	results := make([]uint64, resultCount)
+	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
+		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*8),
+		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
 	if result != Success && result != NotReady {
 		return nil, NewVulkanError(result, "GetQueryPoolResultsUint64", "failed to get query pool results")
 	}
-
 	return results, nil
 }
 

@@ -43,8 +43,10 @@ func CmdClearAttachments(commandBuffer CommandBuffer, attachments []ClearAttachm
 		cAttachments[i].colorAttachment = C.uint32_t(att.ColorAttachment)
 		// Set clear value based on aspect
 		if att.ClearValue.IsDepthStencil {
-			*(*float32)(unsafe.Pointer(&cAttachments[i].clearValue)) = att.ClearValue.DepthStencil.Depth
-			*(*uint32)(unsafe.Pointer(uintptr(unsafe.Pointer(&cAttachments[i].clearValue)) + unsafe.Sizeof(att.ClearValue.DepthStencil.Depth))) = att.ClearValue.DepthStencil.Stencil
+			// Use C struct field sizes for correct offset calculation to match VkClearDepthStencilValue layout
+			cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cAttachments[i].clearValue))
+			cDepthStencil.depth = C.float(att.ClearValue.DepthStencil.Depth)
+			cDepthStencil.stencil = C.uint32_t(att.ClearValue.DepthStencil.Stencil)
 		} else {
 			*(*[4]float32)(unsafe.Pointer(&cAttachments[i].clearValue)) = att.ClearValue.Color.Float32
 		}
@@ -307,24 +309,24 @@ func DestroyBufferView(device Device, bufferView BufferView) {
 type FormatFeatureFlags uint32
 
 const (
-	FormatFeatureSampledImageBit               FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
-	FormatFeatureStorageImageBit               FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
-	FormatFeatureStorageImageAtomicBit         FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT
-	FormatFeatureUniformTexelBufferBit         FormatFeatureFlags = C.VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT
-	FormatFeatureStorageTexelBufferBit         FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT
-	FormatFeatureStorageTexelBufferAtomicBit   FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT
-	FormatFeatureVertexBufferBit               FormatFeatureFlags = C.VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT
-	FormatFeatureColorAttachmentBit            FormatFeatureFlags = C.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT
-	FormatFeatureColorAttachmentBlendBit       FormatFeatureFlags = C.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
-	FormatFeatureDepthStencilAttachmentBit     FormatFeatureFlags = C.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-	FormatFeatureBlitSrcBit                    FormatFeatureFlags = C.VK_FORMAT_FEATURE_BLIT_SRC_BIT
-	FormatFeatureBlitDstBit                    FormatFeatureFlags = C.VK_FORMAT_FEATURE_BLIT_DST_BIT
-	FormatFeatureSampledImageFilterLinearBit   FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
-	FormatFeatureTransferSrcBit                FormatFeatureFlags = C.VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
-	FormatFeatureTransferDstBit                FormatFeatureFlags = C.VK_FORMAT_FEATURE_TRANSFER_DST_BIT
-	FormatFeatureMidpointChromaSamplesBit      FormatFeatureFlags = C.VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT
+	FormatFeatureSampledImageBit                            FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+	FormatFeatureStorageImageBit                            FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
+	FormatFeatureStorageImageAtomicBit                      FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT
+	FormatFeatureUniformTexelBufferBit                      FormatFeatureFlags = C.VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT
+	FormatFeatureStorageTexelBufferBit                      FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT
+	FormatFeatureStorageTexelBufferAtomicBit                FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_ATOMIC_BIT
+	FormatFeatureVertexBufferBit                            FormatFeatureFlags = C.VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT
+	FormatFeatureColorAttachmentBit                         FormatFeatureFlags = C.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT
+	FormatFeatureColorAttachmentBlendBit                    FormatFeatureFlags = C.VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT
+	FormatFeatureDepthStencilAttachmentBit                  FormatFeatureFlags = C.VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+	FormatFeatureBlitSrcBit                                 FormatFeatureFlags = C.VK_FORMAT_FEATURE_BLIT_SRC_BIT
+	FormatFeatureBlitDstBit                                 FormatFeatureFlags = C.VK_FORMAT_FEATURE_BLIT_DST_BIT
+	FormatFeatureSampledImageFilterLinearBit                FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT
+	FormatFeatureTransferSrcBit                             FormatFeatureFlags = C.VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
+	FormatFeatureTransferDstBit                             FormatFeatureFlags = C.VK_FORMAT_FEATURE_TRANSFER_DST_BIT
+	FormatFeatureMidpointChromaSamplesBit                   FormatFeatureFlags = C.VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT
 	FormatFeatureSampledImageYcbcrConversionLinearFilterBit FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT
-	FormatFeatureSampledImageFilterMinmaxBit   FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT
+	FormatFeatureSampledImageFilterMinmaxBit                FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_MINMAX_BIT
 )
 
 // FormatProperties contains format properties
@@ -401,9 +403,9 @@ func GetPhysicalDeviceImageFormatProperties(physicalDevice PhysicalDevice, forma
 type SparseImageFormatFlags uint32
 
 const (
-	SparseImageFormatSingleMiptailBit         SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT
-	SparseImageFormatAlignedMipSizeBit        SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT
-	SparseImageFormatNonstandardBlockSizeBit  SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT
+	SparseImageFormatSingleMiptailBit        SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT
+	SparseImageFormatAlignedMipSizeBit       SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT
+	SparseImageFormatNonstandardBlockSizeBit SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_NONSTANDARD_BLOCK_SIZE_BIT
 )
 
 // SparseImageFormatProperties contains sparse image format properties

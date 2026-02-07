@@ -178,18 +178,18 @@ const (
 	FormatA2R10G10B10UnormPack32 Format = C.VK_FORMAT_A2R10G10B10_UNORM_PACK32
 	FormatA2B10G10R10UnormPack32 Format = C.VK_FORMAT_A2B10G10R10_UNORM_PACK32
 	// YCbCr formats for video
-	FormatG8B8G8R8422Unorm                      Format = C.VK_FORMAT_G8B8G8R8_422_UNORM
-	FormatB8G8R8G8422Unorm                      Format = C.VK_FORMAT_B8G8R8G8_422_UNORM
-	FormatG8B8R83Plane420Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM
-	FormatG8B8R82Plane420Unorm                  Format = C.VK_FORMAT_G8_B8R8_2PLANE_420_UNORM
-	FormatG8B8R83Plane422Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM
-	FormatG8B8R82Plane422Unorm                  Format = C.VK_FORMAT_G8_B8R8_2PLANE_422_UNORM
-	FormatG8B8R83Plane444Unorm                  Format = C.VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM
-	FormatG10X6B10X6G10X6R10X6422Unorm4Pack16   Format = C.VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16
-	FormatG10X6B10X6R10X62Plane420Unorm3Pack16  Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16
-	FormatG10X6B10X6R10X62Plane422Unorm3Pack16  Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16
-	FormatG16B16R162Plane420Unorm               Format = C.VK_FORMAT_G16_B16R16_2PLANE_420_UNORM
-	FormatG16B16R162Plane422Unorm               Format = C.VK_FORMAT_G16_B16R16_2PLANE_422_UNORM
+	FormatG8B8G8R8422Unorm                     Format = C.VK_FORMAT_G8B8G8R8_422_UNORM
+	FormatB8G8R8G8422Unorm                     Format = C.VK_FORMAT_B8G8R8G8_422_UNORM
+	FormatG8B8R83Plane420Unorm                 Format = C.VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM
+	FormatG8B8R82Plane420Unorm                 Format = C.VK_FORMAT_G8_B8R8_2PLANE_420_UNORM
+	FormatG8B8R83Plane422Unorm                 Format = C.VK_FORMAT_G8_B8_R8_3PLANE_422_UNORM
+	FormatG8B8R82Plane422Unorm                 Format = C.VK_FORMAT_G8_B8R8_2PLANE_422_UNORM
+	FormatG8B8R83Plane444Unorm                 Format = C.VK_FORMAT_G8_B8_R8_3PLANE_444_UNORM
+	FormatG10X6B10X6G10X6R10X6422Unorm4Pack16  Format = C.VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16
+	FormatG10X6B10X6R10X62Plane420Unorm3Pack16 Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_420_UNORM_3PACK16
+	FormatG10X6B10X6R10X62Plane422Unorm3Pack16 Format = C.VK_FORMAT_G10X6_B10X6R10X6_2PLANE_422_UNORM_3PACK16
+	FormatG16B16R162Plane420Unorm              Format = C.VK_FORMAT_G16_B16R16_2PLANE_420_UNORM
+	FormatG16B16R162Plane422Unorm              Format = C.VK_FORMAT_G16_B16R16_2PLANE_422_UNORM
 )
 
 // ImageTiling represents image tiling modes
@@ -415,21 +415,12 @@ type MappedMemoryRange struct {
 	Size   DeviceSize
 }
 
-// FlushMappedMemoryRanges flushes mapped memory ranges to make host writes visible to device
-// This is required for non-coherent memory after the host writes to mapped memory
-func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
-	// Input validation
-	if device == nil {
-		return NewValidationError("device", "cannot be nil")
-	}
-	if len(memoryRanges) == 0 {
-		return nil // Nothing to flush
-	}
-
+// buildMappedMemoryRanges converts Go MappedMemoryRange to C VkMappedMemoryRange
+func buildMappedMemoryRanges(memoryRanges []MappedMemoryRange) ([]C.VkMappedMemoryRange, error) {
 	cRanges := make([]C.VkMappedMemoryRange, len(memoryRanges))
 	for i, r := range memoryRanges {
 		if r.Memory == nil {
-			return NewValidationError("Memory", "memory handle cannot be nil")
+			return nil, NewValidationError("Memory", "memory handle cannot be nil")
 		}
 		cRanges[i].sType = C.VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE
 		cRanges[i].pNext = nil
@@ -437,43 +428,46 @@ func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) er
 		cRanges[i].offset = C.VkDeviceSize(r.Offset)
 		cRanges[i].size = C.VkDeviceSize(r.Size)
 	}
+	return cRanges, nil
+}
 
+// FlushMappedMemoryRanges flushes mapped memory ranges to make host writes visible to device
+// This is required for non-coherent memory after the host writes to mapped memory
+func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if len(memoryRanges) == 0 {
+		return nil
+	}
+	cRanges, err := buildMappedMemoryRanges(memoryRanges)
+	if err != nil {
+		return err
+	}
 	result := Result(C.vkFlushMappedMemoryRanges(C.VkDevice(device), C.uint32_t(len(cRanges)), &cRanges[0]))
 	if result != Success {
 		return NewVulkanError(result, "FlushMappedMemoryRanges", "Vulkan flush mapped memory ranges failed")
 	}
-
 	return nil
 }
 
 // InvalidateMappedMemoryRanges invalidates mapped memory ranges to make device writes visible to host
 // This is required for non-coherent memory before the host reads from mapped memory
 func InvalidateMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
-	// Input validation
 	if device == nil {
 		return NewValidationError("device", "cannot be nil")
 	}
 	if len(memoryRanges) == 0 {
-		return nil // Nothing to invalidate
+		return nil
 	}
-
-	cRanges := make([]C.VkMappedMemoryRange, len(memoryRanges))
-	for i, r := range memoryRanges {
-		if r.Memory == nil {
-			return NewValidationError("Memory", "memory handle cannot be nil")
-		}
-		cRanges[i].sType = C.VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE
-		cRanges[i].pNext = nil
-		cRanges[i].memory = C.VkDeviceMemory(r.Memory)
-		cRanges[i].offset = C.VkDeviceSize(r.Offset)
-		cRanges[i].size = C.VkDeviceSize(r.Size)
+	cRanges, err := buildMappedMemoryRanges(memoryRanges)
+	if err != nil {
+		return err
 	}
-
 	result := Result(C.vkInvalidateMappedMemoryRanges(C.VkDevice(device), C.uint32_t(len(cRanges)), &cRanges[0]))
 	if result != Success {
 		return NewVulkanError(result, "InvalidateMappedMemoryRanges", "Vulkan invalidate mapped memory ranges failed")
 	}
-
 	return nil
 }
 

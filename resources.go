@@ -216,6 +216,41 @@ type ImageResolve struct {
 	Extent         Extent3D
 }
 
+// setImageSubresourceLayers sets the image subresource layers on a C struct
+func setImageSubresourceLayers(dst *C.VkImageSubresourceLayers, src ImageSubresourceLayers) {
+	dst.aspectMask = C.VkImageAspectFlags(src.AspectMask)
+	dst.mipLevel = C.uint32_t(src.MipLevel)
+	dst.baseArrayLayer = C.uint32_t(src.BaseArrayLayer)
+	dst.layerCount = C.uint32_t(src.LayerCount)
+}
+
+// setOffset3D sets the offset on a C struct
+func setOffset3D(dst *C.VkOffset3D, src Offset3D) {
+	dst.x = C.int32_t(src.X)
+	dst.y = C.int32_t(src.Y)
+	dst.z = C.int32_t(src.Z)
+}
+
+// setExtent3D sets the extent on a C struct
+func setExtent3D(dst *C.VkExtent3D, src Extent3D) {
+	dst.width = C.uint32_t(src.Width)
+	dst.height = C.uint32_t(src.Height)
+	dst.depth = C.uint32_t(src.Depth)
+}
+
+// buildImageResolveRegions converts Go ImageResolve to C VkImageResolve
+func buildImageResolveRegions(regions []ImageResolve) []C.VkImageResolve {
+	cRegions := make([]C.VkImageResolve, len(regions))
+	for i, region := range regions {
+		setImageSubresourceLayers(&cRegions[i].srcSubresource, region.SrcSubresource)
+		setOffset3D(&cRegions[i].srcOffset, region.SrcOffset)
+		setImageSubresourceLayers(&cRegions[i].dstSubresource, region.DstSubresource)
+		setOffset3D(&cRegions[i].dstOffset, region.DstOffset)
+		setExtent3D(&cRegions[i].extent, region.Extent)
+	}
+	return cRegions
+}
+
 // CmdResolveImage resolves a multisample image to a non-multisample image
 func CmdResolveImage(
 	commandBuffer CommandBuffer,
@@ -228,39 +263,10 @@ func CmdResolveImage(
 	if commandBuffer == nil || srcImage == nil || dstImage == nil || len(regions) == 0 {
 		return
 	}
-
-	cRegions := make([]C.VkImageResolve, len(regions))
-	for i, region := range regions {
-		cRegions[i].srcSubresource.aspectMask = C.VkImageAspectFlags(region.SrcSubresource.AspectMask)
-		cRegions[i].srcSubresource.mipLevel = C.uint32_t(region.SrcSubresource.MipLevel)
-		cRegions[i].srcSubresource.baseArrayLayer = C.uint32_t(region.SrcSubresource.BaseArrayLayer)
-		cRegions[i].srcSubresource.layerCount = C.uint32_t(region.SrcSubresource.LayerCount)
-		cRegions[i].srcOffset.x = C.int32_t(region.SrcOffset.X)
-		cRegions[i].srcOffset.y = C.int32_t(region.SrcOffset.Y)
-		cRegions[i].srcOffset.z = C.int32_t(region.SrcOffset.Z)
-
-		cRegions[i].dstSubresource.aspectMask = C.VkImageAspectFlags(region.DstSubresource.AspectMask)
-		cRegions[i].dstSubresource.mipLevel = C.uint32_t(region.DstSubresource.MipLevel)
-		cRegions[i].dstSubresource.baseArrayLayer = C.uint32_t(region.DstSubresource.BaseArrayLayer)
-		cRegions[i].dstSubresource.layerCount = C.uint32_t(region.DstSubresource.LayerCount)
-		cRegions[i].dstOffset.x = C.int32_t(region.DstOffset.X)
-		cRegions[i].dstOffset.y = C.int32_t(region.DstOffset.Y)
-		cRegions[i].dstOffset.z = C.int32_t(region.DstOffset.Z)
-
-		cRegions[i].extent.width = C.uint32_t(region.Extent.Width)
-		cRegions[i].extent.height = C.uint32_t(region.Extent.Height)
-		cRegions[i].extent.depth = C.uint32_t(region.Extent.Depth)
-	}
-
-	C.vkCmdResolveImage(
-		C.VkCommandBuffer(commandBuffer),
-		C.VkImage(srcImage),
-		C.VkImageLayout(srcImageLayout),
-		C.VkImage(dstImage),
-		C.VkImageLayout(dstImageLayout),
-		C.uint32_t(len(cRegions)),
-		&cRegions[0],
-	)
+	cRegions := buildImageResolveRegions(regions)
+	C.vkCmdResolveImage(C.VkCommandBuffer(commandBuffer), C.VkImage(srcImage),
+		C.VkImageLayout(srcImageLayout), C.VkImage(dstImage), C.VkImageLayout(dstImageLayout),
+		C.uint32_t(len(cRegions)), &cRegions[0])
 }
 
 // BufferImageCopy describes a buffer to image or image to buffer copy operation
@@ -271,6 +277,27 @@ type BufferImageCopy struct {
 	ImageSubresource  ImageSubresourceLayers
 	ImageOffset       Offset3D
 	ImageExtent       Extent3D
+}
+
+// buildBufferImageCopyRegions converts Go BufferImageCopy to C VkBufferImageCopy
+func buildBufferImageCopyRegions(regions []BufferImageCopy) []C.VkBufferImageCopy {
+	cRegions := make([]C.VkBufferImageCopy, len(regions))
+	for i, region := range regions {
+		cRegions[i].bufferOffset = C.VkDeviceSize(region.BufferOffset)
+		cRegions[i].bufferRowLength = C.uint32_t(region.BufferRowLength)
+		cRegions[i].bufferImageHeight = C.uint32_t(region.BufferImageHeight)
+		cRegions[i].imageSubresource.aspectMask = C.VkImageAspectFlags(region.ImageSubresource.AspectMask)
+		cRegions[i].imageSubresource.mipLevel = C.uint32_t(region.ImageSubresource.MipLevel)
+		cRegions[i].imageSubresource.baseArrayLayer = C.uint32_t(region.ImageSubresource.BaseArrayLayer)
+		cRegions[i].imageSubresource.layerCount = C.uint32_t(region.ImageSubresource.LayerCount)
+		cRegions[i].imageOffset.x = C.int32_t(region.ImageOffset.X)
+		cRegions[i].imageOffset.y = C.int32_t(region.ImageOffset.Y)
+		cRegions[i].imageOffset.z = C.int32_t(region.ImageOffset.Z)
+		cRegions[i].imageExtent.width = C.uint32_t(region.ImageExtent.Width)
+		cRegions[i].imageExtent.height = C.uint32_t(region.ImageExtent.Height)
+		cRegions[i].imageExtent.depth = C.uint32_t(region.ImageExtent.Depth)
+	}
+	return cRegions
 }
 
 // CmdCopyBufferToImage copies data from a buffer to an image
@@ -284,32 +311,10 @@ func CmdCopyBufferToImage(
 	if commandBuffer == nil || srcBuffer == nil || dstImage == nil || len(regions) == 0 {
 		return
 	}
-
-	cRegions := make([]C.VkBufferImageCopy, len(regions))
-	for i, region := range regions {
-		cRegions[i].bufferOffset = C.VkDeviceSize(region.BufferOffset)
-		cRegions[i].bufferRowLength = C.uint32_t(region.BufferRowLength)
-		cRegions[i].bufferImageHeight = C.uint32_t(region.BufferImageHeight)
-		cRegions[i].imageSubresource.aspectMask = C.VkImageAspectFlags(region.ImageSubresource.AspectMask)
-		cRegions[i].imageSubresource.mipLevel = C.uint32_t(region.ImageSubresource.MipLevel)
-		cRegions[i].imageSubresource.baseArrayLayer = C.uint32_t(region.ImageSubresource.BaseArrayLayer)
-		cRegions[i].imageSubresource.layerCount = C.uint32_t(region.ImageSubresource.LayerCount)
-		cRegions[i].imageOffset.x = C.int32_t(region.ImageOffset.X)
-		cRegions[i].imageOffset.y = C.int32_t(region.ImageOffset.Y)
-		cRegions[i].imageOffset.z = C.int32_t(region.ImageOffset.Z)
-		cRegions[i].imageExtent.width = C.uint32_t(region.ImageExtent.Width)
-		cRegions[i].imageExtent.height = C.uint32_t(region.ImageExtent.Height)
-		cRegions[i].imageExtent.depth = C.uint32_t(region.ImageExtent.Depth)
-	}
-
-	C.vkCmdCopyBufferToImage(
-		C.VkCommandBuffer(commandBuffer),
-		C.VkBuffer(srcBuffer),
-		C.VkImage(dstImage),
-		C.VkImageLayout(dstImageLayout),
-		C.uint32_t(len(cRegions)),
-		&cRegions[0],
-	)
+	cRegions := buildBufferImageCopyRegions(regions)
+	C.vkCmdCopyBufferToImage(C.VkCommandBuffer(commandBuffer), C.VkBuffer(srcBuffer),
+		C.VkImage(dstImage), C.VkImageLayout(dstImageLayout),
+		C.uint32_t(len(cRegions)), &cRegions[0])
 }
 
 // CmdCopyImageToBuffer copies data from an image to a buffer
@@ -323,41 +328,26 @@ func CmdCopyImageToBuffer(
 	if commandBuffer == nil || srcImage == nil || dstBuffer == nil || len(regions) == 0 {
 		return
 	}
-
-	cRegions := make([]C.VkBufferImageCopy, len(regions))
-	for i, region := range regions {
-		cRegions[i].bufferOffset = C.VkDeviceSize(region.BufferOffset)
-		cRegions[i].bufferRowLength = C.uint32_t(region.BufferRowLength)
-		cRegions[i].bufferImageHeight = C.uint32_t(region.BufferImageHeight)
-		cRegions[i].imageSubresource.aspectMask = C.VkImageAspectFlags(region.ImageSubresource.AspectMask)
-		cRegions[i].imageSubresource.mipLevel = C.uint32_t(region.ImageSubresource.MipLevel)
-		cRegions[i].imageSubresource.baseArrayLayer = C.uint32_t(region.ImageSubresource.BaseArrayLayer)
-		cRegions[i].imageSubresource.layerCount = C.uint32_t(region.ImageSubresource.LayerCount)
-		cRegions[i].imageOffset.x = C.int32_t(region.ImageOffset.X)
-		cRegions[i].imageOffset.y = C.int32_t(region.ImageOffset.Y)
-		cRegions[i].imageOffset.z = C.int32_t(region.ImageOffset.Z)
-		cRegions[i].imageExtent.width = C.uint32_t(region.ImageExtent.Width)
-		cRegions[i].imageExtent.height = C.uint32_t(region.ImageExtent.Height)
-		cRegions[i].imageExtent.depth = C.uint32_t(region.ImageExtent.Depth)
-	}
-
-	C.vkCmdCopyImageToBuffer(
-		C.VkCommandBuffer(commandBuffer),
-		C.VkImage(srcImage),
-		C.VkImageLayout(srcImageLayout),
-		C.VkBuffer(dstBuffer),
-		C.uint32_t(len(cRegions)),
-		&cRegions[0],
-	)
+	cRegions := buildBufferImageCopyRegions(regions)
+	C.vkCmdCopyImageToBuffer(C.VkCommandBuffer(commandBuffer), C.VkImage(srcImage),
+		C.VkImageLayout(srcImageLayout), C.VkBuffer(dstBuffer),
+		C.uint32_t(len(cRegions)), &cRegions[0])
 }
 
-// ImageCopy describes an image to image copy operation
-type ImageCopy struct {
-	SrcSubresource ImageSubresourceLayers
-	SrcOffset      Offset3D
-	DstSubresource ImageSubresourceLayers
-	DstOffset      Offset3D
-	Extent         Extent3D
+// ImageCopy describes an image to image copy operation (same structure as ImageResolve)
+type ImageCopy = ImageResolve
+
+// buildImageCopyRegions converts Go ImageCopy to C VkImageCopy
+func buildImageCopyRegions(regions []ImageCopy) []C.VkImageCopy {
+	cRegions := make([]C.VkImageCopy, len(regions))
+	for i, region := range regions {
+		setImageSubresourceLayers(&cRegions[i].srcSubresource, region.SrcSubresource)
+		setOffset3D(&cRegions[i].srcOffset, region.SrcOffset)
+		setImageSubresourceLayers(&cRegions[i].dstSubresource, region.DstSubresource)
+		setOffset3D(&cRegions[i].dstOffset, region.DstOffset)
+		setExtent3D(&cRegions[i].extent, region.Extent)
+	}
+	return cRegions
 }
 
 // CmdCopyImage copies data between images
@@ -372,39 +362,10 @@ func CmdCopyImage(
 	if commandBuffer == nil || srcImage == nil || dstImage == nil || len(regions) == 0 {
 		return
 	}
-
-	cRegions := make([]C.VkImageCopy, len(regions))
-	for i, region := range regions {
-		cRegions[i].srcSubresource.aspectMask = C.VkImageAspectFlags(region.SrcSubresource.AspectMask)
-		cRegions[i].srcSubresource.mipLevel = C.uint32_t(region.SrcSubresource.MipLevel)
-		cRegions[i].srcSubresource.baseArrayLayer = C.uint32_t(region.SrcSubresource.BaseArrayLayer)
-		cRegions[i].srcSubresource.layerCount = C.uint32_t(region.SrcSubresource.LayerCount)
-		cRegions[i].srcOffset.x = C.int32_t(region.SrcOffset.X)
-		cRegions[i].srcOffset.y = C.int32_t(region.SrcOffset.Y)
-		cRegions[i].srcOffset.z = C.int32_t(region.SrcOffset.Z)
-
-		cRegions[i].dstSubresource.aspectMask = C.VkImageAspectFlags(region.DstSubresource.AspectMask)
-		cRegions[i].dstSubresource.mipLevel = C.uint32_t(region.DstSubresource.MipLevel)
-		cRegions[i].dstSubresource.baseArrayLayer = C.uint32_t(region.DstSubresource.BaseArrayLayer)
-		cRegions[i].dstSubresource.layerCount = C.uint32_t(region.DstSubresource.LayerCount)
-		cRegions[i].dstOffset.x = C.int32_t(region.DstOffset.X)
-		cRegions[i].dstOffset.y = C.int32_t(region.DstOffset.Y)
-		cRegions[i].dstOffset.z = C.int32_t(region.DstOffset.Z)
-
-		cRegions[i].extent.width = C.uint32_t(region.Extent.Width)
-		cRegions[i].extent.height = C.uint32_t(region.Extent.Height)
-		cRegions[i].extent.depth = C.uint32_t(region.Extent.Depth)
-	}
-
-	C.vkCmdCopyImage(
-		C.VkCommandBuffer(commandBuffer),
-		C.VkImage(srcImage),
-		C.VkImageLayout(srcImageLayout),
-		C.VkImage(dstImage),
-		C.VkImageLayout(dstImageLayout),
-		C.uint32_t(len(cRegions)),
-		&cRegions[0],
-	)
+	cRegions := buildImageCopyRegions(regions)
+	C.vkCmdCopyImage(C.VkCommandBuffer(commandBuffer), C.VkImage(srcImage),
+		C.VkImageLayout(srcImageLayout), C.VkImage(dstImage), C.VkImageLayout(dstImageLayout),
+		C.uint32_t(len(cRegions)), &cRegions[0])
 }
 
 // ============================================================================
@@ -480,6 +441,19 @@ const (
 	SparseMemoryBindMetadataBit SparseMemoryBindFlags = C.VK_SPARSE_MEMORY_BIND_METADATA_BIT
 )
 
+// buildSparseMemoryBinds converts Go SparseMemoryBind slice to C VkSparseMemoryBind slice
+func buildSparseMemoryBinds(binds []SparseMemoryBind) []C.VkSparseMemoryBind {
+	cBinds := make([]C.VkSparseMemoryBind, len(binds))
+	for k, bind := range binds {
+		cBinds[k].resourceOffset = C.VkDeviceSize(bind.ResourceOffset)
+		cBinds[k].size = C.VkDeviceSize(bind.Size)
+		cBinds[k].memory = C.VkDeviceMemory(bind.Memory)
+		cBinds[k].memoryOffset = C.VkDeviceSize(bind.MemoryOffset)
+		cBinds[k].flags = C.VkSparseMemoryBindFlags(bind.Flags)
+	}
+	return cBinds
+}
+
 // SparseBufferMemoryBindInfo specifies sparse buffer memory binding info
 type SparseBufferMemoryBindInfo struct {
 	Buffer Buffer
@@ -517,11 +491,11 @@ type SparseImageMemoryBindInfo struct {
 
 // BindSparseInfo describes a sparse binding operation
 type BindSparseInfo struct {
-	WaitSemaphores       []Semaphore
-	BufferBinds          []SparseBufferMemoryBindInfo
-	ImageOpaqueBinds     []SparseImageOpaqueMemoryBindInfo
-	ImageBinds           []SparseImageMemoryBindInfo
-	SignalSemaphores     []Semaphore
+	WaitSemaphores   []Semaphore
+	BufferBinds      []SparseBufferMemoryBindInfo
+	ImageOpaqueBinds []SparseImageOpaqueMemoryBindInfo
+	ImageBinds       []SparseImageMemoryBindInfo
+	SignalSemaphores []Semaphore
 }
 
 // QueueBindSparse binds sparse resources on a queue
@@ -548,14 +522,14 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 
 	// We need to keep these slices alive for the duration of the call
 	type bindInfoArrays struct {
-		waitSemaphores              []C.VkSemaphore
-		signalSemaphores            []C.VkSemaphore
-		bufferBindInfos             []C.VkSparseBufferMemoryBindInfo
-		imageOpaqueBindInfos        []C.VkSparseImageOpaqueMemoryBindInfo
-		imageBindInfos              []C.VkSparseImageMemoryBindInfo
-		sparseMemoryBinds           [][]C.VkSparseMemoryBind
+		waitSemaphores               []C.VkSemaphore
+		signalSemaphores             []C.VkSemaphore
+		bufferBindInfos              []C.VkSparseBufferMemoryBindInfo
+		imageOpaqueBindInfos         []C.VkSparseImageOpaqueMemoryBindInfo
+		imageBindInfos               []C.VkSparseImageMemoryBindInfo
+		sparseMemoryBinds            [][]C.VkSparseMemoryBind
 		sparseImageOpaqueMemoryBinds [][]C.VkSparseMemoryBind
-		sparseImageMemoryBinds      [][]C.VkSparseImageMemoryBind
+		sparseImageMemoryBinds       [][]C.VkSparseImageMemoryBind
 	}
 	arrays := make([]bindInfoArrays, len(bindInfos))
 
@@ -573,21 +547,14 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 			cBindInfos[i].pWaitSemaphores = &arrays[i].waitSemaphores[0]
 		}
 
-		// Buffer binds
-		if len(info.BufferBinds) > 0 {
-			arrays[i].bufferBindInfos = make([]C.VkSparseBufferMemoryBindInfo, len(info.BufferBinds))
-			arrays[i].sparseMemoryBinds = make([][]C.VkSparseMemoryBind, len(info.BufferBinds))
+		// Buffer binds - populate sparse buffer memory bind info
+		if bufBindCount := len(info.BufferBinds); bufBindCount > 0 {
+			arrays[i].bufferBindInfos = make([]C.VkSparseBufferMemoryBindInfo, bufBindCount)
+			arrays[i].sparseMemoryBinds = make([][]C.VkSparseMemoryBind, bufBindCount)
 			for j, bufBind := range info.BufferBinds {
 				arrays[i].bufferBindInfos[j].buffer = C.VkBuffer(bufBind.Buffer)
 				if len(bufBind.Binds) > 0 {
-					arrays[i].sparseMemoryBinds[j] = make([]C.VkSparseMemoryBind, len(bufBind.Binds))
-					for k, bind := range bufBind.Binds {
-						arrays[i].sparseMemoryBinds[j][k].resourceOffset = C.VkDeviceSize(bind.ResourceOffset)
-						arrays[i].sparseMemoryBinds[j][k].size = C.VkDeviceSize(bind.Size)
-						arrays[i].sparseMemoryBinds[j][k].memory = C.VkDeviceMemory(bind.Memory)
-						arrays[i].sparseMemoryBinds[j][k].memoryOffset = C.VkDeviceSize(bind.MemoryOffset)
-						arrays[i].sparseMemoryBinds[j][k].flags = C.VkSparseMemoryBindFlags(bind.Flags)
-					}
+					arrays[i].sparseMemoryBinds[j] = buildSparseMemoryBinds(bufBind.Binds)
 					arrays[i].bufferBindInfos[j].bindCount = C.uint32_t(len(arrays[i].sparseMemoryBinds[j]))
 					arrays[i].bufferBindInfos[j].pBinds = &arrays[i].sparseMemoryBinds[j][0]
 				}
@@ -596,26 +563,20 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 			cBindInfos[i].pBufferBinds = &arrays[i].bufferBindInfos[0]
 		}
 
-		// Image opaque binds
-		if len(info.ImageOpaqueBinds) > 0 {
-			arrays[i].imageOpaqueBindInfos = make([]C.VkSparseImageOpaqueMemoryBindInfo, len(info.ImageOpaqueBinds))
-			arrays[i].sparseImageOpaqueMemoryBinds = make([][]C.VkSparseMemoryBind, len(info.ImageOpaqueBinds))
-			for j, imgBind := range info.ImageOpaqueBinds {
+		// Image opaque binds - populate sparse image opaque memory bind info
+		if imgOpaqueBindCount := len(info.ImageOpaqueBinds); imgOpaqueBindCount > 0 {
+			arrays[i].imageOpaqueBindInfos = make([]C.VkSparseImageOpaqueMemoryBindInfo, imgOpaqueBindCount)
+			arrays[i].sparseImageOpaqueMemoryBinds = make([][]C.VkSparseMemoryBind, imgOpaqueBindCount)
+			for j := 0; j < imgOpaqueBindCount; j++ {
+				imgBind := info.ImageOpaqueBinds[j]
 				arrays[i].imageOpaqueBindInfos[j].image = C.VkImage(imgBind.Image)
-				if len(imgBind.Binds) > 0 {
-					arrays[i].sparseImageOpaqueMemoryBinds[j] = make([]C.VkSparseMemoryBind, len(imgBind.Binds))
-					for k, bind := range imgBind.Binds {
-						arrays[i].sparseImageOpaqueMemoryBinds[j][k].resourceOffset = C.VkDeviceSize(bind.ResourceOffset)
-						arrays[i].sparseImageOpaqueMemoryBinds[j][k].size = C.VkDeviceSize(bind.Size)
-						arrays[i].sparseImageOpaqueMemoryBinds[j][k].memory = C.VkDeviceMemory(bind.Memory)
-						arrays[i].sparseImageOpaqueMemoryBinds[j][k].memoryOffset = C.VkDeviceSize(bind.MemoryOffset)
-						arrays[i].sparseImageOpaqueMemoryBinds[j][k].flags = C.VkSparseMemoryBindFlags(bind.Flags)
-					}
-					arrays[i].imageOpaqueBindInfos[j].bindCount = C.uint32_t(len(arrays[i].sparseImageOpaqueMemoryBinds[j]))
+				if bindLen := len(imgBind.Binds); bindLen > 0 {
+					arrays[i].sparseImageOpaqueMemoryBinds[j] = buildSparseMemoryBinds(imgBind.Binds)
+					arrays[i].imageOpaqueBindInfos[j].bindCount = C.uint32_t(bindLen)
 					arrays[i].imageOpaqueBindInfos[j].pBinds = &arrays[i].sparseImageOpaqueMemoryBinds[j][0]
 				}
 			}
-			cBindInfos[i].imageOpaqueBindCount = C.uint32_t(len(arrays[i].imageOpaqueBindInfos))
+			cBindInfos[i].imageOpaqueBindCount = C.uint32_t(imgOpaqueBindCount)
 			cBindInfos[i].pImageOpaqueBinds = &arrays[i].imageOpaqueBindInfos[0]
 		}
 

@@ -126,59 +126,73 @@ const (
 	MemoryHeapMultiInstanceBit MemoryHeapFlags = C.VK_MEMORY_HEAP_MULTI_INSTANCE_BIT
 )
 
-// CreateDevice creates a logical device
-func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (Device, error) {
-	// Input validation
+// validateDeviceCreateInfo validates the device create info
+func validateDeviceCreateInfo(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) error {
 	if physicalDevice == nil {
-		return nil, NewValidationError("physicalDevice", "cannot be nil")
+		return NewValidationError("physicalDevice", "cannot be nil")
 	}
 	if createInfo == nil {
-		return nil, NewValidationError("createInfo", "cannot be nil")
+		return NewValidationError("createInfo", "cannot be nil")
 	}
+	if err := validateQueueCreateInfos(createInfo.QueueCreateInfos); err != nil {
+		return err
+	}
+	if err := validateDeviceLayersAndExtensions(createInfo); err != nil {
+		return err
+	}
+	return nil
+}
 
-	// Validate queue create infos
-	const maxQueues = 16 // Reasonable limit for queue families
-	if len(createInfo.QueueCreateInfos) > maxQueues {
-		return nil, NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
+// validateQueueCreateInfos validates queue create infos
+func validateQueueCreateInfos(queueCreateInfos []DeviceQueueCreateInfo) error {
+	const maxQueues = 16
+	if len(queueCreateInfos) > maxQueues {
+		return NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
 	}
-	for i, qci := range createInfo.QueueCreateInfos {
+	for _, qci := range queueCreateInfos {
 		if len(qci.QueuePriorities) == 0 {
-			return nil, NewValidationError("QueueCreateInfos", "queue family must have at least one queue")
+			return NewValidationError("QueueCreateInfos", "queue family must have at least one queue")
 		}
 		const maxQueuesPerFamily = 16
 		if len(qci.QueuePriorities) > maxQueuesPerFamily {
-			return nil, NewValidationError("QueueCreateInfos", "queue family exceeds maximum of 16 queues")
+			return NewValidationError("QueueCreateInfos", "queue family exceeds maximum of 16 queues")
 		}
-		// Validate queue priorities are in range [0.0, 1.0]
-		for j, priority := range qci.QueuePriorities {
+		for _, priority := range qci.QueuePriorities {
 			if priority < 0.0 || priority > 1.0 {
-				return nil, NewValidationError("QueueCreateInfos", "queue priority must be between 0.0 and 1.0")
+				return NewValidationError("QueueCreateInfos", "queue priority must be between 0.0 and 1.0")
 			}
-			_ = j // avoid unused variable
 		}
-		_ = i // avoid unused variable
 	}
+	return nil
+}
 
-	// Validate layers (reuse same validation as CreateInstance)
+// validateDeviceLayersAndExtensions validates layers and extensions
+func validateDeviceLayersAndExtensions(createInfo *DeviceCreateInfo) error {
 	const maxLayers = 64
 	if len(createInfo.EnabledLayerNames) > maxLayers {
-		return nil, NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
+		return NewValidationError("EnabledLayerNames", "exceeds maximum of 64 layers")
 	}
 	for _, layer := range createInfo.EnabledLayerNames {
 		if len(layer) > 256 {
-			return nil, NewValidationError("EnabledLayerNames", "layer name exceeds maximum length of 256 characters")
+			return NewValidationError("EnabledLayerNames", "layer name exceeds maximum length of 256 characters")
 		}
 	}
-
-	// Validate extensions
 	const maxExtensions = 256
 	if len(createInfo.EnabledExtensionNames) > maxExtensions {
-		return nil, NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
+		return NewValidationError("EnabledExtensionNames", "exceeds maximum of 256 extensions")
 	}
 	for _, ext := range createInfo.EnabledExtensionNames {
 		if len(ext) > 256 {
-			return nil, NewValidationError("EnabledExtensionNames", "extension name exceeds maximum length of 256 characters")
+			return NewValidationError("EnabledExtensionNames", "extension name exceeds maximum length of 256 characters")
 		}
+	}
+	return nil
+}
+
+// CreateDevice creates a logical device
+func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (Device, error) {
+	if err := validateDeviceCreateInfo(physicalDevice, createInfo); err != nil {
+		return nil, err
 	}
 
 	// Allocate create info in C memory to avoid Go pointer issues
@@ -199,7 +213,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	var cQueueCreateInfosPtr *C.VkDeviceQueueCreateInfo
 	var cPrioritiesArray []*C.float
 	var cPrioritiesToFree []*C.float // Track allocated priorities for cleanup
-	
+
 	if len(createInfo.QueueCreateInfos) > 0 {
 		cQueueCreateInfosPtr = (*C.VkDeviceQueueCreateInfo)(C.malloc(C.size_t(len(createInfo.QueueCreateInfos)) * C.sizeof_VkDeviceQueueCreateInfo))
 		if cQueueCreateInfosPtr == nil {
@@ -212,15 +226,16 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 
 		cPrioritiesArray = make([]*C.float, len(createInfo.QueueCreateInfos))
 
+		// Create a Go slice backed by the C array for safe indexed access
+		cQueueInfos := unsafe.Slice(cQueueCreateInfosPtr, len(createInfo.QueueCreateInfos))
+
 		for i, qci := range createInfo.QueueCreateInfos {
-			// Use pointer arithmetic to access array elements (in bytes)
-			offset := uintptr(i) * uintptr(C.sizeof_VkDeviceQueueCreateInfo)
-			cQueueInfo := (*C.VkDeviceQueueCreateInfo)(unsafe.Pointer(uintptr(unsafe.Pointer(cQueueCreateInfosPtr)) + offset))
-			cQueueInfo.sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
-			cQueueInfo.pNext = nil
-			cQueueInfo.flags = 0
-			cQueueInfo.queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
-			cQueueInfo.queueCount = C.uint32_t(len(qci.QueuePriorities))
+			// Use slice indexing for safe array access (avoids manual pointer arithmetic)
+			cQueueInfos[i].sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
+			cQueueInfos[i].pNext = nil
+			cQueueInfos[i].flags = 0
+			cQueueInfos[i].queueFamilyIndex = C.uint32_t(qci.QueueFamilyIndex)
+			cQueueInfos[i].queueCount = C.uint32_t(len(qci.QueuePriorities))
 
 			if len(qci.QueuePriorities) > 0 {
 				cPrioritiesPtr := (*C.float)(C.malloc(C.size_t(len(qci.QueuePriorities)) * C.sizeof_float))
@@ -236,17 +251,18 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 				cPrioritiesToFree = append(cPrioritiesToFree, cPrioritiesPtr)
 				cPrioritiesArray[i] = cPrioritiesPtr
 
+				// Use slice for safe priority array access
+				cPriorities := unsafe.Slice(cPrioritiesPtr, len(qci.QueuePriorities))
 				for j, priority := range qci.QueuePriorities {
-					cPriority := (*C.float)(unsafe.Pointer(uintptr(unsafe.Pointer(cPrioritiesPtr)) + uintptr(j)*uintptr(C.sizeof_float)))
-					*cPriority = C.float(priority)
+					cPriorities[j] = C.float(priority)
 				}
-				cQueueInfo.pQueuePriorities = cPrioritiesPtr
+				cQueueInfos[i].pQueuePriorities = cPrioritiesPtr
 			}
 		}
 		cCreateInfoPtr.queueCreateInfoCount = C.uint32_t(len(createInfo.QueueCreateInfos))
 		cCreateInfoPtr.pQueueCreateInfos = cQueueCreateInfosPtr
 	}
-	
+
 	// Defer cleanup of priority arrays
 	defer func() {
 		for _, ptr := range cPrioritiesToFree {
@@ -283,22 +299,18 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	if createInfo.EnabledFeatures != nil {
 		cFeaturesPtr = (*C.VkPhysicalDeviceFeatures)(C.malloc(C.sizeof_VkPhysicalDeviceFeatures))
 		if cFeaturesPtr == nil {
-			// Clean up priorities before returning
-			for _, ptr := range cPrioritiesToFree {
-				C.free(unsafe.Pointer(ptr))
-			}
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for physical device features")
 		}
 		*cFeaturesPtr = physicalDeviceFeaturesToC(createInfo.EnabledFeatures)
 		cCreateInfoPtr.pEnabledFeatures = cFeaturesPtr
-		
+
 		// Defer cleanup of features
 		defer C.free(unsafe.Pointer(cFeaturesPtr))
 	}
 
 	var device C.VkDevice
 	result := Result(C.vkCreateDevice(C.VkPhysicalDevice(physicalDevice), cCreateInfoPtr, nil, &device))
-	
+
 	if result != Success {
 		return nil, NewVulkanError(result, "CreateDevice", "Vulkan device creation failed")
 	}
