@@ -891,38 +891,25 @@ func GetPhysicalDeviceSurfacePresentModes(physicalDevice PhysicalDevice, surface
 	if surface == nil {
 		return nil, NewValidationError("surface", "cannot be nil")
 	}
-
 	var modeCount C.uint32_t
-	result := Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
-		C.VkPhysicalDevice(physicalDevice),
-		C.VkSurfaceKHR(surface),
-		&modeCount,
-		nil,
-	))
-	if result != Success {
+	if result := Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
+		C.VkPhysicalDevice(physicalDevice), C.VkSurfaceKHR(surface), &modeCount, nil,
+	)); result != Success {
 		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfacePresentModes", "Vulkan present modes query failed")
 	}
-
 	if modeCount == 0 {
 		return []PresentMode{}, nil
 	}
-
 	cModes := make([]C.VkPresentModeKHR, modeCount)
-	result = Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
-		C.VkPhysicalDevice(physicalDevice),
-		C.VkSurfaceKHR(surface),
-		&modeCount,
-		&cModes[0],
-	))
-	if result != Success {
+	if result := Result(C.vkGetPhysicalDeviceSurfacePresentModesKHR(
+		C.VkPhysicalDevice(physicalDevice), C.VkSurfaceKHR(surface), &modeCount, &cModes[0],
+	)); result != Success {
 		return nil, NewVulkanError(result, "GetPhysicalDeviceSurfacePresentModes", "Vulkan present modes query failed")
 	}
-
 	modes := make([]PresentMode, modeCount)
 	for i := range modes {
 		modes[i] = PresentMode(cModes[i])
 	}
-
 	return modes, nil
 }
 
