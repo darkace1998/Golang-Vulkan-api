@@ -18,6 +18,10 @@ examples/simple_example
 examples/vulkan13_test
 examples/graphics_benchmark
 
+# Compiled binaries in root (from go build)
+graphics_pipeline
+swapchain
+
 # IDE
 .vscode/
 .idea/
