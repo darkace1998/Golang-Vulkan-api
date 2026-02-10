@@ -21,9 +21,9 @@
 
 ## High Priority
 
-- [ ] **Implement benchmark CSV export** — The benchmark example (`examples/benchmark/`) has a CSV export feature marked as a TODO; implement it for machine-readable results output.
-- [ ] **Complete swapchain usage example** — `swapchain.go` defines types (`SwapchainCreateInfo`, `PresentInfo`, surface transforms, color spaces) but there is no end-to-end swapchain + present example.
-- [ ] **Add a full graphics pipeline example** — Current examples cover compute and video codecs; a triangle or quad rendering example using the graphics pipeline would demonstrate vertex buffers, shaders, render passes, and draw commands together.
+- [x] **Implement benchmark CSV export** — The backup benchmark (`examples/benchmark_backup/`) now uses the `-csv` flag to call `exportToCSV`, matching the main benchmark.
+- [x] **Complete swapchain usage example** — `examples/swapchain/main.go` demonstrates all swapchain types, constants, input validation, synchronization objects, and the full present loop workflow.
+- [x] **Add a full graphics pipeline example** — `examples/graphics_pipeline/main.go` demonstrates offscreen rendering with vertex buffers, shader modules, render pass, framebuffer, graphics pipeline creation, and draw commands.
 
 ---
 
