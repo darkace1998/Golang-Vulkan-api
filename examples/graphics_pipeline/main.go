@@ -359,10 +359,12 @@ func main() {
 				},
 			},
 			VertexAttributeDescriptions: []vulkan.VertexInputAttributeDescription{
-				// position: location=0, offset=0, R8G8B8A8 used as 2-float proxy
-				{Location: 0, Binding: 0, Format: vulkan.FormatR8G8B8A8Unorm, Offset: 0},
-				// color: location=1, offset=8
-				{Location: 1, Binding: 0, Format: vulkan.FormatR8G8B8A8Unorm, Offset: 8},
+				// position: vec2 (2 floats at offset 0)
+				// VK_FORMAT_R32G32_SFLOAT = 103
+				{Location: 0, Binding: 0, Format: vulkan.Format(103), Offset: 0},
+				// color: vec3 (3 floats at offset 8)
+				// VK_FORMAT_R32G32B32_SFLOAT = 106
+				{Location: 1, Binding: 0, Format: vulkan.Format(106), Offset: 8},
 			},
 		},
 		InputAssemblyState: &vulkan.PipelineInputAssemblyStateCreateInfo{

@@ -1,4 +1,4 @@
-.PHONY: help build build-verbose test clean setup lint format run-example run-video run-compute run-benchmark run-swapchain run-graphics-pipeline
+.PHONY: help build build-verbose test clean setup lint format run-example run-video run-compute run-benchmark run-swapchain run-graphics
 
 help:
 	@echo "Golang-Vulkan-api Build Targets"
