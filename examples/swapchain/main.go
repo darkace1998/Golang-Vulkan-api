@@ -167,12 +167,16 @@ func main() {
 	_, err = vulkan.CreateSwapchain(nil, &vulkan.SwapchainCreateInfo{})
 	if err != nil {
 		fmt.Printf("   ✓ CreateSwapchain(nil device) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ CreateSwapchain(nil device) should have been rejected")
 	}
 
 	// CreateSwapchain – nil createInfo
 	_, err = vulkan.CreateSwapchain(device, nil)
 	if err != nil {
 		fmt.Printf("   ✓ CreateSwapchain(nil createInfo) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ CreateSwapchain(nil createInfo) should have been rejected")
 	}
 
 	// CreateSwapchain – nil surface
@@ -183,6 +187,8 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("   ✓ CreateSwapchain(nil Surface) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ CreateSwapchain(nil Surface) should have been rejected")
 	}
 
 	// CreateSwapchain – zero extent
@@ -192,18 +198,24 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("   ✓ CreateSwapchain(zero extent) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ CreateSwapchain(zero extent) should have been rejected")
 	}
 
 	// GetSwapchainImages – nil device
 	_, err = vulkan.GetSwapchainImages(nil, nil)
 	if err != nil {
 		fmt.Printf("   ✓ GetSwapchainImages(nil device) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ GetSwapchainImages(nil device) should have been rejected")
 	}
 
 	// AcquireNextImage – nil device
 	_, _, err = vulkan.AcquireNextImage(nil, nil, 0, nil, nil)
 	if err != nil {
 		fmt.Printf("   ✓ AcquireNextImage(nil device) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ AcquireNextImage(nil device) should have been rejected")
 	}
 
 	// QueuePresent – nil queue
@@ -213,6 +225,8 @@ func main() {
 	})
 	if err != nil {
 		fmt.Printf("   ✓ QueuePresent(nil queue) correctly rejected: %v\n", err)
+	} else {
+		log.Fatal("   ✗ QueuePresent(nil queue) should have been rejected")
 	}
 
 	// -----------------------------------------------------------------------
