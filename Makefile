@@ -1,4 +1,4 @@
-.PHONY: help build build-verbose test clean setup lint format run-example run-video run-compute run-benchmark
+.PHONY: help build build-verbose test clean setup lint format run-example run-video run-compute run-benchmark run-swapchain run-graphics
 
 help:
 	@echo "Golang-Vulkan-api Build Targets"
@@ -18,6 +18,8 @@ help:
 	@echo "run-video          - Run video example"
 	@echo "run-type           - Run type example"
 	@echo "run-benchmark      - Run benchmarks"
+	@echo "run-swapchain      - Run swapchain example"
+	@echo "run-graphics       - Run graphics pipeline example"
 	@echo ""
 
 setup:
@@ -82,6 +84,14 @@ run-type:
 run-benchmark:
 	@echo "Running benchmarks..."
 	@go test -bench=. -benchmem ./examples/benchmark/...
+
+run-swapchain:
+	@echo "Running swapchain example..."
+	@go run ./examples/swapchain/main.go
+
+run-graphics:
+	@echo "Running graphics pipeline example..."
+	@go run ./examples/graphics_pipeline/main.go
 
 verify-vulkan:
 	@echo "Verifying Vulkan installation..."

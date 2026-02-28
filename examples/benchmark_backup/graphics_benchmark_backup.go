@@ -328,8 +328,6 @@ func main() {
 	)
 	flag.Parse()
 
-	_ = csvExport // TODO: Implement CSV export functionality
-
 	if *listResolutions {
 		fmt.Println("Available Resolutions:")
 		for _, res := range standardResolutions {
@@ -397,6 +395,15 @@ func main() {
 	} else {
 		fmt.Println("🚀 Running HARDWARE-ACCELERATED stress test")
 		app.runStressTest()
+	}
+
+	// Generate final report
+	results := app.generateResults()
+	app.displayResults(results)
+
+	// Export data if requested
+	if *csvExport && *outputDir != "" {
+		app.exportToCSV(*outputDir)
 	}
 }
 
