@@ -8,6 +8,7 @@ package vulkan
 import "C"
 
 import (
+	"sync"
 	"unsafe"
 )
 
@@ -277,6 +278,9 @@ func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
 
 // DestroyBuffer destroys a buffer
 func DestroyBuffer(device Device, buffer Buffer) {
+	if device == nil || buffer == nil {
+		return
+	}
 	C.vkDestroyBuffer(C.VkDevice(device), C.VkBuffer(buffer), nil)
 }
 
@@ -294,6 +298,13 @@ func GetBufferMemoryRequirements(device Device, buffer Buffer) MemoryRequirement
 
 // AllocateMemory allocates device memory
 func AllocateMemory(device Device, allocateInfo *MemoryAllocateInfo) (DeviceMemory, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if allocateInfo == nil {
+		return nil, NewValidationError("allocateInfo", "cannot be nil")
+	}
+
 	var cAllocateInfo C.VkMemoryAllocateInfo
 	cAllocateInfo.sType = C.VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO
 	cAllocateInfo.pNext = nil
@@ -303,7 +314,7 @@ func AllocateMemory(device Device, allocateInfo *MemoryAllocateInfo) (DeviceMemo
 	var memory C.VkDeviceMemory
 	result := Result(C.vkAllocateMemory(C.VkDevice(device), &cAllocateInfo, nil, &memory))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "AllocateMemory", "Vulkan memory allocation failed")
 	}
 
 	return DeviceMemory(memory), nil
@@ -311,24 +322,44 @@ func AllocateMemory(device Device, allocateInfo *MemoryAllocateInfo) (DeviceMemo
 
 // FreeMemory frees device memory
 func FreeMemory(device Device, memory DeviceMemory) {
+	if device == nil || memory == nil {
+		return
+	}
 	C.vkFreeMemory(C.VkDevice(device), C.VkDeviceMemory(memory), nil)
 }
 
 // BindBufferMemory binds buffer memory
 func BindBufferMemory(device Device, buffer Buffer, memory DeviceMemory, memoryOffset DeviceSize) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if buffer == nil {
+		return NewValidationError("buffer", "cannot be nil")
+	}
+	if memory == nil {
+		return NewValidationError("memory", "cannot be nil")
+	}
+
 	result := Result(C.vkBindBufferMemory(C.VkDevice(device), C.VkBuffer(buffer), C.VkDeviceMemory(memory), C.VkDeviceSize(memoryOffset)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "BindBufferMemory", "Vulkan buffer memory bind failed")
 	}
 	return nil
 }
 
 // MapMemory maps device memory
 func MapMemory(device Device, memory DeviceMemory, offset, size DeviceSize, flags uint32) (unsafe.Pointer, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if memory == nil {
+		return nil, NewValidationError("memory", "cannot be nil")
+	}
+
 	var data unsafe.Pointer
 	result := Result(C.vkMapMemory(C.VkDevice(device), C.VkDeviceMemory(memory), C.VkDeviceSize(offset), C.VkDeviceSize(size), C.VkMemoryMapFlags(flags), &data))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "MapMemory", "Vulkan memory map failed")
 	}
 	return data, nil
 }
@@ -340,6 +371,13 @@ func UnmapMemory(device Device, memory DeviceMemory) {
 
 // CreateImage creates an image
 func CreateImage(device Device, createInfo *ImageCreateInfo) (Image, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkImageCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -362,7 +400,7 @@ func CreateImage(device Device, createInfo *ImageCreateInfo) (Image, error) {
 	var image C.VkImage
 	result := Result(C.vkCreateImage(C.VkDevice(device), &cCreateInfo, nil, &image))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateImage", "Vulkan image creation failed")
 	}
 
 	return Image(image), nil
@@ -370,6 +408,9 @@ func CreateImage(device Device, createInfo *ImageCreateInfo) (Image, error) {
 
 // DestroyImage destroys an image
 func DestroyImage(device Device, image Image) {
+	if device == nil || image == nil {
+		return
+	}
 	C.vkDestroyImage(C.VkDevice(device), C.VkImage(image), nil)
 }
 
@@ -387,9 +428,19 @@ func GetImageMemoryRequirements(device Device, image Image) MemoryRequirements {
 
 // BindImageMemory binds image memory
 func BindImageMemory(device Device, image Image, memory DeviceMemory, memoryOffset DeviceSize) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if image == nil {
+		return NewValidationError("image", "cannot be nil")
+	}
+	if memory == nil {
+		return NewValidationError("memory", "cannot be nil")
+	}
+
 	result := Result(C.vkBindImageMemory(C.VkDevice(device), C.VkImage(image), C.VkDeviceMemory(memory), C.VkDeviceSize(memoryOffset)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "BindImageMemory", "Vulkan image memory bind failed")
 	}
 	return nil
 }
@@ -649,7 +700,8 @@ func CopyDataToStagingBuffer(stagingBuffer *StagingBuffer, data []byte) error {
 // DefaultMemoryAlignment is the default alignment for memory pool allocations
 const DefaultMemoryAlignment DeviceSize = 256
 
-// MemoryPool represents a simple memory pool for efficient allocations
+// MemoryPool represents a simple memory pool for efficient allocations.
+// It is safe for concurrent use by multiple goroutines.
 type MemoryPool struct {
 	Device          Device
 	Memory          DeviceMemory
@@ -657,6 +709,7 @@ type MemoryPool struct {
 	MemoryTypeIndex uint32
 	Offset          DeviceSize // Current allocation offset
 	Alignment       DeviceSize // Minimum allocation alignment
+	mu              sync.Mutex // Protects Offset during concurrent Allocate/Reset
 }
 
 // isPowerOfTwo checks if a value is a power of two
@@ -700,7 +753,8 @@ func CreateMemoryPool(device Device, size DeviceSize, memoryTypeIndex uint32, al
 }
 
 // Allocate allocates memory from the pool
-// Returns the offset within the pool memory, or an error if there's not enough space
+// Returns the offset within the pool memory, or an error if there's not enough space.
+// This method is safe for concurrent use.
 func (pool *MemoryPool) Allocate(size DeviceSize, alignment DeviceSize) (DeviceSize, error) {
 	if pool == nil {
 		return 0, NewValidationError("pool", "cannot be nil")
@@ -717,6 +771,9 @@ func (pool *MemoryPool) Allocate(size DeviceSize, alignment DeviceSize) (DeviceS
 		return 0, NewValidationError("alignment", "must be a power of two")
 	}
 
+	pool.mu.Lock()
+	defer pool.mu.Unlock()
+
 	// Align the current offset
 	alignedOffset := (pool.Offset + alignment - 1) & ^(alignment - 1)
 
@@ -731,10 +788,13 @@ func (pool *MemoryPool) Allocate(size DeviceSize, alignment DeviceSize) (DeviceS
 	return alignedOffset, nil
 }
 
-// Reset resets the pool for reuse (does not free memory)
+// Reset resets the pool for reuse (does not free memory).
+// This method is safe for concurrent use.
 func (pool *MemoryPool) Reset() {
 	if pool != nil {
+		pool.mu.Lock()
 		pool.Offset = 0
+		pool.mu.Unlock()
 	}
 }
 

@@ -145,6 +145,13 @@ const (
 
 // CreateShaderModule creates a shader module
 func CreateShaderModule(device Device, createInfo *ShaderModuleCreateInfo) (ShaderModule, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkShaderModuleCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -157,7 +164,7 @@ func CreateShaderModule(device Device, createInfo *ShaderModuleCreateInfo) (Shad
 	var shaderModule C.VkShaderModule
 	result := Result(C.vkCreateShaderModule(C.VkDevice(device), &cCreateInfo, nil, &shaderModule))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateShaderModule", "Vulkan shader module creation failed")
 	}
 
 	return ShaderModule(shaderModule), nil
@@ -165,11 +172,21 @@ func CreateShaderModule(device Device, createInfo *ShaderModuleCreateInfo) (Shad
 
 // DestroyShaderModule destroys a shader module
 func DestroyShaderModule(device Device, shaderModule ShaderModule) {
+	if device == nil || shaderModule == nil {
+		return
+	}
 	C.vkDestroyShaderModule(C.VkDevice(device), C.VkShaderModule(shaderModule), nil)
 }
 
 // CreatePipelineLayout creates a pipeline layout
 func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (PipelineLayout, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkPipelineLayoutCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -202,7 +219,7 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 	var pipelineLayout C.VkPipelineLayout
 	result := Result(C.vkCreatePipelineLayout(C.VkDevice(device), &cCreateInfo, nil, &pipelineLayout))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreatePipelineLayout", "Vulkan pipeline layout creation failed")
 	}
 
 	return PipelineLayout(pipelineLayout), nil
@@ -210,6 +227,9 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 
 // DestroyPipelineLayout destroys a pipeline layout
 func DestroyPipelineLayout(device Device, pipelineLayout PipelineLayout) {
+	if device == nil || pipelineLayout == nil {
+		return
+	}
 	C.vkDestroyPipelineLayout(C.VkDevice(device), C.VkPipelineLayout(pipelineLayout), nil)
 }
 
@@ -352,6 +372,9 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 
 // DestroyRenderPass destroys a render pass
 func DestroyRenderPass(device Device, renderPass RenderPass) {
+	if device == nil || renderPass == nil {
+		return
+	}
 	C.vkDestroyRenderPass(C.VkDevice(device), C.VkRenderPass(renderPass), nil)
 }
 
@@ -363,6 +386,9 @@ type ComputePipelineCreateInfo struct {
 
 // CreateComputePipelines creates compute pipelines
 func CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
 	if len(createInfos) == 0 {
 		return nil, nil
 	}
@@ -414,7 +440,7 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 	))
 
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateComputePipelines", "Vulkan compute pipeline creation failed")
 	}
 
 	pipelines := make([]Pipeline, len(cPipelines))
@@ -427,6 +453,9 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 
 // DestroyPipeline destroys a pipeline
 func DestroyPipeline(device Device, pipeline Pipeline) {
+	if device == nil || pipeline == nil {
+		return
+	}
 	C.vkDestroyPipeline(C.VkDevice(device), C.VkPipeline(pipeline), nil)
 }
 
@@ -1037,7 +1066,7 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	))
 
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateGraphicsPipelines", "Vulkan graphics pipeline creation failed")
 	}
 
 	pipelines := make([]Pipeline, len(cPipelines))

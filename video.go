@@ -207,6 +207,18 @@ static int call_vkCmdEncodeVideoKHR(
 */
 import "C"
 
+import "sync"
+
+// videoInstanceOnce and videoDeviceOnce ensure that video function pointers
+// are loaded exactly once, preventing data races if multiple goroutines
+// attempt to load them concurrently.
+var (
+	videoInstanceOnce   sync.Once
+	videoInstanceLoaded bool
+	videoDeviceOnce     sync.Once
+	videoDeviceLoaded   bool
+)
+
 // Video codec extension name constants
 const (
 	// H.264 (AVC) extensions
@@ -339,9 +351,9 @@ type VideoEncodeInfo struct {
 // This function MUST be called after creating a Vulkan instance and before using any video-related
 // functionality. If this function is not called, all video API calls will fail.
 //
-// IMPORTANT: This function is NOT thread-safe. It must be called from a single thread during
-// initialization before any concurrent video API usage. Only one instance is supported at a time;
-// calling this function again will overwrite previously loaded function pointers.
+// This function is thread-safe. The underlying C function pointers are loaded exactly once;
+// subsequent calls return the cached result. Note that only one instance is supported at a time.
+// If you need to reload for a different instance, use ResetVideoInstanceFunctions first.
 //
 // Returns false if the video extension functions could not be loaded (e.g., if the Vulkan
 // implementation does not support the VK_KHR_video_queue extension).
@@ -353,7 +365,19 @@ type VideoEncodeInfo struct {
 //	    log.Fatal("Failed to load video instance functions - video extensions not supported")
 //	}
 func LoadVideoInstanceFunctions(instance Instance) bool {
-	return C.loadVideoInstanceFunctions(C.VkInstance(instance)) != 0
+	videoInstanceOnce.Do(func() {
+		videoInstanceLoaded = C.loadVideoInstanceFunctions(C.VkInstance(instance)) != 0
+	})
+	return videoInstanceLoaded
+}
+
+// ResetVideoInstanceFunctions resets the instance function loader so that
+// LoadVideoInstanceFunctions can be called again with a different instance.
+// This is NOT thread-safe and must not be called concurrently with
+// LoadVideoInstanceFunctions or any video API calls.
+func ResetVideoInstanceFunctions() {
+	videoInstanceOnce = sync.Once{}
+	videoInstanceLoaded = false
 }
 
 // LoadVideoDeviceFunctions loads video extension functions that require a Vulkan device.
@@ -361,9 +385,9 @@ func LoadVideoInstanceFunctions(instance Instance) bool {
 // This function MUST be called after creating a logical device and before using any video-related
 // functionality. If this function is not called, all video API calls will fail.
 //
-// IMPORTANT: This function is NOT thread-safe. It must be called from a single thread during
-// initialization before any concurrent video API usage. Only one device is supported at a time;
-// calling this function again will overwrite previously loaded function pointers.
+// This function is thread-safe. The underlying C function pointers are loaded exactly once;
+// subsequent calls return the cached result. Note that only one device is supported at a time.
+// If you need to reload for a different device, use ResetVideoDeviceFunctions first.
 //
 // Returns false if any video extension function could not be loaded. This indicates the device
 // does not fully support the VK_KHR_video_queue extension.
@@ -375,7 +399,19 @@ func LoadVideoInstanceFunctions(instance Instance) bool {
 //	    log.Fatal("Failed to load video device functions - video extensions not supported")
 //	}
 func LoadVideoDeviceFunctions(device Device) bool {
-	return C.loadVideoDeviceFunctions(C.VkDevice(device)) != 0
+	videoDeviceOnce.Do(func() {
+		videoDeviceLoaded = C.loadVideoDeviceFunctions(C.VkDevice(device)) != 0
+	})
+	return videoDeviceLoaded
+}
+
+// ResetVideoDeviceFunctions resets the device function loader so that
+// LoadVideoDeviceFunctions can be called again with a different device.
+// This is NOT thread-safe and must not be called concurrently with
+// LoadVideoDeviceFunctions or any video API calls.
+func ResetVideoDeviceFunctions() {
+	videoDeviceOnce = sync.Once{}
+	videoDeviceLoaded = false
 }
 
 // GetVideoCapabilities retrieves video codec capabilities for a physical device

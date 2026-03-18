@@ -140,7 +140,7 @@ func CreateImageView(device Device, createInfo *ImageViewCreateInfo) (ImageView,
 	var imageView C.VkImageView
 	result := Result(C.vkCreateImageView(C.VkDevice(device), &cCreateInfo, nil, &imageView))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateImageView", "Vulkan image view creation failed")
 	}
 
 	return ImageView(imageView), nil
@@ -148,11 +148,21 @@ func CreateImageView(device Device, createInfo *ImageViewCreateInfo) (ImageView,
 
 // DestroyImageView destroys an image view
 func DestroyImageView(device Device, imageView ImageView) {
+	if device == nil || imageView == nil {
+		return
+	}
 	C.vkDestroyImageView(C.VkDevice(device), C.VkImageView(imageView), nil)
 }
 
 // CreateSampler creates a sampler
 func CreateSampler(device Device, createInfo *SamplerCreateInfo) (Sampler, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkSamplerCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -176,7 +186,7 @@ func CreateSampler(device Device, createInfo *SamplerCreateInfo) (Sampler, error
 	var sampler C.VkSampler
 	result := Result(C.vkCreateSampler(C.VkDevice(device), &cCreateInfo, nil, &sampler))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateSampler", "Vulkan sampler creation failed")
 	}
 
 	return Sampler(sampler), nil
@@ -184,11 +194,21 @@ func CreateSampler(device Device, createInfo *SamplerCreateInfo) (Sampler, error
 
 // DestroySampler destroys a sampler
 func DestroySampler(device Device, sampler Sampler) {
+	if device == nil || sampler == nil {
+		return
+	}
 	C.vkDestroySampler(C.VkDevice(device), C.VkSampler(sampler), nil)
 }
 
 // CreateDescriptorSetLayout creates a descriptor set layout
 func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCreateInfo) (DescriptorSetLayout, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkDescriptorSetLayoutCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -211,7 +231,7 @@ func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCre
 	var layout C.VkDescriptorSetLayout
 	result := Result(C.vkCreateDescriptorSetLayout(C.VkDevice(device), &cCreateInfo, nil, &layout))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateDescriptorSetLayout", "Vulkan descriptor set layout creation failed")
 	}
 
 	return DescriptorSetLayout(layout), nil
@@ -219,11 +239,21 @@ func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCre
 
 // DestroyDescriptorSetLayout destroys a descriptor set layout
 func DestroyDescriptorSetLayout(device Device, layout DescriptorSetLayout) {
+	if device == nil || layout == nil {
+		return
+	}
 	C.vkDestroyDescriptorSetLayout(C.VkDevice(device), C.VkDescriptorSetLayout(layout), nil)
 }
 
 // CreateDescriptorPool creates a descriptor pool
 func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (DescriptorPool, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkDescriptorPoolCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -244,7 +274,7 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 	var pool C.VkDescriptorPool
 	result := Result(C.vkCreateDescriptorPool(C.VkDevice(device), &cCreateInfo, nil, &pool))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateDescriptorPool", "Vulkan descriptor pool creation failed")
 	}
 
 	return DescriptorPool(pool), nil
@@ -252,6 +282,9 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 
 // DestroyDescriptorPool destroys a descriptor pool
 func DestroyDescriptorPool(device Device, pool DescriptorPool) {
+	if device == nil || pool == nil {
+		return
+	}
 	C.vkDestroyDescriptorPool(C.VkDevice(device), C.VkDescriptorPool(pool), nil)
 }
 

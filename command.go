@@ -135,6 +135,13 @@ const (
 
 // CreateCommandPool creates a command pool
 func CreateCommandPool(device Device, createInfo *CommandPoolCreateInfo) (CommandPool, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkCommandPoolCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -144,7 +151,7 @@ func CreateCommandPool(device Device, createInfo *CommandPoolCreateInfo) (Comman
 	var commandPool C.VkCommandPool
 	result := Result(C.vkCreateCommandPool(C.VkDevice(device), &cCreateInfo, nil, &commandPool))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateCommandPool", "Vulkan command pool creation failed")
 	}
 
 	return CommandPool(commandPool), nil
@@ -152,11 +159,24 @@ func CreateCommandPool(device Device, createInfo *CommandPoolCreateInfo) (Comman
 
 // DestroyCommandPool destroys a command pool
 func DestroyCommandPool(device Device, commandPool CommandPool) {
+	if device == nil || commandPool == nil {
+		return
+	}
 	C.vkDestroyCommandPool(C.VkDevice(device), C.VkCommandPool(commandPool), nil)
 }
 
 // AllocateCommandBuffers allocates command buffers
 func AllocateCommandBuffers(device Device, allocateInfo *CommandBufferAllocateInfo) ([]CommandBuffer, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if allocateInfo == nil {
+		return nil, NewValidationError("allocateInfo", "cannot be nil")
+	}
+	if allocateInfo.CommandBufferCount == 0 {
+		return nil, NewValidationError("allocateInfo.CommandBufferCount", "must be greater than zero")
+	}
+
 	var cAllocateInfo C.VkCommandBufferAllocateInfo
 	cAllocateInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO
 	cAllocateInfo.pNext = nil
@@ -167,7 +187,7 @@ func AllocateCommandBuffers(device Device, allocateInfo *CommandBufferAllocateIn
 	cCommandBuffers := make([]C.VkCommandBuffer, allocateInfo.CommandBufferCount)
 	result := Result(C.vkAllocateCommandBuffers(C.VkDevice(device), &cAllocateInfo, &cCommandBuffers[0]))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "AllocateCommandBuffers", "Vulkan command buffer allocation failed")
 	}
 
 	commandBuffers := make([]CommandBuffer, allocateInfo.CommandBufferCount)
@@ -180,7 +200,7 @@ func AllocateCommandBuffers(device Device, allocateInfo *CommandBufferAllocateIn
 
 // FreeCommandBuffers frees command buffers
 func FreeCommandBuffers(device Device, commandPool CommandPool, commandBuffers []CommandBuffer) {
-	if len(commandBuffers) == 0 {
+	if device == nil || commandPool == nil || len(commandBuffers) == 0 {
 		return
 	}
 
@@ -194,6 +214,13 @@ func FreeCommandBuffers(device Device, commandPool CommandPool, commandBuffers [
 
 // BeginCommandBuffer begins recording a command buffer
 func BeginCommandBuffer(commandBuffer CommandBuffer, beginInfo *CommandBufferBeginInfo) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+	if beginInfo == nil {
+		return NewValidationError("beginInfo", "cannot be nil")
+	}
+
 	var cBeginInfo C.VkCommandBufferBeginInfo
 	cBeginInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO
 	cBeginInfo.pNext = nil
@@ -221,26 +248,34 @@ func BeginCommandBuffer(commandBuffer CommandBuffer, beginInfo *CommandBufferBeg
 
 	result := Result(C.vkBeginCommandBuffer(C.VkCommandBuffer(commandBuffer), &cBeginInfo))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "BeginCommandBuffer", "Vulkan begin command buffer failed")
 	}
 	return nil
 }
 
 // EndCommandBuffer ends recording a command buffer
 func EndCommandBuffer(commandBuffer CommandBuffer) error {
+	if commandBuffer == nil {
+		return NewValidationError("commandBuffer", "cannot be nil")
+	}
+
 	result := Result(C.vkEndCommandBuffer(C.VkCommandBuffer(commandBuffer)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "EndCommandBuffer", "Vulkan end command buffer failed")
 	}
 	return nil
 }
 
 // QueueSubmit submits command buffers to a queue
 func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
+	if queue == nil {
+		return NewValidationError("queue", "cannot be nil")
+	}
+
 	if len(submitInfos) == 0 {
 		result := Result(C.vkQueueSubmit(C.VkQueue(queue), 0, nil, C.VkFence(fence)))
 		if result != Success {
-			return result
+			return NewVulkanError(result, "QueueSubmit", "Vulkan queue submit failed")
 		}
 		return nil
 	}
@@ -303,13 +338,17 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 
 	result := Result(C.vkQueueSubmit(C.VkQueue(queue), C.uint32_t(len(cSubmitInfos)), &cSubmitInfos[0], C.VkFence(fence)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "QueueSubmit", "Vulkan queue submit failed")
 	}
 	return nil
 }
 
 // CreateSemaphore creates a semaphore
 func CreateSemaphore(device Device, createInfo *SemaphoreCreateInfo) (Semaphore, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkSemaphoreCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -318,7 +357,7 @@ func CreateSemaphore(device Device, createInfo *SemaphoreCreateInfo) (Semaphore,
 	var semaphore C.VkSemaphore
 	result := Result(C.vkCreateSemaphore(C.VkDevice(device), &cCreateInfo, nil, &semaphore))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateSemaphore", "Vulkan semaphore creation failed")
 	}
 
 	return Semaphore(semaphore), nil
@@ -326,11 +365,21 @@ func CreateSemaphore(device Device, createInfo *SemaphoreCreateInfo) (Semaphore,
 
 // DestroySemaphore destroys a semaphore
 func DestroySemaphore(device Device, semaphore Semaphore) {
+	if device == nil || semaphore == nil {
+		return
+	}
 	C.vkDestroySemaphore(C.VkDevice(device), C.VkSemaphore(semaphore), nil)
 }
 
 // CreateFence creates a fence
 func CreateFence(device Device, createInfo *FenceCreateInfo) (Fence, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkFenceCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -339,7 +388,7 @@ func CreateFence(device Device, createInfo *FenceCreateInfo) (Fence, error) {
 	var fence C.VkFence
 	result := Result(C.vkCreateFence(C.VkDevice(device), &cCreateInfo, nil, &fence))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "CreateFence", "Vulkan fence creation failed")
 	}
 
 	return Fence(fence), nil
@@ -347,11 +396,17 @@ func CreateFence(device Device, createInfo *FenceCreateInfo) (Fence, error) {
 
 // DestroyFence destroys a fence
 func DestroyFence(device Device, fence Fence) {
+	if device == nil || fence == nil {
+		return
+	}
 	C.vkDestroyFence(C.VkDevice(device), C.VkFence(fence), nil)
 }
 
 // WaitForFences waits for fences to be signaled
 func WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
 	if len(fences) == 0 {
 		return nil
 	}
@@ -370,13 +425,16 @@ func WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) 
 
 	result := Result(C.vkWaitForFences(C.VkDevice(device), C.uint32_t(len(cFences)), &cFences[0], cWaitAll, C.uint64_t(timeout)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "WaitForFences", "Vulkan wait for fences failed")
 	}
 	return nil
 }
 
 // ResetFences resets fences
 func ResetFences(device Device, fences []Fence) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
 	if len(fences) == 0 {
 		return nil
 	}
@@ -388,7 +446,7 @@ func ResetFences(device Device, fences []Fence) error {
 
 	result := Result(C.vkResetFences(C.VkDevice(device), C.uint32_t(len(cFences)), &cFences[0]))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "ResetFences", "Vulkan reset fences failed")
 	}
 	return nil
 }

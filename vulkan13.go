@@ -466,6 +466,9 @@ func CreatePrivateDataSlot(device Device, createInfo *PrivateDataSlotCreateInfo)
 
 // DestroyPrivateDataSlot destroys a private data slot
 func DestroyPrivateDataSlot(device Device, privateDataSlot PrivateDataSlot) {
+	if device == nil || privateDataSlot == nil {
+		return
+	}
 	C.vkDestroyPrivateDataSlot(
 		C.VkDevice(device),
 		C.VkPrivateDataSlot(privateDataSlot),

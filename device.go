@@ -320,6 +320,9 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 
 // DestroyDevice destroys a logical device
 func DestroyDevice(device Device) {
+	if device == nil {
+		return
+	}
 	C.vkDestroyDevice(C.VkDevice(device), nil)
 }
 
@@ -332,18 +335,26 @@ func GetDeviceQueue(device Device, queueFamilyIndex, queueIndex uint32) Queue {
 
 // QueueWaitIdle waits for a queue to become idle
 func QueueWaitIdle(queue Queue) error {
+	if queue == nil {
+		return NewValidationError("queue", "cannot be nil")
+	}
+
 	result := Result(C.vkQueueWaitIdle(C.VkQueue(queue)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "QueueWaitIdle", "Vulkan queue wait idle failed")
 	}
 	return nil
 }
 
 // DeviceWaitIdle waits for a device to become idle
 func DeviceWaitIdle(device Device) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+
 	result := Result(C.vkDeviceWaitIdle(C.VkDevice(device)))
 	if result != Success {
-		return result
+		return NewVulkanError(result, "DeviceWaitIdle", "Vulkan device wait idle failed")
 	}
 	return nil
 }
@@ -393,7 +404,7 @@ func EnumerateDeviceExtensionProperties(physicalDevice PhysicalDevice, layerName
 	var propertyCount C.uint32_t
 	result := Result(C.vkEnumerateDeviceExtensionProperties(C.VkPhysicalDevice(physicalDevice), cLayerName, &propertyCount, nil))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateDeviceExtensionProperties", "failed to get extension count")
 	}
 
 	if propertyCount == 0 {
@@ -403,7 +414,7 @@ func EnumerateDeviceExtensionProperties(physicalDevice PhysicalDevice, layerName
 	cProperties := make([]C.VkExtensionProperties, propertyCount)
 	result = Result(C.vkEnumerateDeviceExtensionProperties(C.VkPhysicalDevice(physicalDevice), cLayerName, &propertyCount, &cProperties[0]))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateDeviceExtensionProperties", "failed to enumerate extensions")
 	}
 
 	properties := make([]ExtensionProperties, propertyCount)

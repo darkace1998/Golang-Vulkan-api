@@ -431,6 +431,9 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 
 // DestroyInstance destroys a Vulkan instance
 func DestroyInstance(instance Instance) {
+	if instance == nil {
+		return
+	}
 	C.vkDestroyInstance(C.VkInstance(instance), nil)
 }
 
@@ -445,7 +448,7 @@ func EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperti
 	var propertyCount C.uint32_t
 	result := Result(C.vkEnumerateInstanceExtensionProperties(cLayerName, &propertyCount, nil))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateInstanceExtensionProperties", "failed to get extension count")
 	}
 
 	if propertyCount == 0 {
@@ -455,7 +458,7 @@ func EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperti
 	cProperties := make([]C.VkExtensionProperties, propertyCount)
 	result = Result(C.vkEnumerateInstanceExtensionProperties(cLayerName, &propertyCount, &cProperties[0]))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateInstanceExtensionProperties", "failed to enumerate extensions")
 	}
 
 	properties := make([]ExtensionProperties, propertyCount)
@@ -472,7 +475,7 @@ func EnumerateInstanceLayerProperties() ([]LayerProperties, error) {
 	var propertyCount C.uint32_t
 	result := Result(C.vkEnumerateInstanceLayerProperties(&propertyCount, nil))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateInstanceLayerProperties", "failed to get layer count")
 	}
 
 	if propertyCount == 0 {
@@ -482,7 +485,7 @@ func EnumerateInstanceLayerProperties() ([]LayerProperties, error) {
 	cProperties := make([]C.VkLayerProperties, propertyCount)
 	result = Result(C.vkEnumerateInstanceLayerProperties(&propertyCount, &cProperties[0]))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumerateInstanceLayerProperties", "failed to enumerate layers")
 	}
 
 	properties := make([]LayerProperties, propertyCount)
@@ -498,10 +501,14 @@ func EnumerateInstanceLayerProperties() ([]LayerProperties, error) {
 
 // EnumeratePhysicalDevices enumerates physical devices
 func EnumeratePhysicalDevices(instance Instance) ([]PhysicalDevice, error) {
+	if instance == nil {
+		return nil, NewValidationError("instance", "cannot be nil")
+	}
+
 	var deviceCount C.uint32_t
 	result := Result(C.vkEnumeratePhysicalDevices(C.VkInstance(instance), &deviceCount, nil))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumeratePhysicalDevices", "failed to get device count")
 	}
 
 	if deviceCount == 0 {
@@ -511,7 +518,7 @@ func EnumeratePhysicalDevices(instance Instance) ([]PhysicalDevice, error) {
 	cDevices := make([]C.VkPhysicalDevice, deviceCount)
 	result = Result(C.vkEnumeratePhysicalDevices(C.VkInstance(instance), &deviceCount, &cDevices[0]))
 	if result != Success {
-		return nil, result
+		return nil, NewVulkanError(result, "EnumeratePhysicalDevices", "failed to enumerate devices")
 	}
 
 	devices := make([]PhysicalDevice, deviceCount)
