@@ -1,20 +1,20 @@
 # Multiplatform Build Support
 
-This document explains how the Golang-Vulkan-api library supports multiple platforms through conditional compilation. For detailed installation instructions, see the [main README](../README.md#platform-specific-setup).
+This document explains the platform-specific build guidance for the Golang-Vulkan-api library. The current verified repo state passes `go build ./...`, `go test ./...`, and `go test -race ./...` on Linux with `libvulkan-dev` installed. For detailed installation instructions, see the [main README](../README.md#platform-specific-setup).
 
 ## Architecture
 
 The library uses Go build tags to provide platform-specific CGO directives:
 
-- `cgo_linux.go`: Linux-specific build configuration using pkg-config
-- `cgo_darwin.go`: macOS-specific build configuration using pkg-config  
-- `cgo_windows.go`: Windows-specific build configuration using direct linking
-- `cgo_unix.go`: Fallback for other Unix-like systems (FreeBSD, OpenBSD, etc.)
+- `cgo_linux.go`: Linux-specific build configuration using pkg-config and the system Vulkan development package
+- `cgo_darwin.go`: macOS-specific build configuration using pkg-config and the Vulkan SDK
+- `cgo_windows.go`: Windows-specific build configuration using the Vulkan SDK and `vulkan-1.lib`
+- `cgo_unix.go`: Fallback for other Unix-like systems (FreeBSD, OpenBSD, etc.) with pkg-config and Vulkan libraries available
 
 ## Platform-Specific Notes
 
 ### Linux
-Uses pkg-config to find Vulkan libraries:
+Verified on Linux with `libvulkan-dev` installed. `pkg-config` is still used when available:
 ```bash
 # Install required packages
 sudo apt-get install libvulkan-dev pkg-config
@@ -22,12 +22,14 @@ sudo apt-get install libvulkan-dev pkg-config
 sudo yum install vulkan-devel pkgconf-pkg-config
 sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config
 
-# Build
-go build
+# Build and test
+go build ./...
+go test ./...
+go test -race ./...
 ```
 
 ### Windows
-Uses direct linking to vulkan-1.lib:
+Not reverified in the current repo state. Uses the Vulkan SDK and `vulkan-1.lib`:
 ```cmd
 # Install Vulkan SDK from https://vulkan.lunarg.com/
 # Make sure vulkan-1.lib is in your library path
@@ -41,7 +43,7 @@ go build
 ```
 
 ### macOS
-Uses pkg-config with MoltenVK support:
+Not reverified in the current repo state. Uses pkg-config with MoltenVK support:
 ```bash
 # Install Vulkan SDK with MoltenVK
 # Install pkg-config if needed
@@ -52,7 +54,7 @@ go build
 ```
 
 ### Other Unix Systems
-Uses pkg-config as fallback:
+Not reverified in the current repo state. Uses pkg-config as the fallback:
 ```bash
 # Install Vulkan development libraries for your system
 # Build
@@ -61,9 +63,13 @@ go build
 
 ## Testing Multiplatform Support
 
-Run the included test script:
+Run the included test script when validating additional targets:
 ```bash
 ./test_multiplatform.sh
 ```
 
-This will verify that the build tags are correctly configured for each platform.
+This remains a documentation/example check; only the Linux build/test/race path has been verified in the current repo state.
+
+## Documentation Gaps
+
+Cross-platform verification is still incomplete. Windows, macOS, and other Unix-like platforms should be revalidated before this guide is treated as fully current.

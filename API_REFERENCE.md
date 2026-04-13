@@ -1,6 +1,6 @@
 # Vulkan Go API Reference
 
-This document provides a comprehensive reference for all available functions in the Vulkan Go binding, including complete Vulkan 1.3 support.
+This document provides a reference for the exported functions in the Vulkan Go binding. The current verified repo state builds and tests on Linux with `libvulkan-dev` installed.
 
 ## Table of Contents
 
@@ -13,12 +13,12 @@ This document provides a comprehensive reference for all available functions in 
 - [Memory Management](#memory-management)
 - [Command Buffer Management](#command-buffer-management)
 - [Synchronization](#synchronization)
-- [Vulkan 1.3 Features ⭐ NEW](#vulkan-13-features--new)
+- [Vulkan 1.3 Features](#vulkan-13-features)
 - [Pipeline Management](#pipeline-management)
 - [Descriptor Management](#descriptor-management)
 - [Command Recording](#command-recording)
 - [Compute Pipeline Management](#compute-pipeline-management)
-- [Video Codec Support 🎬 NEW](#video-codec-support--new)
+- [Video Codec Support](#video-codec-support)
 - [Utility Functions](#utility-functions)
 - [Constants and Enums](#constants-and-enums)
 - [Important Constants](#important-constants)
@@ -121,7 +121,7 @@ This document provides a comprehensive reference for all available functions in 
 - `ResetFences(device Device, fences []Fence) error` - Reset fences
 - `GetFenceStatus(device Device, fence Fence) Result` - Get fence status
 
-## Vulkan 1.3 Features ⭐ NEW
+## Vulkan 1.3 Features
 
 ### Dynamic Rendering
 - `CmdBeginRendering(commandBuffer CommandBuffer, renderingInfo *RenderingInfo)` - Begin dynamic render pass
@@ -224,7 +224,7 @@ This document provides a comprehensive reference for all available functions in 
 - `CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error)` - Create compute pipelines
 - `DestroyPipeline(device Device, pipeline Pipeline)` - Destroy pipeline (graphics or compute)
 
-## Video Codec Support 🎬 NEW
+## Video Codec Support
 
 ### Video Codec Extensions
 
@@ -467,6 +467,6 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 1. All functions follow Go error handling conventions where applicable
 2. Memory management is manual - you must destroy what you create
 3. The binding is designed to be as close to the C API as possible while remaining idiomatic Go
-4. CGO is required and Vulkan development libraries must be installed
-5. Some advanced features may require additional implementation
-6. This binding supports Vulkan 1.0 through 1.4 (where available on the system)
+4. CGO is required and the appropriate Vulkan development libraries must be installed for your platform
+5. The current verified Linux setup uses `libvulkan-dev`; other platforms still need their own SDK/loader validation
+6. Some advanced features may require additional implementation or device extensions, and runtime support depends on the installed loader, driver, and enabled extensions

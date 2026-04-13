@@ -38,7 +38,7 @@
 │  │ // C Function Pointers                                 │  │
 │  │ static PFN_vkCreateVideoSessionKHR pfn_... = NULL;     │  │
 │  │ static PFN_vkCmdBeginVideoCodingKHR pfn_... = NULL;    │  │
-│  │ // ... 10 more function pointers                       │  │
+│  │ // ... additional function pointers                    │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                              ↓                                │
 │  ┌────────────────────────────────────────────────────────┐  │
@@ -199,9 +199,9 @@ Calling a Video Function
         │   pfn_vkCmdBeginVideoCodingKHR                   │
         │   [NULL] → [0x7f1234567892] after loading        │
         │                                                   │
-        │ ... 9 more function pointers ...                 │
+        │ ... additional function pointers ...               │
         │                                                   │
-        │ Total: 12 × 8 = 96 bytes                         │
+        │ Total: function pointer table                      │
         └──────────────────────────────────────────────────┘
                          ↓
                    vkGetDeviceProcAddr
@@ -270,7 +270,7 @@ Source Code                   Vulkan Driver
                           ✓ Function loaded!
                           ✓ Works!
 
-✅ RESULT: Builds and runs on all systems
+✅ RESULT: Builds and runs when the Vulkan loader, headers, and required extensions are available
 ```
 
 ## Thread Safety Model
@@ -299,7 +299,7 @@ Source Code                   Vulkan Driver
     │        ↓
     │   ┌─────────────────────────────────┐
     │   │ Function pointers updated       │
-    │   │ All 11 functions now ready      │
+    │   │ All required functions now ready │
     │   └─────────────────────────────────┘
     └────────────────────────────────────────────┘
                       ↓
@@ -361,3 +361,7 @@ These diagrams illustrate:
 7. Hardware capability detection
 
 Understanding these diagrams will help you debug issues and understand the design decisions.
+
+## Verification Note
+
+The current verified repo state builds and tests on Linux with `libvulkan-dev` installed. These diagrams describe the loading model; Windows, macOS, and other Unix-like platforms still need revalidation before the document is considered fully current.

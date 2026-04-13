@@ -1,12 +1,14 @@
 # TODO — Golang-Vulkan-api
 
 > Codebase analysis and improvement roadmap for the Go Vulkan 1.3+ binding library.
+> Verified on the current `origin/main` checkout with `libvulkan-dev` installed; `go build ./...`, `go test ./...`, and `go test -race ./...` all pass.
 
 ---
 
 ## Table of Contents
 
 - [High Priority](#high-priority)
+- [Current Verified State](#current-verified-state)
 - [Testing](#testing)
 - [Documentation](#documentation)
 - [Examples](#examples)
@@ -16,6 +18,16 @@
 - [Security & Robustness](#security--robustness)
 - [Code Quality](#code-quality)
 - [Long-Term / Future](#long-term--future)
+
+---
+
+## Current Verified State
+
+- [x] `libvulkan-dev` is installed
+- [x] `go build ./...` passes
+- [x] `go test ./...` passes
+- [x] `go test -race ./...` passes
+- [x] Repository is synced to `origin/main`
 
 ---
 
