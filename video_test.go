@@ -126,7 +126,7 @@ func TestGetVideoCapabilitiesValidation(t *testing.T) {
 		},
 		{
 			name:           "nil videoProfile",
-			physicalDevice: PhysicalDevice(uintptr(0x1234)), // Non-nil fake handle
+			physicalDevice: fakePhysicalDevice(),
 			videoProfile:   nil,
 			expectError:    true,
 			errorParam:     "videoProfile",
@@ -179,14 +179,14 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 		},
 		{
 			name:        "nil createInfo",
-			device:      Device(uintptr(0x1234)), // Non-nil fake handle
+			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
 			errorParam:  "createInfo",
 		},
 		{
 			name:   "nil videoProfile in createInfo",
-			device: Device(uintptr(0x1234)),
+			device: fakeDevice(),
 			createInfo: &VideoSessionCreateInfo{
 				VideoProfile: nil,
 			},
@@ -231,13 +231,13 @@ func TestGetVideoSessionMemoryRequirementsValidation(t *testing.T) {
 		{
 			name:         "nil device",
 			device:       nil,
-			videoSession: VideoSession(uintptr(0x1234)),
+			videoSession: fakeVideoSession(),
 			expectError:  true,
 			errorParam:   "device",
 		},
 		{
 			name:         "null videoSession",
-			device:       Device(uintptr(0x1234)),
+			device:       fakeDevice(),
 			videoSession: VideoSession(NullHandle),
 			expectError:  true,
 			errorParam:   "videoSession",
@@ -281,14 +281,14 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 		{
 			name:         "nil device",
 			device:       nil,
-			videoSession: VideoSession(uintptr(0x1234)),
+			videoSession: fakeVideoSession(),
 			bindInfos:    []VideoBindMemoryInfo{{MemoryBindIndex: 0}},
 			expectError:  true,
 			errorParam:   "device",
 		},
 		{
 			name:         "null videoSession",
-			device:       Device(uintptr(0x1234)),
+			device:       fakeDevice(),
 			videoSession: VideoSession(NullHandle),
 			bindInfos:    []VideoBindMemoryInfo{{MemoryBindIndex: 0}},
 			expectError:  true,
@@ -296,8 +296,8 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 		},
 		{
 			name:         "empty bindInfos",
-			device:       Device(uintptr(0x1234)),
-			videoSession: VideoSession(uintptr(0x5678)),
+			device:       fakeDevice(),
+			videoSession: fakeVideoSession(),
 			bindInfos:    []VideoBindMemoryInfo{},
 			expectError:  true,
 			errorParam:   "bindInfos",
@@ -346,7 +346,7 @@ func TestCreateVideoSessionParametersValidation(t *testing.T) {
 		},
 		{
 			name:        "nil createInfo",
-			device:      Device(uintptr(0x1234)),
+			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
 			errorParam:  "createInfo",
@@ -466,7 +466,7 @@ func TestVideoSessionCreateInfo(t *testing.T) {
 // TestVideoPictureResource tests VideoPictureResource structure
 func TestVideoPictureResource(t *testing.T) {
 	resource := VideoPictureResource{
-		ImageView:      ImageView(uintptr(0x1234)),
+		ImageView:      fakeImageView(),
 		ImageLayout:    ImageLayoutGeneral,
 		CodedOffset:    Offset2D{X: 0, Y: 0},
 		CodedExtent:    Extent2D{Width: 1920, Height: 1080},
@@ -487,11 +487,11 @@ func TestVideoPictureResource(t *testing.T) {
 // TestVideoDecodeInfo tests VideoDecodeInfo structure
 func TestVideoDecodeInfo(t *testing.T) {
 	decodeInfo := &VideoDecodeInfo{
-		SrcBuffer:       Buffer(uintptr(0x1234)),
+		SrcBuffer:       fakeBuffer(),
 		SrcBufferOffset: 0,
 		SrcBufferRange:  1024,
 		DstPictureResource: VideoPictureResource{
-			ImageView:   ImageView(uintptr(0x5678)),
+			ImageView:   fakeImageView(),
 			ImageLayout: ImageLayoutGeneral,
 			CodedExtent: Extent2D{Width: 1920, Height: 1080},
 		},
@@ -509,11 +509,11 @@ func TestVideoDecodeInfo(t *testing.T) {
 func TestVideoEncodeInfo(t *testing.T) {
 	encodeInfo := &VideoEncodeInfo{
 		SrcPictureResource: VideoPictureResource{
-			ImageView:   ImageView(uintptr(0x1234)),
+			ImageView:   fakeImageView(),
 			ImageLayout: ImageLayoutGeneral,
 			CodedExtent: Extent2D{Width: 1920, Height: 1080},
 		},
-		DstBuffer:       Buffer(uintptr(0x5678)),
+		DstBuffer:       fakeBuffer(),
 		DstBufferOffset: 0,
 		DstBufferRange:  4096,
 	}
@@ -530,7 +530,7 @@ func TestVideoEncodeInfo(t *testing.T) {
 func TestVideoBindMemoryInfo(t *testing.T) {
 	bindInfo := VideoBindMemoryInfo{
 		MemoryBindIndex: 0,
-		Memory:          DeviceMemory(uintptr(0x1234)),
+		Memory:          fakeDeviceMemory(),
 		MemoryOffset:    0,
 		MemorySize:      1024 * 1024, // 1MB
 	}
