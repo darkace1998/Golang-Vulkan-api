@@ -210,7 +210,9 @@ func TestMemoryPoolConcurrentAllocateAndReset(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		for i := 0; i < iterations; i++ {
-			pool.Allocate(64, 8) // ignore errors, just test no panic/race
+			if _, err := pool.Allocate(64, 8); err != nil {
+				return
+			}
 		}
 	}()
 

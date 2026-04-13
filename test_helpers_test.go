@@ -17,7 +17,6 @@ func fakeCommandPool() CommandPool                 { return CommandPool(fakeHand
 func fakeCommandBuffer() CommandBuffer             { return CommandBuffer(fakeHandle()) }
 func fakeFence() Fence                             { return Fence(fakeHandle()) }
 func fakeSemaphore() Semaphore                     { return Semaphore(fakeHandle()) }
-func fakeQueue() Queue                             { return Queue(fakeHandle()) }
 func fakeShaderModule() ShaderModule               { return ShaderModule(fakeHandle()) }
 func fakePipelineLayout() PipelineLayout           { return PipelineLayout(fakeHandle()) }
 func fakeRenderPass() RenderPass                   { return RenderPass(fakeHandle()) }
@@ -26,6 +25,5 @@ func fakeImageView() ImageView                     { return ImageView(fakeHandle
 func fakeSampler() Sampler                         { return Sampler(fakeHandle()) }
 func fakeDescriptorSetLayout() DescriptorSetLayout { return DescriptorSetLayout(fakeHandle()) }
 func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeHandle()) }
-func fakeInstance() Instance                       { return Instance(fakeHandle()) }
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
