@@ -167,7 +167,7 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:   "nil device",
+			name:   testNilDeviceName,
 			device: nil,
 			createInfo: &VideoSessionCreateInfo{
 				VideoProfile: &VideoProfileInfo{
@@ -229,7 +229,7 @@ func TestGetVideoSessionMemoryRequirementsValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         "nil device",
+			name:         testNilDeviceName,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			expectError:  true,
@@ -279,7 +279,7 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         "nil device",
+			name:         testNilDeviceName,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			bindInfos:    []VideoBindMemoryInfo{{MemoryBindIndex: 0}},
@@ -338,7 +338,7 @@ func TestCreateVideoSessionParametersValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:        "nil device",
+			name:        testNilDeviceName,
 			device:      nil,
 			createInfo:  &VideoSessionParametersCreateInfo{},
 			expectError: true,

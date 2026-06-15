@@ -7,8 +7,9 @@ var (
 	testValidationErrorType = "ValidationError"
 	testMemoryParameter     = "memory"
 	testNilCreateInfoName   = "nil createInfo"
+	testNilDeviceName       = "nil device"
+	testNilMemoryName       = "nil memory"
 )
-
 
 // fakeHandle creates a non-nil handle backed by real Go memory, safe for use
 // with -race checkptr. It must never be passed to actual Vulkan C functions.

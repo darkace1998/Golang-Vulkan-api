@@ -49,7 +49,7 @@ func TestCreateSamplerValidation(t *testing.T) {
 		createInfo  *SamplerCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &SamplerCreateInfo{}, testDeviceParameter},
+		{testNilDeviceName, nil, &SamplerCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
@@ -78,7 +78,7 @@ func TestCreateDescriptorSetLayoutValidation(t *testing.T) {
 		createInfo  *DescriptorSetLayoutCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &DescriptorSetLayoutCreateInfo{}, testDeviceParameter},
+		{testNilDeviceName, nil, &DescriptorSetLayoutCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
@@ -107,7 +107,7 @@ func TestCreateDescriptorPoolValidation(t *testing.T) {
 		createInfo  *DescriptorPoolCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &DescriptorPoolCreateInfo{}, testDeviceParameter},
+		{testNilDeviceName, nil, &DescriptorPoolCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 

@@ -42,7 +42,7 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 		createInfo  *CommandPoolCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &CommandPoolCreateInfo{}, testDeviceParameter},
+		{testNilDeviceName, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
@@ -71,7 +71,7 @@ func TestAllocateCommandBuffersValidation(t *testing.T) {
 		allocInfo   *CommandBufferAllocateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
+		{testNilDeviceName, nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 		{"zero count", fakeDevice(), &CommandBufferAllocateInfo{CommandBufferCount: 0}, "allocateInfo.CommandBufferCount"},
 	}
@@ -175,7 +175,7 @@ func TestCreateFenceValidation(t *testing.T) {
 		createInfo  *FenceCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &FenceCreateInfo{}, testDeviceParameter},
+		{testNilDeviceName, nil, &FenceCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
