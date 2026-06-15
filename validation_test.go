@@ -241,7 +241,7 @@ func BenchmarkErrorCreation(b *testing.B) {
 		}
 	})
 
-	b.Run("ValidationError", func(b *testing.B) {
+	b.Run(testValidationErrorType, func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_ = NewValidationError("param", "message")
 		}
