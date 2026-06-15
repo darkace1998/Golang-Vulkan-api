@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-const testDeviceParameter = "device"
 
 // ============================================================================
 // Nil Check Tests for Destroy Functions
