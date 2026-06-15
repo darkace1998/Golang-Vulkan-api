@@ -5,8 +5,6 @@ import (
 	"testing"
 )
 
-const testDeviceParameter = "device"
-
 // ============================================================================
 // Nil Check Tests for Destroy Functions
 // ============================================================================
@@ -35,13 +33,13 @@ func TestQueueWaitIdleValidation(t *testing.T) {
 func TestDeviceWaitIdleValidation(t *testing.T) {
 	err := DeviceWaitIdle(nil)
 	if err == nil {
-		t.Fatalf("Expected error for nil %s", testDeviceParameter)
+		t.Fatalf("Expected error for nil %s", TestParamDevice)
 	}
 	var valErr *ValidationError
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != testDeviceParameter {
-		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Parameter)
+	if valErr.Parameter != TestParamDevice {
+		t.Errorf("Expected param '%s', got '%s'", TestParamDevice, valErr.Parameter)
 	}
 }

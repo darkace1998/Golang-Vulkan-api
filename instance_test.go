@@ -83,10 +83,10 @@ func TestCreateInstanceValidation(t *testing.T) {
 		errorType   string
 	}{
 		{
-			name:        "nil createInfo",
+			name:        TestNameNilCreateInfo,
 			createInfo:  nil,
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "valid minimal createInfo",
@@ -120,7 +120,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "engine name too long",
@@ -131,7 +131,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "too many layers",
@@ -139,7 +139,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledLayerNames: make([]string, 100), // exceeds maxLayers
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "too many extensions",
@@ -147,7 +147,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledExtensionNames: make([]string, 300), // exceeds maxExtensions
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "layer name too long",
@@ -155,7 +155,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledLayerNames: []string{strings.Repeat("a", 300)}, // exceeds 256 chars
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 		{
 			name: "extension name too long",
@@ -163,7 +163,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledExtensionNames: []string{strings.Repeat("a", 300)}, // exceeds 256 chars
 			},
 			expectError: true,
-			errorType:   "ValidationError",
+			errorType:   TestErrValidation,
 		},
 	}
 
@@ -193,7 +193,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 
 				// Check error type
 				switch tt.errorType {
-				case "ValidationError":
+				case TestErrValidation:
 					var validationErr *ValidationError
 					if !errors.As(err, &validationErr) {
 						t.Errorf("Expected ValidationError, got %T: %v", err, err)

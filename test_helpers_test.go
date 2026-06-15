@@ -27,3 +27,14 @@ func fakeDescriptorSetLayout() DescriptorSetLayout { return DescriptorSetLayout(
 func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeHandle()) }
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
+
+// Common test parameter strings and names
+const (
+	TestParamDevice       = "device"
+	TestParamCreateInfo   = "createInfo"
+	TestParamMemory       = "memory"
+	TestNameNilDevice     = "nil device"
+	TestNameNilCreateInfo = "nil createInfo"
+	TestErrValidation     = "ValidationError"
+)
+const TestNameNilMemory = "nil memory"
