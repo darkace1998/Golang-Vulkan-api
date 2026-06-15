@@ -30,10 +30,11 @@ func fakeVideoSession() VideoSession               { return VideoSession(fakeHan
 
 // Validation parameter constants for testing
 const (
-	testDeviceParameter = "device"
+	testDeviceParameter     = "device"
 	testCreateInfoParameter = "createInfo"
-	testMemoryParameter = "memory"
-	testValidationError = "ValidationError"
-	testNilCreateInfo = "nil createInfo"
-	testNilDevice = "nil device"
+	testMemoryParameter     = "memory"
+	testValidationError     = "ValidationError"
+	testNilCreateInfo       = "nil createInfo"
+	testNilDevice           = "nil device"
+	testNilMemory           = "nil memory"
 )

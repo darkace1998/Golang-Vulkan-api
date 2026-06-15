@@ -299,7 +299,7 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 	}{
 		{testNilDevice, nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil buffer", fakeDevice(), nil, fakeDeviceMemory(), "buffer"},
-		{"nil memory", fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
+		{testNilMemory, fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -359,7 +359,7 @@ func TestBindImageMemoryValidation(t *testing.T) {
 	}{
 		{testNilDevice, nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil image", fakeDevice(), nil, fakeDeviceMemory(), "image"},
-		{"nil memory", fakeDevice(), fakeImage(), nil, testMemoryParameter},
+		{testNilMemory, fakeDevice(), fakeImage(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -388,7 +388,7 @@ func TestMapMemoryValidation(t *testing.T) {
 		expectParam string
 	}{
 		{testNilDevice, nil, fakeDeviceMemory(), testDeviceParameter},
-		{"nil memory", fakeDevice(), nil, testMemoryParameter},
+		{testNilMemory, fakeDevice(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
