@@ -281,8 +281,8 @@ func TestAllocateMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -312,8 +312,8 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -341,8 +341,8 @@ func TestCreateImageValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -372,8 +372,8 @@ func TestBindImageMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -401,8 +401,8 @@ func TestMapMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}

@@ -63,8 +63,8 @@ func TestCreateSamplerValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -92,8 +92,8 @@ func TestCreateDescriptorSetLayoutValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -121,8 +121,8 @@ func TestCreateDescriptorPoolValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}

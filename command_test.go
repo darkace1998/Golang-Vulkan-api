@@ -56,8 +56,8 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -86,8 +86,8 @@ func TestAllocateCommandBuffersValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -115,8 +115,8 @@ func TestBeginCommandBufferValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -132,8 +132,8 @@ func TestEndCommandBufferValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "commandBuffer" {
-		t.Errorf("Expected param 'commandBuffer', got '%s'", valErr.Parameter)
+	if valErr.Field != "commandBuffer" {
+		t.Errorf("Expected param 'commandBuffer', got '%s'", valErr.Field)
 	}
 }
 
@@ -147,8 +147,8 @@ func TestQueueSubmitValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "queue" {
-		t.Errorf("Expected param 'queue', got '%s'", valErr.Parameter)
+	if valErr.Field != "queue" {
+		t.Errorf("Expected param 'queue', got '%s'", valErr.Field)
 	}
 }
 
@@ -162,8 +162,8 @@ func TestCreateSemaphoreValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "device" {
-		t.Errorf("Expected param 'device', got '%s'", valErr.Parameter)
+	if valErr.Field != "device" {
+		t.Errorf("Expected param 'device', got '%s'", valErr.Field)
 	}
 }
 
@@ -189,8 +189,8 @@ func TestCreateFenceValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}

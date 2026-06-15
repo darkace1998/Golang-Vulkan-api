@@ -74,15 +74,15 @@ func TestVulkanErrorWithoutDetails(t *testing.T) {
 func TestValidationErrorType(t *testing.T) {
 	err := NewValidationError("testParam", "test message")
 
-	if err.Parameter != "testParam" {
-		t.Errorf("Expected Parameter 'testParam', got '%s'", err.Parameter)
+	if err.Field != "testParam" {
+		t.Errorf("Expected Parameter 'testParam', got '%s'", err.Field)
 	}
 
-	if err.Message != "test message" {
-		t.Errorf("Expected Message 'test message', got '%s'", err.Message)
+	if err.Reason != "test message" {
+		t.Errorf("Expected Message 'test message', got '%s'", err.Reason)
 	}
 
-	expectedMsg := "validation error for parameter 'testParam': test message"
+	expectedMsg := "vulkan validation error: testParam test message"
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
 	}

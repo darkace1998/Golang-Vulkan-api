@@ -26,8 +26,8 @@ func TestQueueWaitIdleValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "queue" {
-		t.Errorf("Expected param 'queue', got '%s'", valErr.Parameter)
+	if valErr.Field != "queue" {
+		t.Errorf("Expected param 'queue', got '%s'", valErr.Field)
 	}
 }
 
@@ -41,7 +41,7 @@ func TestDeviceWaitIdleValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != testDeviceParameter {
-		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Parameter)
+	if valErr.Field != testDeviceParameter {
+		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Field)
 	}
 }
