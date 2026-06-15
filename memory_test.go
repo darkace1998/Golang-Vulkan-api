@@ -267,7 +267,7 @@ func TestAllocateMemoryValidation(t *testing.T) {
 		allocInfo   *MemoryAllocateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &MemoryAllocateInfo{}, "device"},
+		{"nil device", nil, &MemoryAllocateInfo{}, testDeviceParameter},
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 	}
 
@@ -297,9 +297,9 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{"nil device", nil, fakeBuffer(), fakeDeviceMemory(), "device"},
+		{"nil device", nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil buffer", fakeDevice(), nil, fakeDeviceMemory(), "buffer"},
-		{"nil memory", fakeDevice(), fakeBuffer(), nil, "memory"},
+		{"nil memory", fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -327,8 +327,8 @@ func TestCreateImageValidation(t *testing.T) {
 		createInfo  *ImageCreateInfo
 		expectParam string
 	}{
-		{"nil device", nil, &ImageCreateInfo{}, "device"},
-		{"nil createInfo", fakeDevice(), nil, "createInfo"},
+		{"nil device", nil, &ImageCreateInfo{}, testDeviceParameter},
+		{"nil createInfo", fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -357,9 +357,9 @@ func TestBindImageMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{"nil device", nil, fakeImage(), fakeDeviceMemory(), "device"},
+		{"nil device", nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil image", fakeDevice(), nil, fakeDeviceMemory(), "image"},
-		{"nil memory", fakeDevice(), fakeImage(), nil, "memory"},
+		{"nil memory", fakeDevice(), fakeImage(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -387,8 +387,8 @@ func TestMapMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{"nil device", nil, fakeDeviceMemory(), "device"},
-		{"nil memory", fakeDevice(), nil, "memory"},
+		{"nil device", nil, fakeDeviceMemory(), testDeviceParameter},
+		{"nil memory", fakeDevice(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
