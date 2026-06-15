@@ -5,8 +5,12 @@ import (
 	"testing"
 )
 
-const testDeviceParameter = "device"
-const testMemoryParameter = "memory"
+const (
+	testDeviceParameter = "device"
+	testNilDeviceName   = "nil device"
+	testNilMemoryName   = "nil memory"
+	testMemoryParameter = "memory"
+)
 
 // ============================================================================
 // Nil Check Tests for Destroy Functions
@@ -46,6 +50,9 @@ func TestDeviceWaitIdleValidation(t *testing.T) {
 		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Parameter)
 	}
 }
-const testCreateInfoParameter = "createInfo"
-const testNilCreateInfoName = "nil createInfo"
-const testValidationError = "ValidationError"
+
+const (
+	testCreateInfoParameter = "createInfo"
+	testNilCreateInfoName   = "nil createInfo"
+	testValidationError     = "ValidationError"
+)
