@@ -691,9 +691,9 @@ func CopyDataToStagingBuffer(stagingBuffer *StagingBuffer, data []byte) error {
 	if DeviceSize(len(data)) > stagingBuffer.Size {
 		return NewValidationError("data", "data size exceeds staging buffer size")
 	}
-
 	// Copy data to the mapped memory
-	C.memcpy(stagingBuffer.Data, unsafe.Pointer(&data[0]), C.size_t(len(data)))
+	dest := unsafe.Slice((*byte)(stagingBuffer.Data), len(data))
+	copy(dest, data)
 	return nil
 }
 
