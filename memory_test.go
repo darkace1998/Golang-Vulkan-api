@@ -267,11 +267,7 @@ func TestAllocateMemoryValidation(t *testing.T) {
 		allocInfo   *MemoryAllocateInfo
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, &MemoryAllocateInfo{}, testDeviceParameter},
-=======
-		{testNilDeviceName, nil, &MemoryAllocateInfo{}, testDeviceParameter},
->>>>>>> origin/main
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 	}
 
@@ -301,15 +297,9 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil buffer", fakeDevice(), nil, fakeDeviceMemory(), "buffer"},
-		{"nil memory", fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
-=======
-		{testNilDeviceName, nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
-		{"nil buffer", fakeDevice(), nil, fakeDeviceMemory(), "buffer"},
-		{testNilMemoryName, fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
->>>>>>> origin/main
+		{testNilMemory, fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -337,13 +327,8 @@ func TestCreateImageValidation(t *testing.T) {
 		createInfo  *ImageCreateInfo
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, &ImageCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
-=======
-		{testNilDeviceName, nil, &ImageCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
->>>>>>> origin/main
 	}
 
 	for _, tt := range tests {
@@ -372,15 +357,9 @@ func TestBindImageMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil image", fakeDevice(), nil, fakeDeviceMemory(), "image"},
-		{"nil memory", fakeDevice(), fakeImage(), nil, testMemoryParameter},
-=======
-		{testNilDeviceName, nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
-		{"nil image", fakeDevice(), nil, fakeDeviceMemory(), "image"},
-		{testNilMemoryName, fakeDevice(), fakeImage(), nil, testMemoryParameter},
->>>>>>> origin/main
+		{testNilMemory, fakeDevice(), fakeImage(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -408,13 +387,8 @@ func TestMapMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, fakeDeviceMemory(), testDeviceParameter},
-		{"nil memory", fakeDevice(), nil, testMemoryParameter},
-=======
-		{testNilDeviceName, nil, fakeDeviceMemory(), testDeviceParameter},
-		{testNilMemoryName, fakeDevice(), nil, testMemoryParameter},
->>>>>>> origin/main
+		{testNilMemory, fakeDevice(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {

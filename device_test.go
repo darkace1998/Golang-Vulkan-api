@@ -5,16 +5,6 @@ import (
 	"testing"
 )
 
-<<<<<<< HEAD
-=======
-const (
-	testDeviceParameter = "device"
-	testNilDeviceName   = "nil device"
-	testNilMemoryName   = "nil memory"
-	testMemoryParameter = "memory"
-)
->>>>>>> origin/main
-
 // ============================================================================
 // Nil Check Tests for Destroy Functions
 // ============================================================================
@@ -54,8 +44,3 @@ func TestDeviceWaitIdleValidation(t *testing.T) {
 	}
 }
 
-const (
-	testCreateInfoParameter = "createInfo"
-	testNilCreateInfoName   = "nil createInfo"
-	testValidationError     = "ValidationError"
-)

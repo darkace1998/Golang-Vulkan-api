@@ -42,13 +42,8 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 		createInfo  *CommandPoolCreateInfo
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
-=======
-		{testNilDeviceName, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
->>>>>>> origin/main
 	}
 
 	for _, tt := range tests {
@@ -76,11 +71,7 @@ func TestAllocateCommandBuffersValidation(t *testing.T) {
 		allocInfo   *CommandBufferAllocateInfo
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
-=======
-		{testNilDeviceName, nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
->>>>>>> origin/main
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 		{"zero count", fakeDevice(), &CommandBufferAllocateInfo{CommandBufferCount: 0}, "allocateInfo.CommandBufferCount"},
 	}
@@ -171,13 +162,8 @@ func TestCreateSemaphoreValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-<<<<<<< HEAD
 	if valErr.Field != testDeviceParameter {
 		t.Errorf("Expected param 'device', got '%s'", valErr.Field)
-=======
-	if valErr.Parameter != testDeviceParameter {
-		t.Errorf("Expected param 'device', got '%s'", valErr.Parameter)
->>>>>>> origin/main
 	}
 }
 
@@ -189,13 +175,8 @@ func TestCreateFenceValidation(t *testing.T) {
 		createInfo  *FenceCreateInfo
 		expectParam string
 	}{
-<<<<<<< HEAD
 		{testNilDevice, nil, &FenceCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
-=======
-		{testNilDeviceName, nil, &FenceCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
->>>>>>> origin/main
 	}
 
 	for _, tt := range tests {
