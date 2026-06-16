@@ -1557,19 +1557,18 @@ func (app *BenchmarkApp) calculateStabilityScore() float64 {
 	}
 
 	// Calculate coefficient of variation for frame times
-	mean := 0.0
+	sum := 0.0
+	sumSq := 0.0
 	for _, ft := range app.frameTimesMs {
-		mean += ft
+		sum += ft
+		sumSq += ft * ft
 	}
-	mean /= float64(len(app.frameTimesMs))
-
-	variance := 0.0
-	for _, ft := range app.frameTimesMs {
-		diff := ft - mean
-		variance += diff * diff
+	n := float64(len(app.frameTimesMs))
+	mean := sum / n
+	variance := (sumSq / n) - (mean * mean)
+	if variance < 0 {
+		variance = 0
 	}
-	variance /= float64(len(app.frameTimesMs))
-
 	stdDev := math.Sqrt(variance)
 	cv := stdDev / mean // Coefficient of variation
 
