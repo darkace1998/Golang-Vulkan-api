@@ -49,8 +49,8 @@ func TestCreateSamplerValidation(t *testing.T) {
 		createInfo  *SamplerCreateInfo
 		expectParam string
 	}{
-		{TestNameNilDevice, nil, &SamplerCreateInfo{}, TestParamDevice},
-		{TestNameNilCreateInfo, fakeDevice(), nil, TestParamCreateInfo},
+		{testNilDeviceName, nil, &SamplerCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -78,8 +78,8 @@ func TestCreateDescriptorSetLayoutValidation(t *testing.T) {
 		createInfo  *DescriptorSetLayoutCreateInfo
 		expectParam string
 	}{
-		{TestNameNilDevice, nil, &DescriptorSetLayoutCreateInfo{}, TestParamDevice},
-		{TestNameNilCreateInfo, fakeDevice(), nil, TestParamCreateInfo},
+		{testNilDeviceName, nil, &DescriptorSetLayoutCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -107,8 +107,8 @@ func TestCreateDescriptorPoolValidation(t *testing.T) {
 		createInfo  *DescriptorPoolCreateInfo
 		expectParam string
 	}{
-		{TestNameNilDevice, nil, &DescriptorPoolCreateInfo{}, TestParamDevice},
-		{TestNameNilCreateInfo, fakeDevice(), nil, TestParamCreateInfo},
+		{testNilDeviceName, nil, &DescriptorPoolCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {

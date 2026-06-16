@@ -167,7 +167,7 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:   TestNameNilDevice,
+			name:   "nil " + testDeviceParameter,
 			device: nil,
 			createInfo: &VideoSessionCreateInfo{
 				VideoProfile: &VideoProfileInfo{
@@ -175,14 +175,14 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
-			errorParam:  TestParamDevice,
+			errorParam:  testDeviceParameter,
 		},
 		{
-			name:        TestNameNilCreateInfo,
+			name:        testNilCreateInfoName,
 			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
-			errorParam:  TestParamCreateInfo,
+			errorParam:  testCreateInfoParameter,
 		},
 		{
 			name:   "nil videoProfile in createInfo",
@@ -229,11 +229,11 @@ func TestGetVideoSessionMemoryRequirementsValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         TestNameNilDevice,
+			name:         "nil " + testDeviceParameter,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			expectError:  true,
-			errorParam:   TestParamDevice,
+			errorParam:   testDeviceParameter,
 		},
 		{
 			name:         "null videoSession",
@@ -279,12 +279,12 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         TestNameNilDevice,
+			name:         "nil " + testDeviceParameter,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			bindInfos:    []VideoBindMemoryInfo{{MemoryBindIndex: 0}},
 			expectError:  true,
-			errorParam:   TestParamDevice,
+			errorParam:   testDeviceParameter,
 		},
 		{
 			name:         "null videoSession",
@@ -338,18 +338,18 @@ func TestCreateVideoSessionParametersValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:        TestNameNilDevice,
+			name:        "nil " + testDeviceParameter,
 			device:      nil,
 			createInfo:  &VideoSessionParametersCreateInfo{},
 			expectError: true,
-			errorParam:  TestParamDevice,
+			errorParam:  testDeviceParameter,
 		},
 		{
-			name:        TestNameNilCreateInfo,
+			name:        testNilCreateInfoName,
 			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
-			errorParam:  TestParamCreateInfo,
+			errorParam:  testCreateInfoParameter,
 		},
 	}
 
