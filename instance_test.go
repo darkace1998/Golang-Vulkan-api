@@ -83,7 +83,7 @@ func TestCreateInstanceValidation(t *testing.T) {
 		errorType   string
 	}{
 		{
-			name:        testNilCreateInfo,
+			name:        testNilCreateInfoName,
 			createInfo:  nil,
 			expectError: true,
 			errorType:   testValidationError,

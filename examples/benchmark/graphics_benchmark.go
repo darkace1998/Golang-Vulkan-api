@@ -371,7 +371,7 @@ func main() {
 
 	// Initialize output directory if specified
 	if *outputDir != "" {
-		if err := os.MkdirAll(*outputDir, 0755); err != nil {
+		if err := os.MkdirAll(*outputDir, 0o755); err != nil {
 			log.Printf("Warning: Could not create output directory: %v", err)
 		}
 	}
@@ -1371,17 +1371,15 @@ func (app *BenchmarkApp) calculateStabilityScore() float64 {
 
 	// Calculate coefficient of variation for frame times
 	mean := 0.0
-	for _, ft := range app.frameTimesMs {
-		mean += ft
-	}
-	mean /= float64(len(app.frameTimesMs))
-
 	variance := 0.0
 	for _, ft := range app.frameTimesMs {
-		diff := ft - mean
-		variance += diff * diff
+		mean += ft
+		variance += ft * ft
 	}
-	variance /= float64(len(app.frameTimesMs))
+
+	n := float64(len(app.frameTimesMs))
+	mean /= n
+	variance = math.Max(0, variance/n-mean*mean)
 
 	stdDev := math.Sqrt(variance)
 	cv := stdDev / mean // Coefficient of variation
