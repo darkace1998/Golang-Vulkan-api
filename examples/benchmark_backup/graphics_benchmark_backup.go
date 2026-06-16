@@ -373,7 +373,7 @@ func main() {
 
 	// Initialize output directory if specified
 	if *outputDir != "" {
-		if err := os.MkdirAll(*outputDir, 0755); err != nil {
+		if err := os.MkdirAll(*outputDir, 0o755); err != nil {
 			log.Printf("Warning: Could not create output directory: %v", err)
 		}
 	}

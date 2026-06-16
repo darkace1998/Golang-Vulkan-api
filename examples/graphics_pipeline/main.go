@@ -21,15 +21,15 @@ import (
 // Vertex represents a 2D vertex with position (x, y) and color (r, g, b).
 // Packed as 5 floats = 20 bytes per vertex.
 type Vertex struct {
-	PosX, PosY       float32
+	PosX, PosY             float32
 	ColorR, ColorG, ColorB float32
 }
 
 // Triangle vertices (positions in NDC, RGB colors)
 var triangleVertices = []Vertex{
-	{0.0, -0.5, 1.0, 0.0, 0.0},  // top    — red
-	{0.5, 0.5, 0.0, 1.0, 0.0},   // right  — green
-	{-0.5, 0.5, 0.0, 0.0, 1.0},  // left   — blue
+	{0.0, -0.5, 1.0, 0.0, 0.0}, // top    — red
+	{0.5, 0.5, 0.0, 1.0, 0.0},  // right  — green
+	{-0.5, 0.5, 0.0, 0.0, 1.0}, // left   — blue
 }
 
 // Vertex shader SPIR-V (compiled from GLSL equivalent):
@@ -530,7 +530,8 @@ func main() {
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, graphicsPipeline)
 
 	// Bind vertex buffer
-	vulkan.CmdBindVertexBuffers(cb, 0,
+	vulkan.CmdBindVertexBuffers(
+		cb, 0,
 		[]vulkan.Buffer{vertexBuffer},
 		[]vulkan.DeviceSize{0},
 	)
