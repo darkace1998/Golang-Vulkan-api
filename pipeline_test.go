@@ -49,8 +49,13 @@ func TestCreateShaderModuleValidation(t *testing.T) {
 		createInfo  *ShaderModuleCreateInfo
 		expectParam string
 	}{
+<<<<<<< HEAD
 		{testNilDevice, nil, &ShaderModuleCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
+=======
+		{testNilDeviceName, nil, &ShaderModuleCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
+>>>>>>> origin/main
 	}
 
 	for _, tt := range tests {
@@ -78,8 +83,13 @@ func TestCreatePipelineLayoutValidation(t *testing.T) {
 		createInfo  *PipelineLayoutCreateInfo
 		expectParam string
 	}{
+<<<<<<< HEAD
 		{testNilDevice, nil, &PipelineLayoutCreateInfo{}, testDeviceParameter},
 		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
+=======
+		{testNilDeviceName, nil, &PipelineLayoutCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
+>>>>>>> origin/main
 	}
 
 	for _, tt := range tests {
@@ -109,8 +119,13 @@ func TestCreateComputePipelinesValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
+<<<<<<< HEAD
 	if valErr.Field != testDeviceParameter {
 		t.Errorf("Expected param 'device', got '%s'", valErr.Field)
+=======
+	if valErr.Parameter != testDeviceParameter {
+		t.Errorf("Expected param 'device', got '%s'", valErr.Parameter)
+>>>>>>> origin/main
 	}
 }
 

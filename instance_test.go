@@ -83,10 +83,17 @@ func TestCreateInstanceValidation(t *testing.T) {
 		errorType   string
 	}{
 		{
+<<<<<<< HEAD
 			name:        testNilCreateInfo,
 			createInfo:  nil,
 			expectError: true,
 			errorType:   testValidationErrorType,
+=======
+			name:        testNilCreateInfoName,
+			createInfo:  nil,
+			expectError: true,
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "valid minimal createInfo",
@@ -120,7 +127,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "engine name too long",
@@ -131,7 +142,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				},
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "too many layers",
@@ -139,7 +154,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledLayerNames: make([]string, 100), // exceeds maxLayers
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "too many extensions",
@@ -147,7 +166,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledExtensionNames: make([]string, 300), // exceeds maxExtensions
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "layer name too long",
@@ -155,7 +178,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledLayerNames: []string{strings.Repeat("a", 300)}, // exceeds 256 chars
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 		{
 			name: "extension name too long",
@@ -163,7 +190,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 				EnabledExtensionNames: []string{strings.Repeat("a", 300)}, // exceeds 256 chars
 			},
 			expectError: true,
+<<<<<<< HEAD
 			errorType:   testValidationErrorType,
+=======
+			errorType:   testValidationError,
+>>>>>>> origin/main
 		},
 	}
 
@@ -193,7 +224,11 @@ func TestCreateInstanceValidation(t *testing.T) {
 
 				// Check error type
 				switch tt.errorType {
+<<<<<<< HEAD
 				case testValidationErrorType:
+=======
+				case testValidationError:
+>>>>>>> origin/main
 					var validationErr *ValidationError
 					if !errors.As(err, &validationErr) {
 						t.Errorf("Expected ValidationError, got %T: %v", err, err)
