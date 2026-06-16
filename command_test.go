@@ -43,7 +43,7 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 		expectParam string
 	}{
 		{testNilDeviceStr, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
-		{"nil createInfo", fakeDevice(), nil, testCreateInfoParameter},
+		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -176,7 +176,7 @@ func TestCreateFenceValidation(t *testing.T) {
 		expectParam string
 	}{
 		{testNilDeviceStr, nil, &FenceCreateInfo{}, testDeviceParameter},
-		{"nil createInfo", fakeDevice(), nil, testCreateInfoParameter},
+		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {

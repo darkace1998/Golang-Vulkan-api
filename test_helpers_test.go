@@ -34,4 +34,5 @@ const (
 	testValidationErrorStr  = "ValidationError"
 	testNilCreateInfoStr    = "nil createInfo"
 	testNilDeviceStr        = "nil device"
+	testNilMemoryStr        = "nil memory"
 )

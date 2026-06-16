@@ -50,7 +50,7 @@ func TestCreateShaderModuleValidation(t *testing.T) {
 		expectParam string
 	}{
 		{testNilDeviceStr, nil, &ShaderModuleCreateInfo{}, testDeviceParameter},
-		{"nil createInfo", fakeDevice(), nil, testCreateInfoParameter},
+		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -79,7 +79,7 @@ func TestCreatePipelineLayoutValidation(t *testing.T) {
 		expectParam string
 	}{
 		{testNilDeviceStr, nil, &PipelineLayoutCreateInfo{}, testDeviceParameter},
-		{"nil createInfo", fakeDevice(), nil, testCreateInfoParameter},
+		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
