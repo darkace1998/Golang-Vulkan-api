@@ -13,7 +13,7 @@ func TestNewDescriptorPoolManagerValidation(t *testing.T) {
 		poolSizes      []DescriptorPoolSize
 		expectParam    string
 	}{
-		{"nil device", nil, 10, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, "device"},
+		{testNilDeviceStr, nil, 10, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, testDeviceParameter},
 		{"zero maxSets", fakeDevice(), 0, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, "maxSetsPerPool"},
 		{"empty poolSizes", fakeDevice(), 10, []DescriptorPoolSize{}, "poolSizes"},
 		{"nil poolSizes", fakeDevice(), 10, nil, "poolSizes"},

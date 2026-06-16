@@ -86,7 +86,6 @@ func (m *DescriptorPoolManager) AllocateDescriptorSets(layouts []DescriptorSetLa
 	}
 
 	sets, err := AllocateDescriptorSets(m.device, allocInfo)
-
 	// If we run out of memory or the pool gets fragmented, get a new pool and try again
 	if err != nil {
 		var isPoolError bool

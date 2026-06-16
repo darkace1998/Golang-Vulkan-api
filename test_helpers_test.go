@@ -27,3 +27,11 @@ func fakeDescriptorSetLayout() DescriptorSetLayout { return DescriptorSetLayout(
 func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeHandle()) }
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
+
+const (
+	testCreateInfoParameter = "createInfo"
+	testMemoryParameter     = "memory"
+	testValidationErrorStr  = "ValidationError"
+	testNilCreateInfoStr    = "nil createInfo"
+	testNilDeviceStr        = "nil device"
+)
