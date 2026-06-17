@@ -63,8 +63,8 @@ func TestCreateShaderModuleValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -92,8 +92,8 @@ func TestCreatePipelineLayoutValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -109,8 +109,8 @@ func TestCreateComputePipelinesValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != testDeviceParameter {
-		t.Errorf("Expected param 'device', got '%s'", valErr.Parameter)
+	if valErr.Field != testDeviceParameter {
+		t.Errorf("Expected param 'device', got '%s'", valErr.Field)
 	}
 }
 

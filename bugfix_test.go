@@ -25,8 +25,8 @@ func TestEnumeratePhysicalDevicesValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "instance" {
-		t.Errorf("Expected param 'instance', got '%s'", valErr.Parameter)
+	if valErr.Field != "instance" {
+		t.Errorf("Expected param 'instance', got '%s'", valErr.Field)
 	}
 }
 

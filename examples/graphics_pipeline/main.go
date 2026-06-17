@@ -530,7 +530,8 @@ func main() {
 	vulkan.CmdBindPipeline(cb, vulkan.PipelineBindPointGraphics, graphicsPipeline)
 
 	// Bind vertex buffer
-	vulkan.CmdBindVertexBuffers(cb, 0,
+	vulkan.CmdBindVertexBuffers(
+		cb, 0,
 		[]vulkan.Buffer{vertexBuffer},
 		[]vulkan.DeviceSize{0},
 	)
