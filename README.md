@@ -163,9 +163,25 @@ go get github.com/darkace1998/golang-vulkan-api
 ```
 
 
+## Error Handling Patterns
+
+See [ERROR_HANDLING.md](ERROR_HANDLING.md) for idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
+
+## Performance Tuning
+
+See [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) for detailed strategies and tips for optimizing Vulkan compute workloads, particularly for AI/ML and general parallel processing tasks.
+
 ## Thread Safety
 
 See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
+
+
+## Getting Started
+
+If you are new to Vulkan or this library, check out the **[Getting Started Tutorial](GETTING_STARTED.md)** for a step-by-step guide to writing your first Vulkan application.
+## Vulkan 1.4 Readiness
+
+See [VULKAN_1_4_READINESS.md](VULKAN_1_4_READINESS.md) for detailed information about the current state of Vulkan 1.4 support and our roadmap for future implementation.
 
 ## Quick Start
 
