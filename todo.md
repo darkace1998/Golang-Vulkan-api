@@ -46,7 +46,7 @@
 - [ ] **Add tests for `synchronization.go`** — Timeline semaphore creation helpers and fence status logic should be tested in pure Go (validation-only, no GPU required).
 - [x] **Add tests for `vulkan13.go`** — `RenderingInfo`, `SubmitInfo2`, and extended dynamic state types need struct and validation tests.
 - [x] **Add tests for `video_helpers.go`** — `IsExtensionSupported()` and `IsLayerSupported()` are pure Go functions that can be easily unit tested.
-- [ ] **Add integration tests with a mock or software Vulkan driver** — Consider using `lavapipe` (Mesa software renderer) in CI to run tests that require a Vulkan instance without a physical GPU.
+- [x] **Add integration tests with a mock or software Vulkan driver** — Consider using `lavapipe` (Mesa software renderer) in CI to run tests that require a Vulkan instance without a physical GPU.
 - [ ] **Increase benchmark coverage** — Add benchmarks for memory allocation helpers, command buffer recording, and descriptor set updates.
 
 ---
@@ -77,7 +77,7 @@
 
 - [x] **Add CI test job** — The current GitHub Actions workflow (`golangci-lint.yml`) only lints; add a job that runs `go test ./...` on Ubuntu.
 - [ ] **Add multi-platform CI** — Test builds on Windows and macOS runners in addition to Ubuntu to catch platform-specific CGO issues early.
-- [ ] **Add a CI job with `lavapipe`** — Install Mesa's software Vulkan driver in CI to run integration tests that need a Vulkan instance.
+- [x] **Add a CI job with `lavapipe`** — Install Mesa's software Vulkan driver in CI to run integration tests that need a Vulkan instance.
 - [ ] **Pin golangci-lint version in CI** — Currently uses `latest`; pin to a specific version for reproducible builds.
 - [ ] **Add a build matrix for Go versions** — Test against Go 1.22 and the latest stable Go release.
 - [ ] **Add `go vet` to the CI pipeline** — Runs additional static analysis beyond `golangci-lint`.
