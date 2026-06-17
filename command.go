@@ -507,12 +507,14 @@ type ThreadLocalCommandPool struct {
 // CreateThreadLocalCommandPool performs the operation
 // CreateThreadLocalCommandPool creates a command pool optimized for thread-local use
 // Uses TRANSIENT and RESET_COMMAND_BUFFER flags for efficient per-frame recording
+var createCommandPoolFunc = CreateCommandPool
+
 func CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
 	}
 
-	commandPool, err := CreateCommandPool(device, &CommandPoolCreateInfo{
+	commandPool, err := createCommandPoolFunc(device, &CommandPoolCreateInfo{
 		Flags:            CommandPoolCreateTransientBit | CommandPoolCreateResetCommandBufferBit,
 		QueueFamilyIndex: queueFamilyIndex,
 	})
