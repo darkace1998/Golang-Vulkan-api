@@ -267,5 +267,78 @@ func BenchmarkCommandBufferBatchAdd(b *testing.B) {
 		batch.AddCommandBuffer(cb)
 		batch.AddWaitSemaphore(sem, PipelineStageColorAttachmentOutputBit)
 		batch.AddSignalSemaphore(sem)
+// TestCreateThreadLocalCommandPool tests the creation of a thread-local command pool
+func TestCreateThreadLocalCommandPool(t *testing.T) {
+	originalCreateCommandPool := createCommandPoolFunc
+	defer func() { createCommandPoolFunc = originalCreateCommandPool }()
+
+	t.Run("Validation error", testCreateThreadLocalCommandPoolValidation)
+	t.Run("Success path", testCreateThreadLocalCommandPoolSuccess)
+	t.Run("Error path", testCreateThreadLocalCommandPoolError)
+}
+
+func testCreateThreadLocalCommandPoolValidation(t *testing.T) {
+	_, err := CreateThreadLocalCommandPool(nil, 0)
+	if err == nil {
+		t.Fatal("Expected error for nil device")
+	}
+	var valErr *ValidationError
+	if !errors.As(err, &valErr) {
+		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
+	}
+	if valErr.Field != testDeviceParameter {
+		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Field)
+	}
+}
+
+func testCreateThreadLocalCommandPoolSuccess(t *testing.T) {
+	expectedPool := fakeCommandPool()
+	mockDevice := fakeDevice()
+
+	createCommandPoolFunc = func(device Device, createInfo *CommandPoolCreateInfo) (CommandPool, error) {
+		if device != mockDevice {
+			t.Errorf("Expected device %v, got %v", mockDevice, device)
+		}
+		if createInfo.QueueFamilyIndex != 1 {
+			t.Errorf("Expected queue family index 1, got %d", createInfo.QueueFamilyIndex)
+		}
+		if createInfo.Flags != (CommandPoolCreateTransientBit | CommandPoolCreateResetCommandBufferBit) {
+			t.Errorf("Expected correct flags, got %x", createInfo.Flags)
+		}
+		return expectedPool, nil
+	}
+
+	pool, err := CreateThreadLocalCommandPool(mockDevice, 1)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if pool == nil {
+		t.Fatal("Expected pool, got nil")
+	}
+	if pool.Device != mockDevice {
+		t.Errorf("Expected device %v, got %v", mockDevice, pool.Device)
+	}
+	if pool.CommandPool != expectedPool {
+		t.Errorf("Expected command pool %v, got %v", expectedPool, pool.CommandPool)
+	}
+	if pool.CommandBuffers == nil {
+		t.Error("CommandBuffers should be initialized to an empty slice")
+	}
+}
+
+func testCreateThreadLocalCommandPoolError(t *testing.T) {
+	mockDevice := fakeDevice()
+	expectedErr := errors.New("mock error")
+
+	createCommandPoolFunc = func(device Device, createInfo *CommandPoolCreateInfo) (CommandPool, error) {
+		return nil, expectedErr
+	}
+
+	pool, err := CreateThreadLocalCommandPool(mockDevice, 0)
+	if err != expectedErr {
+		t.Fatalf("Expected error %v, got %v", expectedErr, err)
+	}
+	if pool != nil {
+		t.Fatal("Expected nil pool on error")
 	}
 }

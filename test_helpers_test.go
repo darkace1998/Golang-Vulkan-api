@@ -9,6 +9,8 @@ const (
 	testNilCreateInfo       = "nil createInfo"
 	testNilDevice           = "nil device"
 	testNilMemory           = "nil memory"
+	testNilEvent            = "nil event"
+	testEventParameter      = "event"
 	testValidationErrorType = "ValidationError"
 )
 
@@ -39,3 +41,4 @@ func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeH
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
 func fakeSwapchain() Swapchain                     { return Swapchain(fakeHandle()) }
 func fakeDescriptorSet() DescriptorSet         { return DescriptorSet(fakeHandle()) }
+func fakeEvent() Event                             { return Event(fakeHandle()) }
