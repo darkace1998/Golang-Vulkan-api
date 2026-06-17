@@ -211,8 +211,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 
 	// Queue create infos - allocate in C memory
 	var cQueueCreateInfosPtr *C.VkDeviceQueueCreateInfo
-	var cPrioritiesArray []*C.float
-	var cPrioritiesToFree []*C.float // Track allocated priorities for cleanup
+	var cAllPrioritiesPtr *C.float
 
 	if len(createInfo.QueueCreateInfos) > 0 {
 		cQueueCreateInfosPtr = (*C.VkDeviceQueueCreateInfo)(C.malloc(C.size_t(len(createInfo.QueueCreateInfos)) * C.sizeof_VkDeviceQueueCreateInfo))
@@ -224,13 +223,29 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 		// Zero-initialize the queue create info structures
 		C.memset(unsafe.Pointer(cQueueCreateInfosPtr), 0, C.size_t(len(createInfo.QueueCreateInfos))*C.sizeof_VkDeviceQueueCreateInfo)
 
-		cPrioritiesArray = make([]*C.float, len(createInfo.QueueCreateInfos))
+		// Calculate total number of priorities across all queues
+		totalPriorities := 0
+		for _, qci := range createInfo.QueueCreateInfos {
+			totalPriorities += len(qci.QueuePriorities)
+		}
 
-		// Create a Go slice backed by the C array for safe indexed access
+		if totalPriorities > 0 {
+			cAllPrioritiesPtr = (*C.float)(C.malloc(C.size_t(totalPriorities) * C.sizeof_float))
+			if cAllPrioritiesPtr == nil {
+				return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for queue priorities")
+			}
+			C.memset(unsafe.Pointer(cAllPrioritiesPtr), 0, C.size_t(totalPriorities)*C.sizeof_float)
+		}
+
+		// Create Go slices backed by the C arrays for safe indexed access
 		cQueueInfos := unsafe.Slice(cQueueCreateInfosPtr, len(createInfo.QueueCreateInfos))
+		var cPriorities []C.float
+		if cAllPrioritiesPtr != nil {
+			cPriorities = unsafe.Slice(cAllPrioritiesPtr, totalPriorities)
+		}
 
+		offset := 0
 		for i, qci := range createInfo.QueueCreateInfos {
-			// Use slice indexing for safe array access (avoids manual pointer arithmetic)
 			cQueueInfos[i].sType = C.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO
 			cQueueInfos[i].pNext = nil
 			cQueueInfos[i].flags = 0
@@ -238,35 +253,23 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 			cQueueInfos[i].queueCount = C.uint32_t(len(qci.QueuePriorities))
 
 			if len(qci.QueuePriorities) > 0 {
-				cPrioritiesPtr := (*C.float)(C.malloc(C.size_t(len(qci.QueuePriorities)) * C.sizeof_float))
-				if cPrioritiesPtr == nil {
-					// Clean up allocated priorities before returning
-					for _, ptr := range cPrioritiesToFree {
-						C.free(unsafe.Pointer(ptr))
-					}
-					return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for queue priorities")
-				}
-				// Zero-initialize the priorities array
-				C.memset(unsafe.Pointer(cPrioritiesPtr), 0, C.size_t(len(qci.QueuePriorities))*C.sizeof_float)
-				cPrioritiesToFree = append(cPrioritiesToFree, cPrioritiesPtr)
-				cPrioritiesArray[i] = cPrioritiesPtr
-
-				// Use slice for safe priority array access
-				cPriorities := unsafe.Slice(cPrioritiesPtr, len(qci.QueuePriorities))
+				cQueueInfos[i].pQueuePriorities = &cPriorities[offset]
 				for j, priority := range qci.QueuePriorities {
-					cPriorities[j] = C.float(priority)
+					cPriorities[offset+j] = C.float(priority)
 				}
-				cQueueInfos[i].pQueuePriorities = cPrioritiesPtr
+				offset += len(qci.QueuePriorities)
+			} else {
+				cQueueInfos[i].pQueuePriorities = nil
 			}
 		}
 		cCreateInfoPtr.queueCreateInfoCount = C.uint32_t(len(createInfo.QueueCreateInfos))
 		cCreateInfoPtr.pQueueCreateInfos = cQueueCreateInfosPtr
 	}
 
-	// Defer cleanup of priority arrays
+	// Defer cleanup of priority array
 	defer func() {
-		for _, ptr := range cPrioritiesToFree {
-			C.free(unsafe.Pointer(ptr))
+		if cAllPrioritiesPtr != nil {
+			C.free(unsafe.Pointer(cAllPrioritiesPtr))
 		}
 	}()
 

@@ -513,12 +513,14 @@ type ThreadLocalCommandPool struct {
 // CreateThreadLocalCommandPool performs the operation
 // CreateThreadLocalCommandPool creates a command pool optimized for thread-local use
 // Uses TRANSIENT and RESET_COMMAND_BUFFER flags for efficient per-frame recording
+var createCommandPoolFunc = CreateCommandPool
+
 func CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
 	}
 
-	commandPool, err := CreateCommandPool(device, &CommandPoolCreateInfo{
+	commandPool, err := createCommandPoolFunc(device, &CommandPoolCreateInfo{
 		Flags:            CommandPoolCreateTransientBit | CommandPoolCreateResetCommandBufferBit,
 		QueueFamilyIndex: queueFamilyIndex,
 	})
@@ -596,66 +598,3 @@ func (pool *ThreadLocalCommandPool) Destroy() {
 	}
 }
 
-// CommandBufferBatch helps batch command buffers for submission
-type CommandBufferBatch struct {
-	CommandBuffers   []CommandBuffer
-	WaitSemaphores   []Semaphore
-	WaitDstStageMask []PipelineStageFlags
-	SignalSemaphores []Semaphore
-}
-
-// NewCommandBufferBatch creates a new command buffer batch
-func NewCommandBufferBatch() *CommandBufferBatch {
-	return &CommandBufferBatch{
-		CommandBuffers:   make([]CommandBuffer, 0),
-		WaitSemaphores:   make([]Semaphore, 0),
-		WaitDstStageMask: make([]PipelineStageFlags, 0),
-		SignalSemaphores: make([]Semaphore, 0),
-	}
-}
-
-// AddCommandBuffer adds a command buffer to the batch
-func (batch *CommandBufferBatch) AddCommandBuffer(cb CommandBuffer) {
-	if batch != nil && cb != nil {
-		batch.CommandBuffers = append(batch.CommandBuffers, cb)
-	}
-}
-
-// AddWaitSemaphore adds a wait semaphore with its stage mask
-func (batch *CommandBufferBatch) AddWaitSemaphore(semaphore Semaphore, stageMask PipelineStageFlags) {
-	if batch != nil && semaphore != nil {
-		batch.WaitSemaphores = append(batch.WaitSemaphores, semaphore)
-		batch.WaitDstStageMask = append(batch.WaitDstStageMask, stageMask)
-	}
-}
-
-// AddSignalSemaphore adds a signal semaphore
-func (batch *CommandBufferBatch) AddSignalSemaphore(semaphore Semaphore) {
-	if batch != nil && semaphore != nil {
-		batch.SignalSemaphores = append(batch.SignalSemaphores, semaphore)
-	}
-}
-
-// ToSubmitInfo converts the batch to a SubmitInfo
-func (batch *CommandBufferBatch) ToSubmitInfo() SubmitInfo {
-	if batch == nil {
-		return SubmitInfo{}
-	}
-	return SubmitInfo{
-		WaitSemaphores:   batch.WaitSemaphores,
-		WaitDstStageMask: batch.WaitDstStageMask,
-		CommandBuffers:   batch.CommandBuffers,
-		SignalSemaphores: batch.SignalSemaphores,
-	}
-}
-
-// Clear clears the batch for reuse
-func (batch *CommandBufferBatch) Clear() {
-	if batch != nil {
-		// Allow GC of underlying arrays if batch size varies significantly
-		batch.CommandBuffers = make([]CommandBuffer, 0)
-		batch.WaitSemaphores = make([]Semaphore, 0)
-		batch.WaitDstStageMask = make([]PipelineStageFlags, 0)
-		batch.SignalSemaphores = make([]Semaphore, 0)
-	}
-}

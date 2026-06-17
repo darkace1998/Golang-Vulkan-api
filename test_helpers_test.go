@@ -9,6 +9,8 @@ const (
 	testNilCreateInfo       = "nil createInfo"
 	testNilDevice           = "nil device"
 	testNilMemory           = "nil memory"
+	testNilEvent            = "nil event"
+	testEventParameter      = "event"
 	testValidationErrorType = "ValidationError"
 )
 
@@ -45,4 +47,5 @@ const (
 	testNilFenceError  = "vulkan validation error: fence cannot be nil"
 )
 
+func fakeDescriptorSet() DescriptorSet         { return DescriptorSet(fakeHandle()) }
 func fakeEvent() Event                             { return Event(fakeHandle()) }

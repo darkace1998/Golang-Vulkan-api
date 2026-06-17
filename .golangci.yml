@@ -1,7 +1,5 @@
-# version: "2"
 linters:
   enable:
-    
     - dupl
     - goconst
     - gosec
@@ -57,22 +55,38 @@ linters:
       - third_party$
       - builtin$
       - examples/*
+
+linters-settings:
+  cyclop:
+    max-complexity: 15
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
+  funlen:
+    lines: 200
+    statements: 150
+  gocyclo:
+    min-complexity: 60
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gosec:
+    excludes:
+      - G103
+  govet:
+    enable:
+      - printf
+      - shift
+      - structtag
+    disable:
+      - composites
+      - unsafeptr
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-formatters:
-  enable:
-    - gofmt
-    - gofumpt
-    - goimports
-  settings:
-    goimports:
-      local-prefixes:
-        - github.com/darkace1998/Golang-Vulkan-api
-  exclusions:
-    generated: lax
-    paths:
-      - vendor
-      - third_party$
-      - builtin$
-      - examples/*
+  exclude-dirs:
+    - examples
+    - vendor
+    - third_party
+    - builtin
