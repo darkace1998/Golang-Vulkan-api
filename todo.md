@@ -64,7 +64,7 @@
 
 ## Examples
 
-- [ ] **Add a render-to-texture offscreen example** — Demonstrate framebuffer creation, render pass, and reading back pixels without a window/surface.
+- [x] **Add a render-to-texture offscreen example** — Demonstrate framebuffer creation, render pass, and reading back pixels without a window/surface.
 - [ ] **Add a multi-queue example** — Show transfer + graphics queue usage for async resource uploads.
 - [ ] **Add a descriptor set update example** — Demonstrate uniform buffer and combined image sampler descriptor binding.
 - [ ] **Add a push constants example** — Push constants are defined in the pipeline layout types but not demonstrated.
