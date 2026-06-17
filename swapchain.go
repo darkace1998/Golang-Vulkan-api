@@ -190,6 +190,7 @@ func GetSwapchainImages(device Device, swapchain Swapchain) ([]Image, error) {
 	return images, nil
 }
 
+// AcquireNextImage performs the operation
 // AcquireNextImage acquires the next presentable image from a swapchain
 // Returns the index of the next image to use, and whether the swapchain is suboptimal
 func AcquireNextImage(device Device, swapchain Swapchain, timeout uint64, semaphore Semaphore, fence Fence) (uint32, bool, error) {
@@ -239,6 +240,7 @@ type PresentInfo struct {
 	ImageIndices   []uint32
 }
 
+// QueuePresent performs the operation
 // QueuePresent queues an image for presentation
 // Returns true if the swapchain is suboptimal
 func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {

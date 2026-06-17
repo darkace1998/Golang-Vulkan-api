@@ -20,6 +20,7 @@ type ClearDepthStencilValue struct {
 	Stencil uint32
 }
 
+// ClearValue defines the ClearValue type
 // ClearValue represents a clear value union
 // Set IsDepthStencil to true when clearing depth/stencil attachments
 type ClearValue struct {
@@ -251,6 +252,7 @@ func CmdDrawIndexed(commandBuffer CommandBuffer, indexCount, instanceCount, firs
 	C.vkCmdDrawIndexed(C.VkCommandBuffer(commandBuffer), C.uint32_t(indexCount), C.uint32_t(instanceCount), C.uint32_t(firstIndex), C.int32_t(vertexOffset), C.uint32_t(firstInstance))
 }
 
+// CmdDrawIndirect executes the operation
 // CmdDrawIndirect records an indirect draw command
 // The draw parameters are read from a buffer at the specified offset
 // stride specifies the byte stride between successive draw parameter structures
@@ -261,6 +263,7 @@ func CmdDrawIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSi
 	C.vkCmdDrawIndirect(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
 }
 
+// CmdDrawIndexedIndirect executes the operation
 // CmdDrawIndexedIndirect records an indexed indirect draw command
 // The draw parameters are read from a buffer at the specified offset
 // stride specifies the byte stride between successive draw parameter structures
@@ -271,6 +274,7 @@ func CmdDrawIndexedIndirect(commandBuffer CommandBuffer, buffer Buffer, offset D
 	C.vkCmdDrawIndexedIndirect(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
 }
 
+// CmdDrawIndirectCount executes the operation
 // CmdDrawIndirectCount records an indirect draw command with draw count from a buffer (Vulkan 1.2+)
 // The draw count is read from countBuffer at countBufferOffset
 // maxDrawCount specifies the maximum number of draws that will be executed
@@ -281,6 +285,7 @@ func CmdDrawIndirectCount(commandBuffer CommandBuffer, buffer Buffer, offset Dev
 	C.vkCmdDrawIndirectCount(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
 }
 
+// CmdDrawIndexedIndirectCount executes the operation
 // CmdDrawIndexedIndirectCount records an indexed indirect draw command with draw count from a buffer (Vulkan 1.2+)
 // The draw count is read from countBuffer at countBufferOffset
 // maxDrawCount specifies the maximum number of draws that will be executed
@@ -392,6 +397,7 @@ func CmdBindDescriptorSets(commandBuffer CommandBuffer, pipelineBindPoint Pipeli
 	)
 }
 
+// CmdPushConstants executes the operation
 // CmdPushConstants updates push constant values
 // stageFlags specifies the shader stages that will use the push constants
 // offset is the start offset of the push constant range to update (must be a multiple of 4)
@@ -433,7 +439,8 @@ func CmdPushConstants(commandBuffer CommandBuffer, layout PipelineLayout, stageF
 	)
 }
 
-// CmdPushConstantsTyped is a generic helper for pushing typed data as push constants
+// CmdPushConstantsTyped executes the operation
+// CmdPushConstantsTyped CmdPushConstantsTyped is a generic helper for pushing typed data as push constants
 // This is a convenience wrapper around CmdPushConstants for common use cases
 func CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLayout, stageFlags ShaderStageFlags, offset uint32, value *T) {
 	if value == nil {

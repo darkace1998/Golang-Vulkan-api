@@ -86,6 +86,7 @@ func DestroyQueryPool(device Device, queryPool QueryPool) {
 	C.vkDestroyQueryPool(C.VkDevice(device), C.VkQueryPool(queryPool), nil)
 }
 
+// GetQueryPoolResults performs the operation
 // GetQueryPoolResults retrieves results from a query pool
 // Returns the query results as a byte slice, or an error if the operation fails
 // Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned
@@ -268,6 +269,7 @@ func CmdCopyQueryPoolResults(commandBuffer CommandBuffer, queryPool QueryPool, f
 // Host Query Reset (Vulkan 1.2+)
 // ============================================================================
 
+// ResetQueryPool performs the operation
 // ResetQueryPool resets a range of queries in a query pool on the host (Vulkan 1.2+)
 // This requires the hostQueryReset feature to be enabled
 func ResetQueryPool(device Device, queryPool QueryPool, firstQuery, queryCount uint32) {
