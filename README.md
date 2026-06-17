@@ -167,6 +167,10 @@ go get github.com/darkace1998/golang-vulkan-api
 
 See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
 
+## Vulkan 1.4 Readiness
+
+See [VULKAN_1_4_READINESS.md](VULKAN_1_4_READINESS.md) for detailed information about the current state of Vulkan 1.4 support and our roadmap for future implementation.
+
 ## Quick Start
 
 ```go
