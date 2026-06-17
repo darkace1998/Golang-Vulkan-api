@@ -47,7 +47,7 @@
 - [x] **Add tests for `vulkan13.go`** — `RenderingInfo`, `SubmitInfo2`, and extended dynamic state types need struct and validation tests.
 - [x] **Add tests for `video_helpers.go`** — `IsExtensionSupported()` and `IsLayerSupported()` are pure Go functions that can be easily unit tested.
 - [x] **Add integration tests with a mock or software Vulkan driver** — Consider using `lavapipe` (Mesa software renderer) in CI to run tests that require a Vulkan instance without a physical GPU.
-- [ ] **Increase benchmark coverage** — Add benchmarks for memory allocation helpers, command buffer recording, and descriptor set updates.
+- [x] **Increase benchmark coverage** — Add benchmarks for memory allocation helpers, command buffer recording, and descriptor set updates.
 
 ---
 

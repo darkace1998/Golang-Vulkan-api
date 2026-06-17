@@ -253,6 +253,20 @@ func TestCmdExecuteCommandsValidation(t *testing.T) {
 	CmdExecuteCommands(fakeCommandBuffer(), nil)
 }
 
+// ============================================================================
+// Benchmarks
+// ============================================================================
+
+func BenchmarkCommandBufferBatchAdd(b *testing.B) {
+	batch := NewCommandBufferBatch()
+	cb := fakeCommandBuffer()
+	sem := fakeSemaphore()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		batch.AddCommandBuffer(cb)
+		batch.AddWaitSemaphore(sem, PipelineStageColorAttachmentOutputBit)
+		batch.AddSignalSemaphore(sem)
 // TestCreateThreadLocalCommandPool tests the creation of a thread-local command pool
 func TestCreateThreadLocalCommandPool(t *testing.T) {
 	originalCreateCommandPool := createCommandPoolFunc
