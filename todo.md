@@ -75,7 +75,7 @@
 
 ## Build & CI/CD
 
-- [ ] **Add CI test job** — The current GitHub Actions workflow (`golangci-lint.yml`) only lints; add a job that runs `go test ./...` on Ubuntu.
+- [x] **Add CI test job** — The current GitHub Actions workflow (`golangci-lint.yml`) only lints; add a job that runs `go test ./...` on Ubuntu.
 - [ ] **Add multi-platform CI** — Test builds on Windows and macOS runners in addition to Ubuntu to catch platform-specific CGO issues early.
 - [ ] **Add a CI job with `lavapipe`** — Install Mesa's software Vulkan driver in CI to run integration tests that need a Vulkan instance.
 - [ ] **Pin golangci-lint version in CI** — Currently uses `latest`; pin to a specific version for reproducible builds.
