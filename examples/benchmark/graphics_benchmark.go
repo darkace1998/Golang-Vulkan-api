@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/NVIDIA/go-nvml/pkg/nvml"
 	vulkan "github.com/darkace1998/golang-vulkan-api"
 )
 
@@ -75,6 +76,7 @@ type BenchmarkApp struct {
 	complexityLevel int
 
 	// GPU monitoring
+	nvmlInitialized   bool
 	monitoringEnabled bool
 	statsHistory      []GPUStats
 	powerHistory      []float64
@@ -519,24 +521,18 @@ func (app *BenchmarkApp) createCommandPool() error {
 }
 
 func (app *BenchmarkApp) initGPUMonitoring() {
-	// GPU monitoring without NVIDIA NVML
-	// Basic monitoring only - actual GPU stats from Vulkan device
-	fmt.Println("GPU monitoring initialized (basic mode - no NVIDIA NVML)")
+	ret := nvml.Init()
+	if ret != nvml.SUCCESS {
+		log.Printf("Failed to initialize NVML: %v", nvml.ErrorString(ret))
+		return
+	}
+	app.nvmlInitialized = true
+	fmt.Println("GPU monitoring initialized")
 }
 
 func (app *BenchmarkApp) cleanupGPUMonitoring() {
-	// No NVML cleanup needed
-}
-
-func (app *BenchmarkApp) cleanup() {
-	if app.commandPool != nil {
-		vulkan.DestroyCommandPool(app.device, app.commandPool)
-	}
-	if app.device != nil {
-		vulkan.DestroyDevice(app.device)
-	}
-	if app.instance != nil {
-		vulkan.DestroyInstance(app.instance)
+	if app.nvmlInitialized {
+		nvml.Shutdown()
 	}
 }
 
@@ -555,8 +551,77 @@ func (app *BenchmarkApp) getGPUStats() *GPUStats {
 }
 
 func (app *BenchmarkApp) getNvidiaGPUStats() *GPUStats {
-	// NVIDIA NVML support removed
-	return nil
+	if !app.nvmlInitialized {
+		return nil
+	}
+
+	deviceCount, ret := nvml.DeviceGetCount()
+	if ret != nvml.SUCCESS || deviceCount == 0 {
+		return nil
+	}
+
+	device, ret := nvml.DeviceGetHandleByIndex(0)
+	if ret != nvml.SUCCESS {
+		return nil
+	}
+
+	stats := &GPUStats{
+		Vendor:    "NVIDIA",
+		Timestamp: time.Now(),
+	}
+
+	// Get temperature
+	if temp, ret := device.GetTemperature(nvml.TEMPERATURE_GPU); ret == nvml.SUCCESS {
+		stats.Temperature = temp
+
+		// Check for thermal throttling (usually starts around 83°C for most GPUs)
+		if temp >= 83 {
+			stats.ThrottleStatus = true
+		}
+	}
+
+	// Get clock speeds
+	if memoryClock, ret := device.GetClockInfo(nvml.CLOCK_MEM); ret == nvml.SUCCESS {
+		stats.MemoryClock = memoryClock
+	}
+	if graphicsClock, ret := device.GetClockInfo(nvml.CLOCK_GRAPHICS); ret == nvml.SUCCESS {
+		stats.GraphicsClock = graphicsClock
+	}
+
+	// Get memory info
+	if memInfo, ret := device.GetMemoryInfo(); ret == nvml.SUCCESS {
+		stats.MemoryUsed = memInfo.Used
+		stats.MemoryTotal = memInfo.Total
+	}
+
+	// Get utilization
+	if utilization, ret := device.GetUtilizationRates(); ret == nvml.SUCCESS {
+		stats.GPUUtilization = utilization.Gpu
+	}
+
+	// Get power consumption (in milliwatts, convert to watts)
+	if powerDraw, ret := device.GetPowerUsage(); ret == nvml.SUCCESS {
+		stats.PowerUsage = float64(powerDraw) / 1000.0
+	}
+
+	// Get fan speed
+	if fanSpeed, ret := device.GetFanSpeed(); ret == nvml.SUCCESS {
+		stats.FanSpeed = fanSpeed // This is percentage, not RPM
+	}
+
+	// Alternative: Try to get fan speed in RPM if available
+	// NVML doesn't always provide RPM directly, so we might need to estimate
+
+	// Check for performance state throttling
+	if perfState, ret := device.GetPerformanceState(); ret == nvml.SUCCESS {
+		// P0 is maximum performance, higher numbers indicate throttling
+		// P2 and above usually indicate some form of throttling
+		if int(perfState) > 2 {
+			stats.ThrottleStatus = true
+		}
+	}
+
+	return stats
 }
 
 func (app *BenchmarkApp) getGenericGPUStats() *GPUStats {
@@ -969,19 +1034,141 @@ func (app *BenchmarkApp) simulateAdvancedWorkload() {
 	}
 }
 
-// Advanced rendering simulation functions
+// Enhanced rendering simulation functions
 func (app *BenchmarkApp) simulateRayTracingPass() {
-	// Simulate ray tracing workload - very compute intensive
-	rayCount := app.resolution.Width * app.resolution.Height / 4
-	for i := uint32(0); i < rayCount; i++ {
-		// Simulate ray-scene intersection calculations
-		_ = math.Sqrt(float64(i)) * math.Tan(float64(app.rotationAngle))
-		if i%1000 == 0 {
-			runtime.Gosched()
+	fmt.Println("\nRunning simulated benchmark (no GPU drivers available)...")
+	fmt.Println("This demonstrates the benchmark structure and monitoring capabilities")
+
+	duration := app.maxDuration
+	if duration == 0 {
+		duration = 5 * time.Second // Default simulation duration
+	}
+
+	targetFPS := app.targetFPS
+	if targetFPS == 0 {
+		targetFPS = 60
+	}
+
+	totalFrames := int(duration.Seconds()) * targetFPS
+
+	for i := 0; i < totalFrames; i++ {
+		app.renderFrame()
+
+		if i%targetFPS == 0 {
+			app.displayStats()
 		}
+
+		time.Sleep(time.Second / time.Duration(targetFPS))
+	}
+
+	fmt.Printf("\nSimulated benchmark complete! (%v)\n", duration)
+	app.displayFinalStats()
+}
+
+func (app *BenchmarkApp) displayStats() {
+	// Clear screen (simple approach)
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		fmt.Print("\033[2J\033[H")
+	}
+
+	fmt.Println("Vulkan Graphics Benchmark - Live Stats")
+	fmt.Println("=====================================")
+
+	// Runtime stats
+	elapsed := time.Since(app.startTime)
+	avgFPS := float64(app.frameCount) / elapsed.Seconds()
+
+	fmt.Printf("Runtime: %v\n", elapsed.Round(time.Second))
+	fmt.Printf("Total Frames: %d\n", app.frameCount)
+	fmt.Printf("Average FPS: %.1f\n", avgFPS)
+	fmt.Printf("Current FPS: %.1f\n", app.currentFPS)
+	fmt.Printf("Rotation Angle: %.2f radians\n", app.rotationAngle)
+
+	// GPU stats
+	gpuStats := app.getGPUStats()
+	if gpuStats != nil {
+		fmt.Printf("\nGPU Statistics (%s):\n", gpuStats.Vendor)
+		if gpuStats.Temperature > 0 {
+			fmt.Printf("Temperature: %d°C\n", gpuStats.Temperature)
+		}
+		if gpuStats.GraphicsClock > 0 {
+			fmt.Printf("Graphics Clock: %d MHz\n", gpuStats.GraphicsClock)
+		}
+		if gpuStats.MemoryClock > 0 {
+			fmt.Printf("Memory Clock: %d MHz\n", gpuStats.MemoryClock)
+		}
+		if gpuStats.GPUUtilization > 0 {
+			fmt.Printf("GPU Utilization: %d%%\n", gpuStats.GPUUtilization)
+		}
+		if gpuStats.MemoryTotal > 0 {
+			fmt.Printf("Memory Used: %.1f MB / %.1f MB (%.1f%%)\n",
+				float64(gpuStats.MemoryUsed)/1024/1024,
+				float64(gpuStats.MemoryTotal)/1024/1024,
+				float64(gpuStats.MemoryUsed)*100/float64(gpuStats.MemoryTotal))
+		}
+	} else {
+		fmt.Println("\nGPU Statistics: Not available")
+		fmt.Println("(GPU monitoring requires supported hardware and drivers)")
+	}
+
+	// System stats
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+	fmt.Printf("\nSystem Memory: %.1f MB allocated\n", float64(memStats.Alloc)/1024/1024)
+	fmt.Printf("Goroutines: %d\n", runtime.NumGoroutine())
+}
+
+func (app *BenchmarkApp) displayFinalStats() {
+	elapsed := time.Since(app.startTime)
+	avgFPS := float64(app.frameCount) / elapsed.Seconds()
+
+	fmt.Println("\n" + strings.Repeat("=", 50))
+	fmt.Println("FINAL BENCHMARK RESULTS")
+	fmt.Println(strings.Repeat("=", 50))
+	fmt.Printf("Total Runtime: %v\n", elapsed.Round(time.Millisecond))
+	fmt.Printf("Total Frames Rendered: %d\n", app.frameCount)
+	fmt.Printf("Average FPS: %.2f\n", avgFPS)
+	fmt.Printf("Final Rotation Angle: %.2f radians\n", app.rotationAngle)
+
+	// Performance rating
+	var rating string
+	switch {
+	case avgFPS >= 120:
+		rating = "Excellent"
+	case avgFPS >= 60:
+		rating = "Good"
+	case avgFPS >= 30:
+		rating = "Fair"
+	default:
+		rating = "Poor"
+	}
+	fmt.Printf("Performance Rating: %s\n", rating)
+
+	// GPU stats summary
+	gpuStats := app.getGPUStats()
+	if gpuStats != nil {
+		fmt.Printf("GPU Vendor: %s\n", gpuStats.Vendor)
+		if gpuStats.Temperature > 0 {
+			fmt.Printf("Max Temperature: %d°C\n", gpuStats.Temperature)
+		}
+	}
+
+	fmt.Println(strings.Repeat("=", 50))
+}
+
+func (app *BenchmarkApp) cleanup() {
+	if app.commandPool != nil {
+		vulkan.DestroyCommandPool(app.device, app.commandPool)
+	}
+	if app.device != nil {
+		vulkan.DestroyDevice(app.device)
+	}
+	if app.instance != nil {
+		vulkan.DestroyInstance(app.instance)
 	}
 }
 
+// Advanced rendering simulation functions
 func (app *BenchmarkApp) simulateVolumetricEffects() {
 	// Simulate volumetric fog/smoke calculations
 	voxelCount := app.complexityLevel * 10000
@@ -1370,17 +1557,18 @@ func (app *BenchmarkApp) calculateStabilityScore() float64 {
 	}
 
 	// Calculate coefficient of variation for frame times
-	mean := 0.0
-	variance := 0.0
+	sum := 0.0
+	sumSq := 0.0
 	for _, ft := range app.frameTimesMs {
-		mean += ft
-		variance += ft * ft
+		sum += ft
+		sumSq += ft * ft
 	}
-
 	n := float64(len(app.frameTimesMs))
-	mean /= n
-	variance = math.Max(0, variance/n-mean*mean)
-
+	mean := sum / n
+	variance := (sumSq / n) - (mean * mean)
+	if variance < 0 {
+		variance = 0
+	}
 	stdDev := math.Sqrt(variance)
 	cv := stdDev / mean // Coefficient of variation
 

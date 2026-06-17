@@ -11,6 +11,7 @@ import "unsafe"
 // Image Layout Transition Helpers
 // ============================================================================
 
+// TransitionImageLayout performs the operation
 // TransitionImageLayout transitions an image from one layout to another
 // This is a helper function for common layout transitions
 func TransitionImageLayout(
@@ -36,95 +37,92 @@ func TransitionImageLayout(
 	var srcStage PipelineStageFlags
 	var dstStage PipelineStageFlags
 
+	barrier.SrcAccessMask, barrier.DstAccessMask, srcStage, dstStage = getLayoutTransitionAccessAndStages(oldLayout, newLayout)
+
+	CmdPipelineBarrierFull(commandBuffer, srcStage, dstStage, 0, nil, nil, []ImageMemoryBarrier{barrier})
+}
+
+// getLayoutTransitionAccessAndStages returns the source access mask, destination access mask,
+// source pipeline stage, and destination pipeline stage for a given image layout transition.
+func getLayoutTransitionAccessAndStages(oldLayout, newLayout ImageLayout) (AccessFlags, AccessFlags, PipelineStageFlags, PipelineStageFlags) {
+	var srcAccessMask AccessFlags
+	var dstAccessMask AccessFlags
+	var srcStage PipelineStageFlags
+	var dstStage PipelineStageFlags
+
 	// Determine access masks and pipeline stages based on the transition
 	switch {
 	case oldLayout == ImageLayoutUndefined && newLayout == ImageLayoutTransferDstOptimal:
-		barrier.SrcAccessMask = 0
-		barrier.DstAccessMask = AccessTransferWriteBit
+		srcAccessMask = 0
+		dstAccessMask = AccessTransferWriteBit
 		srcStage = PipelineStageTopOfPipeBit
 		dstStage = PipelineStageTransferBit
 
 	case oldLayout == ImageLayoutTransferDstOptimal && newLayout == ImageLayoutShaderReadOnlyOptimal:
-		barrier.SrcAccessMask = AccessTransferWriteBit
-		barrier.DstAccessMask = AccessShaderReadBit
+		srcAccessMask = AccessTransferWriteBit
+		dstAccessMask = AccessShaderReadBit
 		srcStage = PipelineStageTransferBit
 		dstStage = PipelineStageFragmentShaderBit
 
 	case oldLayout == ImageLayoutUndefined && newLayout == ImageLayoutDepthStencilAttachmentOptimal:
-		barrier.SrcAccessMask = 0
-		barrier.DstAccessMask = AccessDepthStencilAttachmentReadBit | AccessDepthStencilAttachmentWriteBit
+		srcAccessMask = 0
+		dstAccessMask = AccessDepthStencilAttachmentReadBit | AccessDepthStencilAttachmentWriteBit
 		srcStage = PipelineStageTopOfPipeBit
 		dstStage = PipelineStageEarlyFragmentTestsBit
 
 	case oldLayout == ImageLayoutUndefined && newLayout == ImageLayoutColorAttachmentOptimal:
-		barrier.SrcAccessMask = 0
-		barrier.DstAccessMask = AccessColorAttachmentReadBit | AccessColorAttachmentWriteBit
+		srcAccessMask = 0
+		dstAccessMask = AccessColorAttachmentReadBit | AccessColorAttachmentWriteBit
 		srcStage = PipelineStageTopOfPipeBit
 		dstStage = PipelineStageColorAttachmentOutputBit
 
 	case oldLayout == ImageLayoutColorAttachmentOptimal && newLayout == ImageLayoutPresentSrcKHR:
-		barrier.SrcAccessMask = AccessColorAttachmentWriteBit
-		barrier.DstAccessMask = 0
+		srcAccessMask = AccessColorAttachmentWriteBit
+		dstAccessMask = 0
 		srcStage = PipelineStageColorAttachmentOutputBit
 		dstStage = PipelineStageBottomOfPipeBit
 
 	case oldLayout == ImageLayoutTransferSrcOptimal && newLayout == ImageLayoutShaderReadOnlyOptimal:
-		barrier.SrcAccessMask = AccessTransferReadBit
-		barrier.DstAccessMask = AccessShaderReadBit
+		srcAccessMask = AccessTransferReadBit
+		dstAccessMask = AccessShaderReadBit
 		srcStage = PipelineStageTransferBit
 		dstStage = PipelineStageFragmentShaderBit
 
 	case oldLayout == ImageLayoutShaderReadOnlyOptimal && newLayout == ImageLayoutTransferSrcOptimal:
-		barrier.SrcAccessMask = AccessShaderReadBit
-		barrier.DstAccessMask = AccessTransferReadBit
+		srcAccessMask = AccessShaderReadBit
+		dstAccessMask = AccessTransferReadBit
 		srcStage = PipelineStageFragmentShaderBit
 		dstStage = PipelineStageTransferBit
 
 	case oldLayout == ImageLayoutShaderReadOnlyOptimal && newLayout == ImageLayoutTransferDstOptimal:
-		barrier.SrcAccessMask = AccessShaderReadBit
-		barrier.DstAccessMask = AccessTransferWriteBit
+		srcAccessMask = AccessShaderReadBit
+		dstAccessMask = AccessTransferWriteBit
 		srcStage = PipelineStageFragmentShaderBit
 		dstStage = PipelineStageTransferBit
 
 	case oldLayout == ImageLayoutGeneral && newLayout == ImageLayoutTransferSrcOptimal:
-		barrier.SrcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
-		barrier.DstAccessMask = AccessTransferReadBit
+		srcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
+		dstAccessMask = AccessTransferReadBit
 		srcStage = PipelineStageAllCommandsBit
 		dstStage = PipelineStageTransferBit
 
 	case oldLayout == ImageLayoutGeneral && newLayout == ImageLayoutTransferDstOptimal:
-		barrier.SrcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
-		barrier.DstAccessMask = AccessTransferWriteBit
+		srcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
+		dstAccessMask = AccessTransferWriteBit
 		srcStage = PipelineStageAllCommandsBit
 		dstStage = PipelineStageTransferBit
 
 	default:
 		// Generic fallback - use ALL_COMMANDS for safety
-		barrier.SrcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
-		barrier.DstAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
+		srcAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
+		dstAccessMask = AccessMemoryReadBit | AccessMemoryWriteBit
 		srcStage = PipelineStageAllCommandsBit
 		dstStage = PipelineStageAllCommandsBit
 	}
 
-	CmdPipelineBarrierFull(commandBuffer, srcStage, dstStage, 0, nil, nil, []ImageMemoryBarrier{barrier})
+	return srcAccessMask, dstAccessMask, srcStage, dstStage
 }
 
-// TransitionImageLayoutSimple transitions an image layout using default settings
-// Convenience function that uses the color aspect and full mip/array range
-func TransitionImageLayoutSimple(
-	commandBuffer CommandBuffer,
-	image Image,
-	oldLayout ImageLayout,
-	newLayout ImageLayout,
-) {
-	TransitionImageLayout(commandBuffer, image, FormatUndefined, oldLayout, newLayout, ImageSubresourceRange{
-		AspectMask:     ImageAspectColorBit,
-		BaseMipLevel:   0,
-		LevelCount:     1,
-		BaseArrayLayer: 0,
-		LayerCount:     1,
-	})
-}
 
 // ============================================================================
 // Image Operations
@@ -372,6 +370,7 @@ func CmdCopyImage(
 // Buffer Operations
 // ============================================================================
 
+// CmdFillBuffer executes the operation
 // CmdFillBuffer fills a buffer with a fixed 32-bit value
 // size must be a multiple of 4, or WholeSize to fill to the end
 func CmdFillBuffer(
@@ -394,6 +393,7 @@ func CmdFillBuffer(
 	)
 }
 
+// CmdUpdateBuffer executes the operation
 // CmdUpdateBuffer updates buffer contents inline from host memory
 // The data size must be less than or equal to 65536 bytes and a multiple of 4
 func CmdUpdateBuffer(

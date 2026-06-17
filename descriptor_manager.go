@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// DescriptorPoolManager defines the DescriptorPoolManager type
 // DescriptorPoolManager is a high-level utility that dynamically manages
 // a growing collection of Vulkan descriptor pools. It eliminates the need
 // to manually recreate pools when they run out of memory or get fragmented.

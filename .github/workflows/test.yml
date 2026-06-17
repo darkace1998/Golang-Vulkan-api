@@ -1,0 +1,53 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Vulkan SDK and Mesa Drivers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan-dev mesa-vulkan-drivers vulkan-tools
+
+      - name: Verify Lavapipe Configuration
+        run: |
+          # Verify that Lavapipe works using vulkaninfo
+          VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json vulkaninfo || true
+          VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json vulkaninfo || true
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Run tests with race detector
+        run: go test -race -v ./...
+
+      - name: Run integration tests with Lavapipe
+        run: |
+          # Run tests with RUN_INTEGRATION_TESTS=1 using Lavapipe
+          # Some Ubuntu versions use lvp_icd.json, others use lvp_icd.x86_64.json
+          if [ -f "/usr/share/vulkan/icd.d/lvp_icd.x86_64.json" ]; then
+            VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json RUN_INTEGRATION_TESTS=1 go test -v -run Integration -race ./...
+          elif [ -f "/usr/share/vulkan/icd.d/lvp_icd.json" ]; then
+            VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json RUN_INTEGRATION_TESTS=1 go test -v -run Integration -race ./...
+          else
+            echo "Lavapipe ICD not found, trying with default settings"
+            RUN_INTEGRATION_TESTS=1 go test -v -run Integration -race ./...
+          fi

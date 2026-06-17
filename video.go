@@ -346,6 +346,7 @@ type VideoEncodeInfo struct {
 	}
 }
 
+// LoadVideoInstanceFunctions performs the operation
 // LoadVideoInstanceFunctions loads video extension functions that require a Vulkan instance.
 //
 // This function MUST be called after creating a Vulkan instance and before using any video-related
@@ -364,6 +365,7 @@ func LoadVideoInstanceFunctions(instance Instance) bool {
 	return videoInstanceLoaded
 }
 
+// ResetVideoInstanceFunctions performs the operation
 // ResetVideoInstanceFunctions resets the instance function loader so that
 // LoadVideoInstanceFunctions can be called again with a different instance.
 // This is NOT thread-safe and must not be called concurrently with
@@ -373,6 +375,7 @@ func ResetVideoInstanceFunctions() {
 	videoInstanceLoaded = false
 }
 
+// LoadVideoDeviceFunctions performs the operation
 // LoadVideoDeviceFunctions loads video extension functions that require a Vulkan device.
 //
 // This function MUST be called after creating a logical device and before using any video-related
@@ -390,6 +393,7 @@ func LoadVideoDeviceFunctions(device Device) bool {
 	return videoDeviceLoaded
 }
 
+// ResetVideoDeviceFunctions performs the operation
 // ResetVideoDeviceFunctions resets the device function loader so that
 // LoadVideoDeviceFunctions can be called again with a different device.
 // This is NOT thread-safe and must not be called concurrently with
@@ -654,6 +658,7 @@ type VideoCodingControlInfo struct {
 	Flags uint32
 }
 
+// CmdBeginVideoCoding executes the operation
 // CmdBeginVideoCoding begins video coding operations in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
 func CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo) error {
@@ -685,6 +690,7 @@ type VideoBeginCodingInfo struct {
 	VideoSessionParameters VideoSessionParameters
 }
 
+// CmdEndVideoCoding executes the operation
 // CmdEndVideoCoding ends video coding operations in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
 func CmdEndVideoCoding(commandBuffer CommandBuffer) error {
@@ -703,6 +709,7 @@ func CmdEndVideoCoding(commandBuffer CommandBuffer) error {
 	return nil
 }
 
+// CmdControlVideoCoding executes the operation
 // CmdControlVideoCoding controls video coding operations.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
 func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCodingControlInfo) error {
@@ -724,6 +731,7 @@ func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCoding
 	return nil
 }
 
+// CmdDecodeVideo executes the operation
 // CmdDecodeVideo performs video decode operation in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
 func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) error {
@@ -766,6 +774,7 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) er
 	return nil
 }
 
+// CmdEncodeVideo executes the operation
 // CmdEncodeVideo performs video encode operation in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
 func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) error {

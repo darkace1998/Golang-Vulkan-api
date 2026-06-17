@@ -59,6 +59,7 @@ import (
 	"unsafe"
 )
 
+// VideoDeviceFunctions defines the VideoDeviceFunctions type
 // VideoDeviceFunctions holds per-device video function pointers
 // This provides thread-safe access to video extension functions
 type VideoDeviceFunctions struct {
@@ -85,6 +86,7 @@ func GetVideoDeviceFunctions(device Device) *VideoDeviceFunctions {
 	return funcs
 }
 
+// CreateVideoDeviceFunctions performs the operation
 // CreateVideoDeviceFunctions creates and loads video functions for a device
 // This provides per-device function pointer storage with thread-safe loading
 func CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error) {
@@ -123,6 +125,7 @@ func (vdf *VideoDeviceFunctions) IsLoaded() bool {
 	return vdf.loaded
 }
 
+// LoadVideoFormatFunctions performs the operation
 // LoadVideoFormatFunctions loads video format query functions
 // This must be called after creating a Vulkan instance
 func LoadVideoFormatFunctions(instance Instance) bool {
@@ -732,6 +735,7 @@ func (dpb *DPBManager) Reset() {
 	dpb.frameNum = 0
 }
 
+// CalculatePOC performs the operation
 // CalculatePOC calculates the Picture Order Count for the next frame
 // This is a simplified implementation for H.264/H.265
 func (dpb *DPBManager) CalculatePOC() int32 {
