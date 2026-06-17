@@ -1,4 +1,3 @@
-# version: "2"
 linters:
   enable:
     - dupl
@@ -37,23 +36,3 @@ linters-settings:
     disable:
       - composites
       - unsafeptr
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
-  exclude-rules:
-    - linters:
-        - gosec
-      path: .*\.go
-      text: Use of unsafe calls should be audited
-    - linters:
-        - govet
-      path: _test\.go
-      text: possible misuse of unsafe.Pointer
-    - linters:
-        - cyclop
-      path: _test\.go
-  exclude-dirs:
-    - vendor
-    - third_party
-    - builtin
-    - examples
