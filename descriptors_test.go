@@ -127,3 +127,46 @@ func TestCreateDescriptorPoolValidation(t *testing.T) {
 		})
 	}
 }
+
+// ============================================================================
+// Benchmarks
+// ============================================================================
+
+func BenchmarkUpdateDescriptorSets(b *testing.B) {
+	device := Device(nil)
+
+	writes := make([]WriteDescriptorSet, 10)
+	for i := 0; i < 10; i++ {
+		writes[i] = WriteDescriptorSet{
+			DstSet:          fakeDescriptorSet(),
+			DstBinding:      uint32(i), //nolint:gosec // benchmark safe
+			DstArrayElement: 0,
+			DescriptorType:  DescriptorTypeUniformBuffer,
+			BufferInfo: []DescriptorBufferInfo{
+				{
+					Buffer: fakeBuffer(),
+					Offset: 0,
+					Range:  256,
+				},
+			},
+		}
+	}
+
+	copies := make([]CopyDescriptorSet, 5)
+	for i := 0; i < 5; i++ {
+		copies[i] = CopyDescriptorSet{
+			SrcSet:          fakeDescriptorSet(),
+			SrcBinding:      0,
+			SrcArrayElement: 0,
+			DstSet:          fakeDescriptorSet(),
+			DstBinding:      1,
+			DstArrayElement: 0,
+			DescriptorCount: 1,
+		}
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		UpdateDescriptorSets(device, writes, copies)
+	}
+}

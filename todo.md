@@ -41,13 +41,13 @@
 
 ## Testing
 
-- [ ] **Expand unit test coverage beyond validation** — Current tests (`instance_test.go`, `validation_test.go`, `video_test.go`) focus on input validation and error types; add tests for struct field defaults, constant correctness, and helper function edge cases.
+- [x] **Expand unit test coverage beyond validation** — Current tests (`instance_test.go`, `validation_test.go`, `video_test.go`) focus on input validation and error types; add tests for struct field defaults, constant correctness, and helper function edge cases.
 - [x] **Add tests for `resources.go`** — `TransitionImageLayout()` has non-trivial logic for selecting access masks and pipeline stages based on layout transitions; unit test all layout transition paths.
-- [ ] **Add tests for `synchronization.go`** — Timeline semaphore creation helpers and fence status logic should be tested in pure Go (validation-only, no GPU required).
+- [x] **Add tests for `synchronization.go`** — Timeline semaphore creation helpers and fence status logic should be tested in pure Go (validation-only, no GPU required).
 - [x] **Add tests for `vulkan13.go`** — `RenderingInfo`, `SubmitInfo2`, and extended dynamic state types need struct and validation tests.
 - [x] **Add tests for `video_helpers.go`** — `IsExtensionSupported()` and `IsLayerSupported()` are pure Go functions that can be easily unit tested.
 - [x] **Add integration tests with a mock or software Vulkan driver** — Consider using `lavapipe` (Mesa software renderer) in CI to run tests that require a Vulkan instance without a physical GPU.
-- [ ] **Increase benchmark coverage** — Add benchmarks for memory allocation helpers, command buffer recording, and descriptor set updates.
+- [x] **Increase benchmark coverage** — Add benchmarks for memory allocation helpers, command buffer recording, and descriptor set updates.
 
 ---
 

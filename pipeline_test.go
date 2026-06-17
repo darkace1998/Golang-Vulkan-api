@@ -124,3 +124,35 @@ func TestCreateComputePipelinesEmptyInfos(t *testing.T) {
 		t.Errorf("Expected nil result for empty createInfos")
 	}
 }
+
+// TestIsExtensionSupported tests IsExtensionSupported function
+func TestIsExtensionSupported(t *testing.T) {
+	extensions := []ExtensionProperties{
+		{ExtensionName: "VK_KHR_surface", SpecVersion: 1},
+		{ExtensionName: "VK_KHR_swapchain", SpecVersion: 2},
+	}
+
+	if !IsExtensionSupported("VK_KHR_surface", extensions) {
+		t.Errorf("Expected IsExtensionSupported to return true for existing extension")
+	}
+
+	if IsExtensionSupported("VK_EXT_debug_utils", extensions) {
+		t.Errorf("Expected IsExtensionSupported to return false for missing extension")
+	}
+}
+
+// TestIsLayerSupported tests IsLayerSupported function
+func TestIsLayerSupported(t *testing.T) {
+	layers := []LayerProperties{
+		{LayerName: "VK_LAYER_KHRONOS_validation", SpecVersion: MakeVersion(1, 0, 0)},
+		{LayerName: "VK_LAYER_LUNARG_api_dump", SpecVersion: MakeVersion(1, 0, 0)},
+	}
+
+	if !IsLayerSupported("VK_LAYER_KHRONOS_validation", layers) {
+		t.Errorf("Expected IsLayerSupported to return true for existing layer")
+	}
+
+	if IsLayerSupported("VK_LAYER_RENDERDOC_Capture", layers) {
+		t.Errorf("Expected IsLayerSupported to return false for missing layer")
+	}
+}
