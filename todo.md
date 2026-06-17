@@ -54,7 +54,7 @@
 ## Documentation
 
 - [ ] **Add a "Getting Started" tutorial** — A step-by-step guide for new users that walks through instance creation → device selection → memory allocation → command buffer → first draw/compute dispatch.
-- [ ] **Document thread safety guarantees** — Video codec functions require single-threaded loading (`LoadVideoDeviceFunctions`); document which API functions are safe for concurrent use.
+- [x] **Document thread safety guarantees** — Video codec functions require single-threaded loading (`LoadVideoDeviceFunctions`); document which API functions are safe for concurrent use.
 - [ ] **Add inline doc comments on all exported types and functions** — Some exported symbols (e.g., in `queries.go`, `swapchain.go`, `misc.go`) lack Go doc comments.
 - [ ] **Document error recovery patterns** — Show idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
 - [ ] **Add a performance tuning guide** — Tips for AI/ML compute workloads: batch size, memory alignment, queue family selection, timeline semaphore usage.
