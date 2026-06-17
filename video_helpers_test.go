@@ -61,3 +61,65 @@ func TestIsLayerSupported(t *testing.T) {
 		})
 	}
 }
+
+// ============================================================================
+// Video Device Functions Tests
+// ============================================================================
+
+func TestCreateVideoDeviceFunctions(t *testing.T) {
+	// Test nil device
+	funcs, err := CreateVideoDeviceFunctions(nil)
+	if err == nil {
+		t.Error("expected error for nil device, got nil")
+	}
+	if funcs != nil {
+		t.Error("expected nil functions for nil device, got non-nil")
+	}
+
+	// Setup fake device
+	device := fakeDevice()
+
+	// Clear the global map before testing
+	videoDeviceFunctionsMapLock.Lock()
+	videoDeviceFunctionsMap = make(map[Device]*VideoDeviceFunctions)
+	videoDeviceFunctionsMapLock.Unlock()
+
+	// Test successful creation
+	funcs1, err := CreateVideoDeviceFunctions(device)
+	if err != nil {
+		t.Errorf("unexpected error creating video device functions: %v", err)
+	}
+	if funcs1 == nil {
+		t.Fatal("expected non-nil functions, got nil")
+	}
+
+	// Verify the loaded state
+	loaded := funcs1.IsLoaded()
+	// Just calling it to ensure coverage, whether it's loaded depends on if the system actually has Vulkan loaded,
+	// for a fake handle, C.loadAdditionalVideoDeviceFunctions likely returns 0, so IsLoaded should be false.
+	if loaded {
+		t.Log("Note: IsLoaded returned true")
+	}
+
+	// Test idempotency (creating again should return the same instance)
+	funcs2, err := CreateVideoDeviceFunctions(device)
+	if err != nil {
+		t.Errorf("unexpected error calling CreateVideoDeviceFunctions twice: %v", err)
+	}
+	if funcs1 != funcs2 {
+		t.Error("expected second call to return the exact same instance")
+	}
+
+	// Test GetVideoDeviceFunctions
+	funcs3 := GetVideoDeviceFunctions(device)
+	if funcs1 != funcs3 {
+		t.Error("expected GetVideoDeviceFunctions to return the created instance")
+	}
+
+	// Test GetVideoDeviceFunctions for unknown device
+	unknownDevice := Device(fakeHandle()) // creating a new unique handle
+	funcs4 := GetVideoDeviceFunctions(unknownDevice)
+	if funcs4 != nil {
+		t.Error("expected GetVideoDeviceFunctions to return nil for unknown device")
+	}
+}
