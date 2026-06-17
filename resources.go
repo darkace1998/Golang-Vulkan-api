@@ -11,6 +11,7 @@ import "unsafe"
 // Image Layout Transition Helpers
 // ============================================================================
 
+// TransitionImageLayout performs the operation
 // TransitionImageLayout transitions an image from one layout to another
 // This is a helper function for common layout transitions
 func TransitionImageLayout(
@@ -109,6 +110,7 @@ func TransitionImageLayout(
 	CmdPipelineBarrierFull(commandBuffer, srcStage, dstStage, 0, nil, nil, []ImageMemoryBarrier{barrier})
 }
 
+// TransitionImageLayoutSimple performs the operation
 // TransitionImageLayoutSimple transitions an image layout using default settings
 // Convenience function that uses the color aspect and full mip/array range
 func TransitionImageLayoutSimple(
@@ -372,6 +374,7 @@ func CmdCopyImage(
 // Buffer Operations
 // ============================================================================
 
+// CmdFillBuffer executes the operation
 // CmdFillBuffer fills a buffer with a fixed 32-bit value
 // size must be a multiple of 4, or WholeSize to fill to the end
 func CmdFillBuffer(
@@ -394,6 +397,7 @@ func CmdFillBuffer(
 	)
 }
 
+// CmdUpdateBuffer executes the operation
 // CmdUpdateBuffer updates buffer contents inline from host memory
 // The data size must be less than or equal to 65536 bytes and a multiple of 4
 func CmdUpdateBuffer(

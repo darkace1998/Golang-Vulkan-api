@@ -483,6 +483,7 @@ func ResetCommandPool(device Device, commandPool CommandPool, flags CommandPoolR
 	return nil
 }
 
+// TrimCommandPool performs the operation
 // TrimCommandPool trims a command pool (Vulkan 1.1+)
 // This allows the implementation to reclaim unused memory from the command pool
 func TrimCommandPool(device Device, commandPool CommandPool) {
@@ -503,6 +504,7 @@ type ThreadLocalCommandPool struct {
 	CommandBuffers []CommandBuffer
 }
 
+// CreateThreadLocalCommandPool performs the operation
 // CreateThreadLocalCommandPool creates a command pool optimized for thread-local use
 // Uses TRANSIENT and RESET_COMMAND_BUFFER flags for efficient per-frame recording
 func CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error) {

@@ -39,8 +39,8 @@ func NewVulkanError(result Result, operation string, details string) *VulkanErro
 
 // ValidationError represents input validation errors
 type ValidationError struct {
-	Field string
-	Reason   string
+	Field  string
+	Reason string
 }
 
 // Error implements the error interface
@@ -51,7 +51,7 @@ func (e *ValidationError) Error() string {
 // NewValidationError creates a new ValidationError
 func NewValidationError(field, reason string) *ValidationError {
 	return &ValidationError{
-		Field: field,
-		Reason:   reason,
+		Field:  field,
+		Reason: reason,
 	}
 }

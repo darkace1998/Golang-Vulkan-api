@@ -162,6 +162,11 @@ imageMemReqs := vulkan.GetDeviceImageMemoryRequirements(device, &vulkan.ImageCre
 go get github.com/darkace1998/golang-vulkan-api
 ```
 
+
+## Thread Safety
+
+See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
+
 ## Quick Start
 
 ```go

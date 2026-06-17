@@ -430,6 +430,7 @@ type CopyDescriptorSet struct {
 	DescriptorCount uint32
 }
 
+// UpdateDescriptorSets performs the operation
 // UpdateDescriptorSets updates descriptor sets with write and copy operations
 // Note: This function follows the Vulkan API which is void and doesn't return errors.
 // If device is nil, the function returns early without performing any operation.
