@@ -2,6 +2,16 @@ package vulkan
 
 import "unsafe"
 
+const (
+	testDeviceParameter     = "device"
+	testCreateInfoParameter = "createInfo"
+	testMemoryParameter     = "memory"
+	testNilCreateInfo       = "nil createInfo"
+	testNilDevice           = "nil device"
+	testNilMemory           = "nil memory"
+	testValidationErrorType = "ValidationError"
+)
+
 // fakeHandle creates a non-nil handle backed by real Go memory, safe for use
 // with -race checkptr. It must never be passed to actual Vulkan C functions.
 func fakeHandle() unsafe.Pointer {

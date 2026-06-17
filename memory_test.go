@@ -267,7 +267,7 @@ func TestAllocateMemoryValidation(t *testing.T) {
 		allocInfo   *MemoryAllocateInfo
 		expectParam string
 	}{
-		{testNilDeviceName, nil, &MemoryAllocateInfo{}, testDeviceParameter},
+		{testNilDevice, nil, &MemoryAllocateInfo{}, testDeviceParameter},
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 	}
 
@@ -281,8 +281,8 @@ func TestAllocateMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -297,9 +297,9 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{testNilDeviceName, nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
+		{testNilDevice, nil, fakeBuffer(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil buffer", fakeDevice(), nil, fakeDeviceMemory(), "buffer"},
-		{testNilMemoryName, fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
+		{testNilMemory, fakeDevice(), fakeBuffer(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -312,8 +312,8 @@ func TestBindBufferMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -327,8 +327,8 @@ func TestCreateImageValidation(t *testing.T) {
 		createInfo  *ImageCreateInfo
 		expectParam string
 	}{
-		{testNilDeviceName, nil, &ImageCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoName, fakeDevice(), nil, testCreateInfoParameter},
+		{testNilDevice, nil, &ImageCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -341,8 +341,8 @@ func TestCreateImageValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -357,9 +357,9 @@ func TestBindImageMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{testNilDeviceName, nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
+		{testNilDevice, nil, fakeImage(), fakeDeviceMemory(), testDeviceParameter},
 		{"nil image", fakeDevice(), nil, fakeDeviceMemory(), "image"},
-		{testNilMemoryName, fakeDevice(), fakeImage(), nil, testMemoryParameter},
+		{testNilMemory, fakeDevice(), fakeImage(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -372,8 +372,8 @@ func TestBindImageMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -387,8 +387,8 @@ func TestMapMemoryValidation(t *testing.T) {
 		memory      DeviceMemory
 		expectParam string
 	}{
-		{testNilDeviceName, nil, fakeDeviceMemory(), testDeviceParameter},
-		{testNilMemoryName, fakeDevice(), nil, testMemoryParameter},
+		{testNilDevice, nil, fakeDeviceMemory(), testDeviceParameter},
+		{testNilMemory, fakeDevice(), nil, testMemoryParameter},
 	}
 
 	for _, tt := range tests {
@@ -401,8 +401,8 @@ func TestMapMemoryValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
