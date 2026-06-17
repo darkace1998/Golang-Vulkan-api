@@ -52,15 +52,15 @@ func main() {
 		queueFlags := qf.QueueFlags
 
 		// Find a graphics queue
-		if (queueFlags & vulkan.QueueGraphicsBit) != 0 && graphicsFamilyIndex == ^uint32(0) {
+		if (queueFlags&vulkan.QueueGraphicsBit) != 0 && graphicsFamilyIndex == ^uint32(0) {
 			graphicsFamilyIndex = uint32(i)
 		}
 
 		// Find a dedicated transfer queue (has transfer bit, but NOT graphics or compute)
 		if (queueFlags&vulkan.QueueTransferBit) != 0 &&
-		   (queueFlags&vulkan.QueueGraphicsBit) == 0 &&
-		   (queueFlags&vulkan.QueueComputeBit) == 0 &&
-		   transferFamilyIndex == ^uint32(0) {
+			(queueFlags&vulkan.QueueGraphicsBit) == 0 &&
+			(queueFlags&vulkan.QueueComputeBit) == 0 &&
+			transferFamilyIndex == ^uint32(0) {
 			transferFamilyIndex = uint32(i)
 		}
 	}
