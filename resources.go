@@ -110,23 +110,6 @@ func TransitionImageLayout(
 	CmdPipelineBarrierFull(commandBuffer, srcStage, dstStage, 0, nil, nil, []ImageMemoryBarrier{barrier})
 }
 
-// TransitionImageLayoutSimple performs the operation
-// TransitionImageLayoutSimple transitions an image layout using default settings
-// Convenience function that uses the color aspect and full mip/array range
-func TransitionImageLayoutSimple(
-	commandBuffer CommandBuffer,
-	image Image,
-	oldLayout ImageLayout,
-	newLayout ImageLayout,
-) {
-	TransitionImageLayout(commandBuffer, image, FormatUndefined, oldLayout, newLayout, ImageSubresourceRange{
-		AspectMask:     ImageAspectColorBit,
-		BaseMipLevel:   0,
-		LevelCount:     1,
-		BaseArrayLayer: 0,
-		LayerCount:     1,
-	})
-}
 
 // ============================================================================
 // Image Operations
