@@ -430,3 +430,19 @@ func TestMemoryPoolDefaultAlignment(t *testing.T) {
 		t.Errorf("Expected offset aligned to 64, got %d", offset)
 	}
 }
+
+// ============================================================================
+// Benchmarks
+// ============================================================================
+
+func BenchmarkMemoryPoolAllocate(b *testing.B) {
+	pool := &MemoryPool{
+		Size:      DeviceSize(uint64(b.N)) * 64, //nolint:gosec // benchmark safe // Ensure enough size
+		Alignment: 64,
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = pool.Allocate(64, 64)
+	}
+}
