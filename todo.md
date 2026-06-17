@@ -54,8 +54,8 @@
 ## Documentation
 
 - [ ] **Add a "Getting Started" tutorial** — A step-by-step guide for new users that walks through instance creation → device selection → memory allocation → command buffer → first draw/compute dispatch.
-- [ ] **Document thread safety guarantees** — Video codec functions require single-threaded loading (`LoadVideoDeviceFunctions`); document which API functions are safe for concurrent use.
 - [x] **Add inline doc comments on all exported types and functions** — Some exported symbols (e.g., in `queries.go`, `swapchain.go`, `misc.go`) lack Go doc comments.
+- [x] **Document thread safety guarantees** — Video codec functions require single-threaded loading (`LoadVideoDeviceFunctions`); document which API functions are safe for concurrent use.
 - [ ] **Document error recovery patterns** — Show idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
 - [ ] **Add a performance tuning guide** — Tips for AI/ML compute workloads: batch size, memory alignment, queue family selection, timeline semaphore usage.
 - [ ] **Document Vulkan 1.4 readiness** — `types.go` defines `Version14`; document which 1.4 features are ready and which are planned.
@@ -64,7 +64,7 @@
 
 ## Examples
 
-- [ ] **Add a render-to-texture offscreen example** — Demonstrate framebuffer creation, render pass, and reading back pixels without a window/surface.
+- [x] **Add a render-to-texture offscreen example** — Demonstrate framebuffer creation, render pass, and reading back pixels without a window/surface.
 - [ ] **Add a multi-queue example** — Show transfer + graphics queue usage for async resource uploads.
 - [ ] **Add a descriptor set update example** — Demonstrate uniform buffer and combined image sampler descriptor binding.
 - [ ] **Add a push constants example** — Push constants are defined in the pipeline layout types but not demonstrated.
@@ -75,7 +75,7 @@
 
 ## Build & CI/CD
 
-- [ ] **Add CI test job** — The current GitHub Actions workflow (`golangci-lint.yml`) only lints; add a job that runs `go test ./...` on Ubuntu.
+- [x] **Add CI test job** — The current GitHub Actions workflow (`golangci-lint.yml`) only lints; add a job that runs `go test ./...` on Ubuntu.
 - [ ] **Add multi-platform CI** — Test builds on Windows and macOS runners in addition to Ubuntu to catch platform-specific CGO issues early.
 - [ ] **Add a CI job with `lavapipe`** — Install Mesa's software Vulkan driver in CI to run integration tests that need a Vulkan instance.
 - [ ] **Pin golangci-lint version in CI** — Currently uses `latest`; pin to a specific version for reproducible builds.
