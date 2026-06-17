@@ -38,3 +38,11 @@ func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeH
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
 func fakeSwapchain() Swapchain                     { return Swapchain(fakeHandle()) }
+
+const (
+	testNilDeviceError = "vulkan validation error: device cannot be nil"
+	testNilEventError  = "vulkan validation error: event cannot be nil"
+	testNilFenceError  = "vulkan validation error: fence cannot be nil"
+)
+
+func fakeEvent() Event                             { return Event(fakeHandle()) }

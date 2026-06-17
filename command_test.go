@@ -252,3 +252,19 @@ func TestCmdExecuteCommandsValidation(t *testing.T) {
 	CmdExecuteCommands(nil, nil)
 	CmdExecuteCommands(fakeCommandBuffer(), nil)
 }
+
+func TestGetFenceStatusValidation(t *testing.T) {
+	_, err := GetFenceStatus(nil, fakeFence())
+	if err == nil {
+		t.Errorf("Expected error when device is nil")
+	} else if err.Error() != testNilDeviceError {
+		t.Errorf("Unexpected error message: %v", err)
+	}
+
+	_, err = GetFenceStatus(fakeDevice(), nil)
+	if err == nil {
+		t.Errorf("Expected error when fence is nil")
+	} else if err.Error() != testNilFenceError {
+		t.Errorf("Unexpected error message: %v", err)
+	}
+}

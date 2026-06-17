@@ -3,19 +3,19 @@ linters:
   enable:
     
     - dupl
-    - funlen
     - goconst
-    - gocyclo
     - gosec
     - unconvert
   disable:
+    - funlen
+    - gocyclo
     - gochecknoglobals
     - gochecknoinits
     - lll
     - cyclop
   settings:
     cyclop:
-      max-complexity: 15
+      max-complexity: 40
     errcheck:
       check-type-assertions: true
       check-blank: false

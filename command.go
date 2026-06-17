@@ -452,8 +452,14 @@ func ResetFences(device Device, fences []Fence) error {
 }
 
 // GetFenceStatus gets fence status
-func GetFenceStatus(device Device, fence Fence) Result {
-	return Result(C.vkGetFenceStatus(C.VkDevice(device), C.VkFence(fence)))
+func GetFenceStatus(device Device, fence Fence) (Result, error) {
+	if device == nil {
+		return 0, NewValidationError("device", "cannot be nil")
+	}
+	if fence == nil {
+		return 0, NewValidationError("fence", "cannot be nil")
+	}
+	return Result(C.vkGetFenceStatus(C.VkDevice(device), C.VkFence(fence))), nil
 }
 
 // ============================================================================
