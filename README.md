@@ -167,6 +167,11 @@ go get github.com/darkace1998/golang-vulkan-api
 
 See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
 
+
+## Getting Started
+
+If you are new to Vulkan or this library, check out the **[Getting Started Tutorial](GETTING_STARTED.md)** for a step-by-step guide to writing your first Vulkan application.
+
 ## Quick Start
 
 ```go
