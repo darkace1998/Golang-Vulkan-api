@@ -171,6 +171,9 @@ See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread s
 ## Getting Started
 
 If you are new to Vulkan or this library, check out the **[Getting Started Tutorial](GETTING_STARTED.md)** for a step-by-step guide to writing your first Vulkan application.
+## Vulkan 1.4 Readiness
+
+See [VULKAN_1_4_READINESS.md](VULKAN_1_4_READINESS.md) for detailed information about the current state of Vulkan 1.4 support and our roadmap for future implementation.
 
 ## Quick Start
 
