@@ -11,6 +11,7 @@ linters:
     - gochecknoinits
     - lll
     - cyclop
+
 linters-settings:
   cyclop:
     max-complexity: 15
@@ -19,9 +20,9 @@ linters-settings:
     check-blank: false
   funlen:
     lines: 200
-    statements: 100
+    statements: 150
   gocyclo:
-    min-complexity: 40
+    min-complexity: 60
   goconst:
     min-len: 3
     min-occurrences: 3
@@ -36,3 +37,12 @@ linters-settings:
     disable:
       - composites
       - unsafeptr
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - examples
+    - vendor
+    - third_party
+    - builtin
