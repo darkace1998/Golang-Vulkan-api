@@ -306,3 +306,40 @@ func BenchmarkStringSliceToCharArray(b *testing.B) {
 		}
 	}
 }
+
+// TestBufferCreateInfoDefaults tests struct field defaults and initialization
+func TestBufferCreateInfoDefaults(t *testing.T) {
+	info := BufferCreateInfo{
+		Size:        1024,
+		Usage:       BufferUsageTransferSrcBit,
+		SharingMode: SharingModeExclusive,
+	}
+
+	if info.Size != 1024 {
+		t.Errorf("Expected Size 1024, got %d", info.Size)
+	}
+	if info.Usage != BufferUsageTransferSrcBit {
+		t.Errorf("Expected Usage %v, got %v", BufferUsageTransferSrcBit, info.Usage)
+	}
+	if info.SharingMode != SharingModeExclusive {
+		t.Errorf("Expected SharingMode %v, got %v", SharingModeExclusive, info.SharingMode)
+	}
+	if info.Flags != 0 {
+		t.Errorf("Expected zero flags by default, got %v", info.Flags)
+	}
+}
+
+// TestMemoryAllocateInfoDefaults tests struct field defaults and initialization
+func TestMemoryAllocateInfoDefaults(t *testing.T) {
+	info := MemoryAllocateInfo{
+		AllocationSize:  2048,
+		MemoryTypeIndex: 1,
+	}
+
+	if info.AllocationSize != 2048 {
+		t.Errorf("Expected AllocationSize 2048, got %d", info.AllocationSize)
+	}
+	if info.MemoryTypeIndex != 1 {
+		t.Errorf("Expected MemoryTypeIndex 1, got %d", info.MemoryTypeIndex)
+	}
+}
