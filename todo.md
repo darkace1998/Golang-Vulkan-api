@@ -68,7 +68,7 @@
 - [x] **Add a multi-queue example** — Show transfer + graphics queue usage for async resource uploads.
 - [ ] **Add a descriptor set update example** — Demonstrate uniform buffer and combined image sampler descriptor binding.
 - [ ] **Add a push constants example** — Push constants are defined in the pipeline layout types but not demonstrated.
-- [ ] **Expand the `vulkan13/` example** — Show private data slots and maintenance4 (`GetDeviceBufferMemoryRequirements` / `GetDeviceImageMemoryRequirements`) in action.
+- [x] **Expand the `vulkan13/` example** — Show private data slots and maintenance4 (`GetDeviceBufferMemoryRequirements` / `GetDeviceImageMemoryRequirements`) in action.
 - [x] **Clean up `benchmark_backup/`** — Either merge useful parts into the main `benchmark/` example or remove the backup directory to reduce duplication.
 
 ---
