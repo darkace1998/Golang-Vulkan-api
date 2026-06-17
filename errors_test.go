@@ -2,6 +2,7 @@ package vulkan
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -85,5 +86,98 @@ func TestValidationError(t *testing.T) {
 	expectedError := "vulkan validation error: imageInfo.format unsupported format"
 	if err.Error() != expectedError {
 		t.Errorf("Expected Error() string %q, got %q", expectedError, err.Error())
+	}
+}
+
+func TestVulkanErrorUnwrapIsAs(t *testing.T) {
+	// Setup
+	result := ErrorOutOfDeviceMemory
+	op := "vkAllocateMemory"
+	details := "failed to allocate 1024 bytes"
+
+	vkErr := NewVulkanError(result, op, details)
+
+	// Test errors.Is
+	if !errors.Is(vkErr, result) {
+		t.Errorf("Expected errors.Is to return true for %v", result)
+	}
+
+	if errors.Is(vkErr, ErrorOutOfHostMemory) {
+		t.Errorf("Expected errors.Is to return false for %v", ErrorOutOfHostMemory)
+	}
+
+	// Test errors.As
+	var extractedVkErr *VulkanError
+	if !errors.As(vkErr, &extractedVkErr) {
+		t.Errorf("Expected errors.As to return true and extract VulkanError")
+	}
+
+	if extractedVkErr.Result != result || extractedVkErr.Operation != op || extractedVkErr.Details != details {
+		t.Errorf("Expected extracted error to match original. Got %+v", extractedVkErr)
+	}
+
+	// Test wrapping in fmt.Errorf
+	wrappedErr := fmt.Errorf("allocation failed: %w", vkErr)
+
+	if !errors.Is(wrappedErr, result) {
+		t.Errorf("Expected wrapped error to match underlying result %v via errors.Is", result)
+	}
+
+	var extractedWrappedVkErr *VulkanError
+	if !errors.As(wrappedErr, &extractedWrappedVkErr) {
+		t.Errorf("Expected errors.As to extract VulkanError from wrapped error")
+	}
+}
+
+func TestValidationErrorAs(t *testing.T) {
+	field := "bufferInfo.size"
+	reason := "must be greater than 0"
+	valErr := NewValidationError(field, reason)
+
+	// Test errors.As
+	var extractedValErr *ValidationError
+	if !errors.As(valErr, &extractedValErr) {
+		t.Errorf("Expected errors.As to extract ValidationError")
+	}
+
+	if extractedValErr.Field != field || extractedValErr.Reason != reason {
+		t.Errorf("Expected extracted error to match original. Got %+v", extractedValErr)
+	}
+
+	// Test wrapping in fmt.Errorf
+	wrappedErr := fmt.Errorf("parameter validation failed: %w", valErr)
+
+	var extractedWrappedValErr *ValidationError
+	if !errors.As(wrappedErr, &extractedWrappedValErr) {
+		t.Errorf("Expected errors.As to extract ValidationError from wrapped error")
+	}
+}
+
+func TestVulkanErrorStringGeneration(t *testing.T) {
+	// 1. Without details
+	result := ErrorOutOfHostMemory
+	op := "vkAllocateMemory"
+	errNoDetails := NewVulkanError(result, op, "")
+	expectedNoDetails := "vkAllocateMemory failed: VK_ERROR_OUT_OF_HOST_MEMORY"
+
+	if errNoDetails.Error() != expectedNoDetails {
+		t.Errorf("Expected string %q, got %q", expectedNoDetails, errNoDetails.Error())
+	}
+
+	// 2. With details
+	details := "system out of memory"
+	errWithDetails := NewVulkanError(result, op, details)
+	expectedWithDetails := "vkAllocateMemory failed: VK_ERROR_OUT_OF_HOST_MEMORY (system out of memory)"
+
+	if errWithDetails.Error() != expectedWithDetails {
+		t.Errorf("Expected string %q, got %q", expectedWithDetails, errWithDetails.Error())
+	}
+}
+
+func TestValidationErrorStringGeneration(t *testing.T) {
+	err := NewValidationError("image.format", "unsupported format")
+	expected := "vulkan validation error: image.format unsupported format"
+	if err.Error() != expected {
+		t.Errorf("Expected string %q, got %q", expected, err.Error())
 	}
 }

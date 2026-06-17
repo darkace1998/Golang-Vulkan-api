@@ -1,0 +1,13 @@
+🧪 Enhance error testing coverage in errors_test.go
+
+🎯 **What:** The testing gap addressed
+This PR enhances the testing suite for `errors.go` to explicitly cover standard error string formatting and Go 1.13+ error unwrapping (`errors.Is` and `errors.As`). It adds explicit verifications that `VulkanError` and `ValidationError` interact correctly with the `errors` and `fmt` packages.
+
+📊 **Coverage:** What scenarios are now tested
+- Verification of standard Go error handling: `errors.Is` appropriately matching underlying `Result` types.
+- Verification of `errors.As` extracting explicit `*VulkanError` and `*ValidationError` details from the error interfaces.
+- Formatting of errors wrapped via `fmt.Errorf("%w", err)`.
+- Explicit verification of error string generation with and without error details.
+
+✨ **Result:** The improvement in test coverage
+Error generation and interoperability are fully covered. It guarantees that applications depending on `VulkanError` unwrapping semantics won't face subtle regressions.
