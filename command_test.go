@@ -245,3 +245,10 @@ func TestFreeCommandBuffersNilArgs(t *testing.T) {
 	FreeCommandBuffers(fakeDevice(), fakeCommandPool(), []CommandBuffer{})
 	FreeCommandBuffers(fakeDevice(), fakeCommandPool(), nil)
 }
+
+// TestCmdExecuteCommandsValidation validates CmdExecuteCommands function
+func TestCmdExecuteCommandsValidation(t *testing.T) {
+	// These shouldn't panic
+	CmdExecuteCommands(nil, nil)
+	CmdExecuteCommands(fakeCommandBuffer(), nil)
+}
