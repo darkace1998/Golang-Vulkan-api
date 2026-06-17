@@ -43,4 +43,3 @@ func TestDeviceWaitIdleValidation(t *testing.T) {
 		t.Errorf("Expected param '%s', got '%s'", testDeviceParameter, valErr.Field)
 	}
 }
-
