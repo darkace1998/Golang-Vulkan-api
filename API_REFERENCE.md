@@ -119,7 +119,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `DestroyFence(device Device, fence Fence)` - Destroy fence
 - `WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) error` - Wait for fences
 - `ResetFences(device Device, fences []Fence) error` - Reset fences
-- `GetFenceStatus(device Device, fence Fence) Result` - Get fence status
+- `GetFenceStatus(device Device, fence Fence) (Result, error)` - Get fence status
 
 ## Vulkan 1.3 Features
 
