@@ -163,6 +163,10 @@ go get github.com/darkace1998/golang-vulkan-api
 ```
 
 
+## Error Handling Patterns
+
+See [ERROR_HANDLING.md](ERROR_HANDLING.md) for idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
+
 ## Performance Tuning
 
 See [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) for detailed strategies and tips for optimizing Vulkan compute workloads, particularly for AI/ML and general parallel processing tasks.

@@ -56,7 +56,7 @@
 - [x] **Add a "Getting Started" tutorial** — A step-by-step guide for new users that walks through instance creation → device selection → memory allocation → command buffer → first draw/compute dispatch.
 - [x] **Add inline doc comments on all exported types and functions** — Some exported symbols (e.g., in `queries.go`, `swapchain.go`, `misc.go`) lack Go doc comments.
 - [x] **Document thread safety guarantees** — Video codec functions require single-threaded loading (`LoadVideoDeviceFunctions`); document which API functions are safe for concurrent use.
-- [ ] **Document error recovery patterns** — Show idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
+- [x] **Document error recovery patterns** — Show idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
 - [x] **Add a performance tuning guide** — Tips for AI/ML compute workloads: batch size, memory alignment, queue family selection, timeline semaphore usage.
 - [x] **Document Vulkan 1.4 readiness** — `types.go` defines `Version14`; document which 1.4 features are ready and which are planned.
 
