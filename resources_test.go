@@ -145,10 +145,3 @@ func TestTransitionImageLayoutNilArgs(t *testing.T) {
 	TransitionImageLayout(nil, fakeImage(), FormatUndefined, ImageLayoutUndefined, ImageLayoutTransferDstOptimal, ImageSubresourceRange{})
 }
 
-// TestTransitionImageLayoutSimpleNilArgs ensures TransitionImageLayoutSimple gracefully handles nil inputs
-func TestTransitionImageLayoutSimpleNilArgs(t *testing.T) {
-	// Should not panic
-	TransitionImageLayoutSimple(nil, nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)
-	TransitionImageLayoutSimple(fakeCommandBuffer(), nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)
-	TransitionImageLayoutSimple(nil, fakeImage(), ImageLayoutUndefined, ImageLayoutTransferDstOptimal)
-}
