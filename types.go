@@ -28,16 +28,19 @@ func MakeVersion(major, minor, patch uint32) Version {
 	return Version((major << 22) | (minor << 12) | patch)
 }
 
+// Major performs the operation
 // VersionMajor extracts the major version number
 func (v Version) Major() uint32 {
 	return uint32((v >> 22) & 0x7F)
 }
 
+// Minor performs the operation
 // VersionMinor extracts the minor version number
 func (v Version) Minor() uint32 {
 	return uint32((v >> 12) & 0x3FF)
 }
 
+// Patch performs the operation
 // VersionPatch extracts the patch version number
 func (v Version) Patch() uint32 {
 	return uint32(v & 0xFFF)
@@ -182,6 +185,7 @@ func (r Result) IsSuccess() bool {
 	return r >= 0
 }
 
+// Bool32 defines the Bool32 type
 // Bool type for Vulkan boolean values
 type Bool32 uint32
 
@@ -212,6 +216,7 @@ type DeviceAddress uint64
 // Flags represents generic flags
 type Flags uint32
 
+// SampleCountFlags defines the SampleCountFlags type
 // SampleCount represents sample count flags
 type SampleCountFlags uint32
 
