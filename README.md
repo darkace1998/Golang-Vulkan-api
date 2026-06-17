@@ -163,6 +163,10 @@ go get github.com/darkace1998/golang-vulkan-api
 ```
 
 
+## Performance Tuning
+
+See [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) for detailed strategies and tips for optimizing Vulkan compute workloads, particularly for AI/ML and general parallel processing tasks.
+
 ## Thread Safety
 
 See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
