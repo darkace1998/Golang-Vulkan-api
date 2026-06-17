@@ -102,8 +102,17 @@ const (
 	DescriptorTypeInputAttachment      DescriptorType = C.VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
 )
 
+// DescriptorPoolCreateFlags represents descriptor pool creation flags
+type DescriptorPoolCreateFlags uint32
+
+const (
+	DescriptorPoolCreateFreeDescriptorSetBit DescriptorPoolCreateFlags = C.VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT
+	DescriptorPoolCreateUpdateAfterBindBit   DescriptorPoolCreateFlags = C.VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT
+)
+
 // DescriptorPoolCreateInfo contains descriptor pool creation information
 type DescriptorPoolCreateInfo struct {
+	Flags     DescriptorPoolCreateFlags
 	MaxSets   uint32
 	PoolSizes []DescriptorPoolSize
 }
@@ -257,7 +266,7 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 	var cCreateInfo C.VkDescriptorPoolCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO
 	cCreateInfo.pNext = nil
-	cCreateInfo.flags = 0
+	cCreateInfo.flags = C.VkDescriptorPoolCreateFlags(createInfo.Flags)
 	cCreateInfo.maxSets = C.uint32_t(createInfo.MaxSets)
 
 	var cPoolSizes []C.VkDescriptorPoolSize
