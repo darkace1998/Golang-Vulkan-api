@@ -1,5 +1,7 @@
 package vulkan
 
+import "fmt"
+
 // VulkanError represents a structured Vulkan error with additional context
 type VulkanError struct {
 	Result    Result
@@ -37,19 +39,19 @@ func NewVulkanError(result Result, operation string, details string) *VulkanErro
 
 // ValidationError represents input validation errors
 type ValidationError struct {
-	Parameter string
-	Message   string
+	Field string
+	Reason   string
 }
 
 // Error implements the error interface
 func (e *ValidationError) Error() string {
-	return "validation error for parameter '" + e.Parameter + "': " + e.Message
+	return fmt.Sprintf("vulkan validation error: %s %s", e.Field, e.Reason)
 }
 
 // NewValidationError creates a new ValidationError
-func NewValidationError(parameter, message string) *ValidationError {
+func NewValidationError(field, reason string) *ValidationError {
 	return &ValidationError{
-		Parameter: parameter,
-		Message:   message,
+		Field: field,
+		Reason:   reason,
 	}
 }

@@ -734,8 +734,10 @@ func (b *graphicsPipelineBuilder) setupShaderStages(cInfo *C.VkGraphicsPipelineC
 		cStages[j].flags = 0
 		cStages[j].stage = C.VkShaderStageFlagBits(stage.Stage)
 		cStages[j].module = C.VkShaderModule(stage.Module)
+
+		b.cNames = append(b.cNames, nil)
 		cName := C.CString(stage.Name)
-		b.cNames = append(b.cNames, cName)
+		b.cNames[len(b.cNames)-1] = cName
 		cStages[j].pName = cName
 		cStages[j].pSpecializationInfo = nil
 	}
