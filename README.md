@@ -163,6 +163,11 @@ go get github.com/darkace1998/golang-vulkan-api
 ```
 
 
+## Error Handling Patterns
+
+See [ERROR_HANDLING.md](ERROR_HANDLING.md) for idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
+
+
 ## Thread Safety
 
 See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about thread safety guarantees, host synchronization requirements, and specific details regarding video codec function loading.
