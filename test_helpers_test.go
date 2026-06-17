@@ -2,6 +2,16 @@ package vulkan
 
 import "unsafe"
 
+const (
+	testDeviceParameter     = "device"
+	testCreateInfoParameter = "createInfo"
+	testMemoryParameter     = "memory"
+	testNilCreateInfo       = "nil createInfo"
+	testNilDevice           = "nil device"
+	testNilMemory           = "nil memory"
+	testValidationErrorType = "ValidationError"
+)
+
 // fakeHandle creates a non-nil handle backed by real Go memory, safe for use
 // with -race checkptr. It must never be passed to actual Vulkan C functions.
 func fakeHandle() unsafe.Pointer {
@@ -27,12 +37,4 @@ func fakeDescriptorSetLayout() DescriptorSetLayout { return DescriptorSetLayout(
 func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeHandle()) }
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
-
-const (
-	testCreateInfoParameter = "createInfo"
-	testMemoryParameter     = "memory"
-	testValidationErrorStr  = "ValidationError"
-	testNilCreateInfoStr    = "nil createInfo"
-	testNilDeviceStr        = "nil device"
-	testNilMemoryStr        = "nil memory"
-)
+func fakeSwapchain() Swapchain                     { return Swapchain(fakeHandle()) }

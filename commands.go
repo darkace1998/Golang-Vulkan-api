@@ -122,6 +122,9 @@ func CmdNextSubpass(commandBuffer CommandBuffer, contents SubpassContents) {
 
 // CmdExecuteCommands executes secondary command buffers from a primary command buffer
 func CmdExecuteCommands(commandBuffer CommandBuffer, commandBuffers []CommandBuffer) {
+	if commandBuffer == nil {
+		return
+	}
 	if len(commandBuffers) == 0 {
 		return
 	}

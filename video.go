@@ -357,13 +357,6 @@ type VideoEncodeInfo struct {
 //
 // Returns false if the video extension functions could not be loaded (e.g., if the Vulkan
 // implementation does not support the VK_KHR_video_queue extension).
-//
-// Example usage:
-//
-//	instance, _ := vulkan.CreateInstance(...)
-//	if !vulkan.LoadVideoInstanceFunctions(instance) {
-//	    log.Fatal("Failed to load video instance functions - video extensions not supported")
-//	}
 func LoadVideoInstanceFunctions(instance Instance) bool {
 	videoInstanceOnce.Do(func() {
 		videoInstanceLoaded = C.loadVideoInstanceFunctions(C.VkInstance(instance)) != 0
@@ -388,16 +381,8 @@ func ResetVideoInstanceFunctions() {
 // This function is thread-safe. The underlying C function pointers are loaded exactly once;
 // subsequent calls return the cached result. Note that only one device is supported at a time.
 // If you need to reload for a different device, use ResetVideoDeviceFunctions first.
-//
 // Returns false if any video extension function could not be loaded. This indicates the device
 // does not fully support the VK_KHR_video_queue extension.
-//
-// Example usage:
-//
-//	device, _ := vulkan.CreateDevice(...)
-//	if !vulkan.LoadVideoDeviceFunctions(device) {
-//	    log.Fatal("Failed to load video device functions - video extensions not supported")
-//	}
 func LoadVideoDeviceFunctions(device Device) bool {
 	videoDeviceOnce.Do(func() {
 		videoDeviceLoaded = C.loadVideoDeviceFunctions(C.VkDevice(device)) != 0

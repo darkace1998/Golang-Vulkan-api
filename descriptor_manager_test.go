@@ -13,7 +13,7 @@ func TestNewDescriptorPoolManagerValidation(t *testing.T) {
 		poolSizes      []DescriptorPoolSize
 		expectParam    string
 	}{
-		{testNilDeviceStr, nil, 10, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, testDeviceParameter},
+		{testNilDevice, nil, 10, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, testDeviceParameter},
 		{"zero maxSets", fakeDevice(), 0, []DescriptorPoolSize{{Type: DescriptorTypeUniformBuffer, DescriptorCount: 10}}, "maxSetsPerPool"},
 		{"empty poolSizes", fakeDevice(), 10, []DescriptorPoolSize{}, "poolSizes"},
 		{"nil poolSizes", fakeDevice(), 10, nil, "poolSizes"},
@@ -29,8 +29,8 @@ func TestNewDescriptorPoolManagerValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}

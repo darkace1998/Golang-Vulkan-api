@@ -42,8 +42,8 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 		createInfo  *CommandPoolCreateInfo
 		expectParam string
 	}{
-		{testNilDeviceStr, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
+		{testNilDevice, nil, &CommandPoolCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -56,8 +56,8 @@ func TestCreateCommandPoolValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -71,7 +71,7 @@ func TestAllocateCommandBuffersValidation(t *testing.T) {
 		allocInfo   *CommandBufferAllocateInfo
 		expectParam string
 	}{
-		{testNilDeviceStr, nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
+		{testNilDevice, nil, &CommandBufferAllocateInfo{CommandBufferCount: 1}, testDeviceParameter},
 		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
 		{"zero count", fakeDevice(), &CommandBufferAllocateInfo{CommandBufferCount: 0}, "allocateInfo.CommandBufferCount"},
 	}
@@ -86,8 +86,8 @@ func TestAllocateCommandBuffersValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -115,8 +115,8 @@ func TestBeginCommandBufferValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -132,8 +132,8 @@ func TestEndCommandBufferValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "commandBuffer" {
-		t.Errorf("Expected param 'commandBuffer', got '%s'", valErr.Parameter)
+	if valErr.Field != "commandBuffer" {
+		t.Errorf("Expected param 'commandBuffer', got '%s'", valErr.Field)
 	}
 }
 
@@ -147,8 +147,8 @@ func TestQueueSubmitValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != "queue" {
-		t.Errorf("Expected param 'queue', got '%s'", valErr.Parameter)
+	if valErr.Field != "queue" {
+		t.Errorf("Expected param 'queue', got '%s'", valErr.Field)
 	}
 }
 
@@ -162,8 +162,8 @@ func TestCreateSemaphoreValidation(t *testing.T) {
 	if !errors.As(err, &valErr) {
 		t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 	}
-	if valErr.Parameter != testDeviceParameter {
-		t.Errorf("Expected param 'device', got '%s'", valErr.Parameter)
+	if valErr.Field != testDeviceParameter {
+		t.Errorf("Expected param 'device', got '%s'", valErr.Field)
 	}
 }
 
@@ -175,8 +175,8 @@ func TestCreateFenceValidation(t *testing.T) {
 		createInfo  *FenceCreateInfo
 		expectParam string
 	}{
-		{testNilDeviceStr, nil, &FenceCreateInfo{}, testDeviceParameter},
-		{testNilCreateInfoStr, fakeDevice(), nil, testCreateInfoParameter},
+		{testNilDevice, nil, &FenceCreateInfo{}, testDeviceParameter},
+		{testNilCreateInfo, fakeDevice(), nil, testCreateInfoParameter},
 	}
 
 	for _, tt := range tests {
@@ -189,8 +189,8 @@ func TestCreateFenceValidation(t *testing.T) {
 			if !errors.As(err, &valErr) {
 				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
 			}
-			if valErr.Parameter != tt.expectParam {
-				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Parameter)
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
 			}
 		})
 	}
@@ -244,4 +244,11 @@ func TestFreeCommandBuffersNilArgs(t *testing.T) {
 	FreeCommandBuffers(fakeDevice(), nil, []CommandBuffer{fakeCommandBuffer()})
 	FreeCommandBuffers(fakeDevice(), fakeCommandPool(), []CommandBuffer{})
 	FreeCommandBuffers(fakeDevice(), fakeCommandPool(), nil)
+}
+
+// TestCmdExecuteCommandsValidation validates CmdExecuteCommands function
+func TestCmdExecuteCommandsValidation(t *testing.T) {
+	// These shouldn't panic
+	CmdExecuteCommands(nil, nil)
+	CmdExecuteCommands(fakeCommandBuffer(), nil)
 }

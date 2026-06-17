@@ -132,3 +132,17 @@ func BenchmarkSimulateRenderingWork(b *testing.B) {
 		app.simulateRenderingWork()
 	}
 }
+
+func BenchmarkCalculateStabilityScore(b *testing.B) {
+	app := &BenchmarkApp{
+		frameTimesMs: make([]float64, 1000),
+	}
+	for i := range app.frameTimesMs {
+		app.frameTimesMs[i] = 16.6 + float64(i%10)*0.1
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		app.calculateStabilityScore()
+	}
+}

@@ -149,8 +149,8 @@ func TestGetVideoCapabilitiesValidation(t *testing.T) {
 					return
 				}
 
-				if validationErr.Parameter != tt.errorParam {
-					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Parameter)
+				if validationErr.Field != tt.errorParam {
+					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Field)
 				}
 			}
 		})
@@ -167,7 +167,7 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:   testNilDeviceStr,
+			name:   testNilDevice,
 			device: nil,
 			createInfo: &VideoSessionCreateInfo{
 				VideoProfile: &VideoProfileInfo{
@@ -178,7 +178,7 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 			errorParam:  testDeviceParameter,
 		},
 		{
-			name:        testNilCreateInfoStr,
+			name:        testNilCreateInfo,
 			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
@@ -211,8 +211,8 @@ func TestCreateVideoSessionValidation(t *testing.T) {
 					return
 				}
 
-				if validationErr.Parameter != tt.errorParam {
-					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Parameter)
+				if validationErr.Field != tt.errorParam {
+					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Field)
 				}
 			}
 		})
@@ -229,7 +229,7 @@ func TestGetVideoSessionMemoryRequirementsValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         testNilDeviceStr,
+			name:         testNilDevice,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			expectError:  true,
@@ -260,8 +260,8 @@ func TestGetVideoSessionMemoryRequirementsValidation(t *testing.T) {
 					return
 				}
 
-				if validationErr.Parameter != tt.errorParam {
-					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Parameter)
+				if validationErr.Field != tt.errorParam {
+					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Field)
 				}
 			}
 		})
@@ -279,7 +279,7 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 		errorParam   string
 	}{
 		{
-			name:         testNilDeviceStr,
+			name:         testNilDevice,
 			device:       nil,
 			videoSession: fakeVideoSession(),
 			bindInfos:    []VideoBindMemoryInfo{{MemoryBindIndex: 0}},
@@ -320,8 +320,8 @@ func TestBindVideoSessionMemoryValidation(t *testing.T) {
 					return
 				}
 
-				if validationErr.Parameter != tt.errorParam {
-					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Parameter)
+				if validationErr.Field != tt.errorParam {
+					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Field)
 				}
 			}
 		})
@@ -338,14 +338,14 @@ func TestCreateVideoSessionParametersValidation(t *testing.T) {
 		errorParam  string
 	}{
 		{
-			name:        testNilDeviceStr,
+			name:        testNilDevice,
 			device:      nil,
 			createInfo:  &VideoSessionParametersCreateInfo{},
 			expectError: true,
 			errorParam:  testDeviceParameter,
 		},
 		{
-			name:        testNilCreateInfoStr,
+			name:        testNilCreateInfo,
 			device:      fakeDevice(),
 			createInfo:  nil,
 			expectError: true,
@@ -369,8 +369,8 @@ func TestCreateVideoSessionParametersValidation(t *testing.T) {
 					return
 				}
 
-				if validationErr.Parameter != tt.errorParam {
-					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Parameter)
+				if validationErr.Field != tt.errorParam {
+					t.Errorf("Expected error for parameter '%s', got '%s'", tt.errorParam, validationErr.Field)
 				}
 			}
 		})
