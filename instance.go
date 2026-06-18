@@ -253,7 +253,14 @@ func stringSliceToCharArray(strs []string) **C.char {
 	}
 
 	// Convert strings and track successful allocations for cleanup on failure
+	const maxStringLength = 4096 // Reasonable limit for individual strings
 	for i, str := range strs {
+		if len(str) > maxStringLength {
+			// Clean up the array - freeCharArray handles partial cleanup
+			C.freeCharArray(cArray, C.int(i)) // Only free up to current index
+			return nil
+		}
+
 		cStr := C.CString(str)
 		// Check if string allocation failed
 		if cStr == nil {
