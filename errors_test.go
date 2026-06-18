@@ -43,47 +43,94 @@ func TestVulkanError(t *testing.T) {
 }
 
 func TestIsVulkanError(t *testing.T) {
-	// True case
-	vkErr := NewVulkanError(Success, "test", "")
-	if !IsVulkanError(vkErr) {
-		t.Errorf("Expected IsVulkanError to return true for VulkanError")
+	tests := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{
+			name: "vulkan error with success",
+			err:  NewVulkanError(Success, "test", ""),
+			want: true,
+		},
+		{
+			name: "standard error",
+			err:  errors.New("standard error"),
+			want: false,
+		},
+		{
+			name: "nil error",
+			err:  nil,
+			want: false,
+		},
+		{
+			name: "validation error",
+			err:  NewValidationError("field", "reason"),
+			want: false,
+		},
+		{
+			name: "vulkan error with failure",
+			err:  NewVulkanError(ErrorOutOfHostMemory, "vkCreateInstance", ""),
+			want: true,
+		},
 	}
 
-	// False case - standard error
-	stdErr := errors.New("standard error")
-	if IsVulkanError(stdErr) {
-		t.Errorf("Expected IsVulkanError to return false for standard error")
-	}
-
-	// False case - nil error
-	if IsVulkanError(nil) {
-		t.Errorf("Expected IsVulkanError to return false for nil error")
-	}
-
-	// False case - other custom error
-	valErr := NewValidationError("field", "reason")
-	if IsVulkanError(valErr) {
-		t.Errorf("Expected IsVulkanError to return false for ValidationError")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsVulkanError(tt.err); got != tt.want {
+				t.Errorf("IsVulkanError() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
 func TestValidationError(t *testing.T) {
-	// Test NewValidationError
-	field := "imageInfo.format"
-	reason := "unsupported format"
-
-	err := NewValidationError(field, reason)
-
-	if err.Field != field {
-		t.Errorf("Expected Field %v, got %v", field, err.Field)
+	tests := []struct {
+		name     string
+		field    string
+		reason   string
+		expected string
+	}{
+		{
+			name:     "normal validation error",
+			field:    "imageInfo.format",
+			reason:   "unsupported format",
+			expected: "vulkan validation error: imageInfo.format unsupported format",
+		},
+		{
+			name:     "empty field",
+			field:    "",
+			reason:   "missing field",
+			expected: "vulkan validation error:  missing field",
+		},
+		{
+			name:     "empty reason",
+			field:    "flags",
+			reason:   "",
+			expected: "vulkan validation error: flags ",
+		},
+		{
+			name:     "empty field and reason",
+			field:    "",
+			reason:   "",
+			expected: "vulkan validation error:  ",
+		},
 	}
-	if err.Reason != reason {
-		t.Errorf("Expected Reason %v, got %v", reason, err.Reason)
-	}
 
-	// Test Error()
-	expectedError := "vulkan validation error: imageInfo.format unsupported format"
-	if err.Error() != expectedError {
-		t.Errorf("Expected Error() string %q, got %q", expectedError, err.Error())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := NewValidationError(tt.field, tt.reason)
+
+			if err.Field != tt.field {
+				t.Errorf("Expected Field %v, got %v", tt.field, err.Field)
+			}
+			if err.Reason != tt.reason {
+				t.Errorf("Expected Reason %v, got %v", tt.reason, err.Reason)
+			}
+
+			if err.Error() != tt.expected {
+				t.Errorf("Expected Error() string %q, got %q", tt.expected, err.Error())
+			}
+		})
 	}
 }

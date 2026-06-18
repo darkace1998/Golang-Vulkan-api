@@ -126,7 +126,7 @@ func TestCreateComputePipelinesEmptyInfos(t *testing.T) {
 }
 
 // TestIsExtensionSupported tests IsExtensionSupported function
-func TestIsExtensionSupported(t *testing.T) {
+func TestPipelineIsExtensionSupported(t *testing.T) {
 	extensions := []ExtensionProperties{
 		{ExtensionName: "VK_KHR_surface", SpecVersion: 1},
 		{ExtensionName: "VK_KHR_swapchain", SpecVersion: 2},
@@ -142,7 +142,7 @@ func TestIsExtensionSupported(t *testing.T) {
 }
 
 // TestIsLayerSupported tests IsLayerSupported function
-func TestIsLayerSupported(t *testing.T) {
+func TestPipelineIsLayerSupported(t *testing.T) {
 	layers := []LayerProperties{
 		{LayerName: "VK_LAYER_KHRONOS_validation", SpecVersion: MakeVersion(1, 0, 0)},
 		{LayerName: "VK_LAYER_LUNARG_api_dump", SpecVersion: MakeVersion(1, 0, 0)},

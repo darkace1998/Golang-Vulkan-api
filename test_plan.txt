@@ -1,0 +1,2 @@
+1. Verify if the user wants me to add more test cases to errors_test.go, even though it already has 100% statement coverage.
+2. If so, I will add some edge cases, like empty field names for validation errors, or checking more values.
