@@ -38,6 +38,11 @@ func TestStringSliceToCharArrayValidation(t *testing.T) {
 			input:    make([]string, 20000), // exceeds maxAllowedSize
 			expected: false,
 		},
+		{
+			name:     "too long string",
+			input:    []string{"normal", strings.Repeat("A", 4097), "normal"}, // exceeds maxStringLength
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
