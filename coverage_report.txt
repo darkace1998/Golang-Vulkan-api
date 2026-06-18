@@ -1,0 +1,1 @@
+Coverage on errors.go is 100%. The test file `errors_test.go` already exists and covers `VulkanError`'s `Error()`, `Unwrap()`, `IsVulkanError()`, and `NewVulkanError()`, as well as `ValidationError`'s `Error()` and `NewValidationError()`. The instructions were incorrect that it was missing.

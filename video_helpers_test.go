@@ -8,7 +8,7 @@ import (
 // Extension and Layer Support Tests
 // ============================================================================
 
-func TestIsExtensionSupported(t *testing.T) {
+func TestVideoIsExtensionSupported(t *testing.T) {
 	availableExtensions := []ExtensionProperties{
 		{ExtensionName: "VK_KHR_surface", SpecVersion: 25},
 		{ExtensionName: "VK_KHR_swapchain", SpecVersion: 68},
@@ -35,7 +35,7 @@ func TestIsExtensionSupported(t *testing.T) {
 	}
 }
 
-func TestIsLayerSupported(t *testing.T) {
+func TestVideoIsLayerSupported(t *testing.T) {
 	availableLayers := []LayerProperties{
 		{LayerName: "VK_LAYER_KHRONOS_validation", SpecVersion: 1, ImplementationVersion: 1, Description: "Validation Layer"},
 		{LayerName: "VK_LAYER_LUNARG_api_dump", SpecVersion: 1, ImplementationVersion: 1, Description: "API Dump Layer"},

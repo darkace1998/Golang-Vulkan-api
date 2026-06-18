@@ -1,0 +1,3 @@
+sed -i 's/TransitionImageLayout(nil, nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/TransitionImageLayoutSimple(nil, nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/g' resources_test.go
+sed -i 's/TransitionImageLayout(fakeCommandBuffer(), nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/TransitionImageLayoutSimple(fakeCommandBuffer(), nil, ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/g' resources_test.go
+sed -i 's/TransitionImageLayout(nil, fakeImage(), ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/TransitionImageLayoutSimple(nil, fakeImage(), ImageLayoutUndefined, ImageLayoutTransferDstOptimal)/g' resources_test.go
