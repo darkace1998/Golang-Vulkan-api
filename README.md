@@ -482,7 +482,7 @@ Other Unix-like systems may work if pkg-config and Vulkan development libraries 
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests, report bugs, or suggest features.
+Contributions are welcome! Please feel free to submit pull requests, report bugs, or suggest features. See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on building, testing, and submitting code.
 
 ## License
 
