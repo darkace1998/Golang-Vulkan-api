@@ -268,15 +268,21 @@ See the `examples/` directory for example programs:
 
 - `examples/basic/main.go`: Basic Vulkan setup and device enumeration
 - `examples/compute/main.go`: Compute shader example
-- `examples/vulkan13/main.go`: Vulkan 1.3 feature demonstration
-- `examples/video/main.go`: Video codec support detection
-- `examples/type/main.go`: Type system and constant validation
-- `examples/simple/main.go`: Minimal Vulkan instance creation
+- `examples/descriptor_manager/main.go`: High-level DescriptorPoolManager usage
+- `examples/descriptor_update/main.go`: Binding uniform buffers and image samplers
 - `examples/graphics_pipeline/main.go`: Graphics pipeline example
+- `examples/multi_queue/main.go`: Parallel transfer and graphics operations
+- `examples/push_constants/main.go`: Push constants usage
+- `examples/render_to_texture/main.go`: Offscreen rendering
+- `examples/secondary_command_buffer/main.go`: Secondary command buffers
+- `examples/simple/main.go`: Minimal Vulkan instance creation
 - `examples/swapchain/main.go`: Swapchain example
+- `examples/type/main.go`: Type system and constant validation
+- `examples/video/main.go`: Video codec support detection
+- `examples/vulkan13/main.go`: Vulkan 1.3 feature demonstration
 - `examples/benchmark/graphics_benchmark.go`: GPU stress testing and benchmarking tool
 
-See [examples/BENCHMARK_README.md](examples/BENCHMARK_README.md) for detailed information about the GPU benchmark tool.
+See [examples/benchmark/README.md](examples/benchmark/README.md) for detailed information about the GPU benchmark tool.
 
 ## Testing
 
