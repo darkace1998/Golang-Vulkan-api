@@ -186,6 +186,16 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (DescriptorPool, error)` - Create descriptor pool
 - `DestroyDescriptorPool(device Device, pool DescriptorPool)` - Destroy descriptor pool
 
+### Descriptor Sets
+- `AllocateDescriptorSets(device Device, allocateInfo *DescriptorSetAllocateInfo) ([]DescriptorSet, error)` - Allocate descriptor sets
+- `UpdateDescriptorSets(device Device, writes []WriteDescriptorSet, copies []CopyDescriptorSet)` - Update descriptor sets with write and copy operations
+
+### Descriptor Pool Manager (High-Level)
+- `NewDescriptorPoolManager(device Device, maxSetsPerPool uint32, poolSizes []DescriptorPoolSize, flags DescriptorPoolCreateFlags) (*DescriptorPoolManager, error)` - Create a high-level manager to dynamically allocate from multiple pools
+- `(m *DescriptorPoolManager) AllocateDescriptorSets(layouts []DescriptorSetLayout) ([]DescriptorSet, error)` - Safely allocate descriptor sets, creating new pools as needed
+- `(m *DescriptorPoolManager) Reset() error` - Reset all managed descriptor pools
+- `(m *DescriptorPoolManager) Destroy()` - Destroy all managed descriptor pools
+
 ## Command Recording
 
 ### Render Pass Commands
