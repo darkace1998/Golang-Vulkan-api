@@ -123,7 +123,6 @@ func getLayoutTransitionAccessAndStages(oldLayout, newLayout ImageLayout) (Acces
 	return srcAccessMask, dstAccessMask, srcStage, dstStage
 }
 
-
 // ============================================================================
 // Image Operations
 // ============================================================================

@@ -47,5 +47,5 @@ const (
 	testNilFenceError  = "vulkan validation error: fence cannot be nil"
 )
 
-func fakeDescriptorSet() DescriptorSet         { return DescriptorSet(fakeHandle()) }
-func fakeEvent() Event                             { return Event(fakeHandle()) }
+func fakeDescriptorSet() DescriptorSet { return DescriptorSet(fakeHandle()) }
+func fakeEvent() Event                 { return Event(fakeHandle()) }

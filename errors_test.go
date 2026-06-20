@@ -228,3 +228,31 @@ func TestValidationErrorStringGeneration(t *testing.T) {
 		t.Errorf("Expected string %q, got %q", expected, err.Error())
 	}
 }
+
+func TestVulkanError_errorsUnwrap(t *testing.T) {
+	// Setup
+	result := ErrorOutOfDeviceMemory
+	op := "vkAllocateMemory"
+	details := "failed to allocate 1024 bytes"
+
+	vkErr := NewVulkanError(result, op, details)
+
+	// Test standard library unwrapping natively
+	unwrapped := errors.Unwrap(vkErr)
+	if unwrapped != result {
+		t.Errorf("Expected errors.Unwrap to yield Result %v, but got %v", result, unwrapped)
+	}
+
+	// Test standard library unwrapping when wrapped with fmt.Errorf
+	wrappedErr := fmt.Errorf("allocation failed: %w", vkErr)
+	unwrappedFromFmt := errors.Unwrap(wrappedErr)
+	if unwrappedFromFmt != vkErr {
+		t.Errorf("Expected errors.Unwrap of fmt.Errorf to yield original VulkanError, but got %v", unwrappedFromFmt)
+	}
+
+	// Unwrapping twice should get the result
+	unwrappedTwice := errors.Unwrap(unwrappedFromFmt)
+	if unwrappedTwice != result {
+		t.Errorf("Expected errors.Unwrap twice to yield Result %v, but got %v", result, unwrappedTwice)
+	}
+}

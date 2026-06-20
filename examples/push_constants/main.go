@@ -22,7 +22,7 @@ import (
 // Packed as 5 floats = 20 bytes per vertex.
 // PushConstantsData matches the push constant block in the shader
 type PushConstantsData struct {
-	OffsetX, OffsetY float32
+	OffsetX, OffsetY       float32
 	ColorR, ColorG, ColorB float32
 }
 

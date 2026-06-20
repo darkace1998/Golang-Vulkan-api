@@ -101,14 +101,14 @@ func TestBoolConversion(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-    v := MakeVersion(1, 2, 3)
-    if v.Major() != 1 {
-        t.Errorf("Expected Major() 1, got %d", v.Major())
-    }
-    if v.Minor() != 2 {
-        t.Errorf("Expected Minor() 2, got %d", v.Minor())
-    }
-    if v.Patch() != 3 {
-        t.Errorf("Expected Patch() 3, got %d", v.Patch())
-    }
+	v := MakeVersion(1, 2, 3)
+	if v.Major() != 1 {
+		t.Errorf("Expected Major() 1, got %d", v.Major())
+	}
+	if v.Minor() != 2 {
+		t.Errorf("Expected Minor() 2, got %d", v.Minor())
+	}
+	if v.Patch() != 3 {
+		t.Errorf("Expected Patch() 3, got %d", v.Patch())
+	}
 }
