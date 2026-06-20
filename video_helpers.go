@@ -159,6 +159,48 @@ type VideoEncodeRateControlInfo struct {
 }
 
 // --------------------------------
+// Shared Session Creation Helpers
+// --------------------------------
+
+type videoSessionHelperConfig struct {
+	Width               uint32
+	Height              uint32
+	ChromaSubsampling   VideoChromaSubsampling
+	LumaBitDepth        VideoComponentBitDepth
+	ChromaBitDepth      VideoComponentBitDepth
+	MaxDpbSlots         uint32
+	MaxActiveReferences uint32
+	QueueFamilyIndex    uint32
+	PictureFormat       Format
+	ReferenceFormat     Format
+}
+
+func createVideoSessionHelper(device Device, config *videoSessionHelperConfig, codecOp VideoCodecOperationFlags) (VideoSession, error) {
+	if device == nil {
+		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
+	}
+
+	videoProfile := &VideoProfileInfo{
+		VideoCodecOperation: codecOp,
+		ChromaSubsampling:   config.ChromaSubsampling,
+		LumaBitDepth:        config.LumaBitDepth,
+		ChromaBitDepth:      config.ChromaBitDepth,
+	}
+
+	sessionCreateInfo := &VideoSessionCreateInfo{
+		QueueFamilyIndex:       config.QueueFamilyIndex,
+		VideoProfile:           videoProfile,
+		PictureFormat:          config.PictureFormat,
+		MaxCodedExtent:         Extent2D{Width: config.Width, Height: config.Height},
+		ReferencePictureFormat: config.ReferenceFormat,
+		MaxDpbSlots:            config.MaxDpbSlots,
+		MaxActiveReferences:    config.MaxActiveReferences,
+	}
+
+	return CreateVideoSession(device, sessionCreateInfo)
+}
+
+// --------------------------------
 // H.264 Encoding Session Helpers
 // --------------------------------
 
@@ -232,31 +274,24 @@ func DefaultH264EncodeSessionCreateInfo(width, height uint32) *H264EncodeSession
 
 // CreateH264EncodeSession creates an H.264 encode session with the given configuration
 func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationEncodeH264Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationEncodeH264Bit)
 }
 
 // --------------------------------
@@ -329,31 +364,24 @@ func DefaultH265EncodeSessionCreateInfo(width, height uint32) *H265EncodeSession
 
 // CreateH265EncodeSession creates an H.265 encode session with the given configuration
 func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationEncodeH265Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationEncodeH265Bit)
 }
 
 // --------------------------------
@@ -425,31 +453,24 @@ func DefaultAV1EncodeSessionCreateInfo(width, height uint32) *AV1EncodeSessionCr
 
 // CreateAV1EncodeSession creates an AV1 encode session with the given configuration
 func CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationEncodeAV1Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationEncodeAV1Bit)
 }
 
 // --------------------------------
@@ -487,31 +508,24 @@ func DefaultH264DecodeSessionCreateInfo(width, height uint32) *H264DecodeSession
 
 // CreateH264DecodeSession creates an H.264 decode session with the given configuration
 func CreateH264DecodeSession(device Device, createInfo *H264DecodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationDecodeH264Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationDecodeH264Bit)
 }
 
 // H265DecodeSessionCreateInfo contains configuration for H.265 decode session
@@ -545,31 +559,24 @@ func DefaultH265DecodeSessionCreateInfo(width, height uint32) *H265DecodeSession
 
 // CreateH265DecodeSession creates an H.265 decode session with the given configuration
 func CreateH265DecodeSession(device Device, createInfo *H265DecodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationDecodeH265Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationDecodeH265Bit)
 }
 
 // AV1DecodeSessionCreateInfo contains configuration for AV1 decode session
@@ -603,31 +610,24 @@ func DefaultAV1DecodeSessionCreateInfo(width, height uint32) *AV1DecodeSessionCr
 
 // CreateAV1DecodeSession creates an AV1 decode session with the given configuration
 func CreateAV1DecodeSession(device Device, createInfo *AV1DecodeSessionCreateInfo) (VideoSession, error) {
-	if device == nil {
-		return VideoSession(NullHandle), NewValidationError("device", "cannot be nil")
-	}
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
-	videoProfile := &VideoProfileInfo{
-		VideoCodecOperation: VideoCodecOperationDecodeAV1Bit,
+	config := &videoSessionHelperConfig{
+		Width:               createInfo.Width,
+		Height:              createInfo.Height,
 		ChromaSubsampling:   createInfo.ChromaSubsampling,
 		LumaBitDepth:        createInfo.LumaBitDepth,
 		ChromaBitDepth:      createInfo.ChromaBitDepth,
+		MaxDpbSlots:         createInfo.MaxDpbSlots,
+		MaxActiveReferences: createInfo.MaxActiveReferences,
+		QueueFamilyIndex:    createInfo.QueueFamilyIndex,
+		PictureFormat:       createInfo.PictureFormat,
+		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
 
-	sessionCreateInfo := &VideoSessionCreateInfo{
-		QueueFamilyIndex:       createInfo.QueueFamilyIndex,
-		VideoProfile:           videoProfile,
-		PictureFormat:          createInfo.PictureFormat,
-		MaxCodedExtent:         Extent2D{Width: createInfo.Width, Height: createInfo.Height},
-		ReferencePictureFormat: createInfo.ReferenceFormat,
-		MaxDpbSlots:            createInfo.MaxDpbSlots,
-		MaxActiveReferences:    createInfo.MaxActiveReferences,
-	}
-
-	return CreateVideoSession(device, sessionCreateInfo)
+	return createVideoSessionHelper(device, config, VideoCodecOperationDecodeAV1Bit)
 }
 
 // --------------------------------
