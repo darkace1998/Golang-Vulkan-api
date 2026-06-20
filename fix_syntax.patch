@@ -1,0 +1,20 @@
+--- command_test.go
++++ command_test.go
+@@ -266,6 +266,8 @@
+		t.Errorf("Expected error when fence is nil")
+	} else if err.Error() != testNilFenceError {
+		t.Errorf("Unexpected error message: %v", err)
++	}
++}
+ // ============================================================================
+ // Benchmarks
+ // ============================================================================
+@@ -280,6 +282,8 @@
+		batch.AddCommandBuffer(cb)
+		batch.AddWaitSemaphore(sem, PipelineStageColorAttachmentOutputBit)
+		batch.AddSignalSemaphore(sem)
++	}
++}
+ // TestCreateThreadLocalCommandPool tests the creation of a thread-local command pool
+ func TestCreateThreadLocalCommandPool(t *testing.T) {
+	originalCreateCommandPool := createCommandPoolFunc
