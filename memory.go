@@ -426,6 +426,18 @@ func GetImageMemoryRequirements(device Device, image Image) MemoryRequirements {
 	}
 }
 
+// GetDeviceMemoryCommitment queries the current memory commitment of the device
+func GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize {
+	if device == nil || memory == nil {
+		return 0
+	}
+
+	var cCommitment C.VkDeviceSize
+	C.vkGetDeviceMemoryCommitment(C.VkDevice(device), C.VkDeviceMemory(memory), &cCommitment)
+
+	return DeviceSize(cCommitment)
+}
+
 // BindImageMemory binds image memory
 func BindImageMemory(device Device, image Image, memory DeviceMemory, memoryOffset DeviceSize) error {
 	if device == nil {

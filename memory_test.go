@@ -379,6 +379,29 @@ func TestBindImageMemoryValidation(t *testing.T) {
 	}
 }
 
+// TestGetDeviceMemoryCommitmentValidation tests nil parameter validation
+func TestGetDeviceMemoryCommitmentValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		device      Device
+		memory      DeviceMemory
+		expectParam string
+	}{
+		{testNilDevice, nil, fakeDeviceMemory(), testDeviceParameter},
+		{testNilMemory, fakeDevice(), nil, testMemoryParameter},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			GetDeviceMemoryCommitment(tt.device, tt.memory)
+			// GetDeviceMemoryCommitment returns 0 on error/nil params,
+			// it does not return an error itself to maintain API compatibility
+			// with similar query functions, but we can visually verify it handles nil
+			// safely without crashing during tests.
+		})
+	}
+}
+
 // TestMapMemoryValidation tests nil parameter validation
 func TestMapMemoryValidation(t *testing.T) {
 	tests := []struct {
