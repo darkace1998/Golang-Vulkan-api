@@ -58,25 +58,42 @@ func TestResult_Error(t *testing.T) {
 	}
 }
 
-func TestResultHelpers2(t *testing.T) {
+func TestResultHelpers(t *testing.T) {
 	t.Run("IsError", func(t *testing.T) {
-		if !ErrorOutOfHostMemory.IsError() {
-			t.Error("Expected ErrorOutOfHostMemory to be an error")
+		tests := []struct {
+			name     string
+			result   Result
+			expected bool
+		}{
+			{"Negative Result (Error)", ErrorOutOfHostMemory, true},
+			{"Zero Result (Success)", Success, false},
+			{"Positive Result (Incomplete)", Incomplete, false},
 		}
-		if Success.IsError() {
-			t.Error("Expected Success not to be an error")
-		}
-		if Incomplete.IsError() {
-			t.Error("Expected Incomplete not to be an error (it's >= 0)")
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				if tc.result.IsError() != tc.expected {
+					t.Errorf("Expected IsError() to be %v for %v, got %v", tc.expected, tc.result, tc.result.IsError())
+				}
+			})
 		}
 	})
 
 	t.Run("IsSuccess", func(t *testing.T) {
-		if !Success.IsSuccess() {
-			t.Error("Expected Success to be a success")
+		tests := []struct {
+			name     string
+			result   Result
+			expected bool
+		}{
+			{"Zero Result (Success)", Success, true},
+			{"Positive Result (Incomplete)", Incomplete, true},
+			{"Negative Result (Error)", ErrorOutOfHostMemory, false},
 		}
-		if ErrorOutOfHostMemory.IsSuccess() {
-			t.Error("Expected ErrorOutOfHostMemory not to be a success")
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				if tc.result.IsSuccess() != tc.expected {
+					t.Errorf("Expected IsSuccess() to be %v for %v, got %v", tc.expected, tc.result, tc.result.IsSuccess())
+				}
+			})
 		}
 	})
 }
