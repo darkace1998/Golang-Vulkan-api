@@ -1,7 +1,7 @@
-# 🧪 [Testing improvement for video_helpers.go]
+# 🧪 [Testing improvement for errors_test.go]
 
 ## Description
 
-* 🎯 **What:** The testing gap in `video_helpers.go` for managing video device functions has been addressed. The missing test file has been added.
-* 📊 **Coverage:** `TestCreateVideoDeviceFunctions` was added, providing coverage for `CreateVideoDeviceFunctions`, `GetVideoDeviceFunctions`, and `IsLoaded` methods. Scenarios tested include `nil` inputs, map-caching idempotency (ensuring we don't duplicate state across repeated calls for the same device instance), map state querying, and validation error propagation.
-* ✨ **Result:** The improvement in test coverage provides a baseline safety net for refactoring the map-based tracking of video capabilities per device instance, improving reliability during multithreaded loading contexts.
+* 🎯 **What:** The testing gap in `errors_test.go` for managing unwrapping behaviour has been addressed. The missing test function has been added.
+* 📊 **Coverage:** `TestVulkanError_errorsUnwrap` was added, providing coverage for standard library errors behaviour for `VulkanError.Unwrap`. Scenarios tested include standard behaviour via `errors.Unwrap()`, behaviour when double wrapped with `fmt.Errorf()`, and repeated chained unwrapping.
+* ✨ **Result:** The improvement in test coverage provides a baseline safety net for refactoring the Vulkan library errors, ensuring any error handling changes remain standard-library compliant.

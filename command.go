@@ -597,4 +597,3 @@ func (pool *ThreadLocalCommandPool) Destroy() {
 		pool.CommandBuffers = nil
 	}
 }
-
