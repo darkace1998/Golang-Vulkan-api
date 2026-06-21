@@ -4,6 +4,7 @@ package vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
+import "unsafe"
 
 // ColorSpace represents color space values
 type ColorSpace uint32
@@ -146,6 +147,7 @@ func CreateSwapchain(device Device, createInfo *SwapchainCreateInfo) (Swapchain,
 		return nil, NewVulkanError(result, "CreateSwapchain", "Vulkan swapchain creation failed")
 	}
 
+	trackResource("Swapchain", unsafe.Pointer(swapchain))
 	return Swapchain(swapchain), nil
 }
 
@@ -155,6 +157,8 @@ func DestroySwapchain(device Device, swapchain Swapchain) {
 		return
 	}
 	C.vkDestroySwapchainKHR(C.VkDevice(device), C.VkSwapchainKHR(swapchain), nil)
+	untrackResource("Swapchain", unsafe.Pointer(swapchain))
+	untrackResource("SwapchainKHR", unsafe.Pointer(swapchain))
 }
 
 // GetSwapchainImages gets the swapchain images
