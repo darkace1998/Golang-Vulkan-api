@@ -273,6 +273,7 @@ func CreateBuffer(device Device, createInfo *BufferCreateInfo) (Buffer, error) {
 		return nil, NewVulkanError(result, "CreateBuffer", "Vulkan buffer creation failed")
 	}
 
+	trackResource("Buffer", unsafe.Pointer(buffer))
 	return Buffer(buffer), nil
 }
 
@@ -282,6 +283,7 @@ func DestroyBuffer(device Device, buffer Buffer) {
 		return
 	}
 	C.vkDestroyBuffer(C.VkDevice(device), C.VkBuffer(buffer), nil)
+	untrackResource("Buffer", unsafe.Pointer(buffer))
 }
 
 // GetBufferMemoryRequirements gets buffer memory requirements
@@ -317,6 +319,7 @@ func AllocateMemory(device Device, allocateInfo *MemoryAllocateInfo) (DeviceMemo
 		return nil, NewVulkanError(result, "AllocateMemory", "Vulkan memory allocation failed")
 	}
 
+	trackResource("DeviceMemory", unsafe.Pointer(memory))
 	return DeviceMemory(memory), nil
 }
 
@@ -326,6 +329,7 @@ func FreeMemory(device Device, memory DeviceMemory) {
 		return
 	}
 	C.vkFreeMemory(C.VkDevice(device), C.VkDeviceMemory(memory), nil)
+	untrackResource("DeviceMemory", unsafe.Pointer(memory))
 }
 
 // BindBufferMemory binds buffer memory
@@ -403,6 +407,7 @@ func CreateImage(device Device, createInfo *ImageCreateInfo) (Image, error) {
 		return nil, NewVulkanError(result, "CreateImage", "Vulkan image creation failed")
 	}
 
+	trackResource("Image", unsafe.Pointer(image))
 	return Image(image), nil
 }
 
@@ -412,6 +417,7 @@ func DestroyImage(device Device, image Image) {
 		return
 	}
 	C.vkDestroyImage(C.VkDevice(device), C.VkImage(image), nil)
+	untrackResource("Image", unsafe.Pointer(image))
 }
 
 // GetImageMemoryRequirements gets image memory requirements

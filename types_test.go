@@ -59,7 +59,7 @@ func TestResult_Error(t *testing.T) {
 	}
 }
 
-func TestResultHelpers(t *testing.T) {
+func TestResultHelpersTypes(t *testing.T) {
 	t.Run("IsError", func(t *testing.T) {
 		tests := []struct {
 			name     string

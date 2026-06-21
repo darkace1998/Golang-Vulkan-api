@@ -4,6 +4,7 @@ package vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
+import "unsafe"
 
 // ImageViewCreateInfo contains image view creation information
 type ImageViewCreateInfo struct {
@@ -152,6 +153,7 @@ func CreateImageView(device Device, createInfo *ImageViewCreateInfo) (ImageView,
 		return nil, NewVulkanError(result, "CreateImageView", "Vulkan image view creation failed")
 	}
 
+	trackResource("ImageView", unsafe.Pointer(imageView))
 	return ImageView(imageView), nil
 }
 
@@ -161,6 +163,7 @@ func DestroyImageView(device Device, imageView ImageView) {
 		return
 	}
 	C.vkDestroyImageView(C.VkDevice(device), C.VkImageView(imageView), nil)
+	untrackResource("ImageView", unsafe.Pointer(imageView))
 }
 
 // CreateSampler creates a sampler

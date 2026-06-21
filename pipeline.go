@@ -167,6 +167,7 @@ func CreateShaderModule(device Device, createInfo *ShaderModuleCreateInfo) (Shad
 		return nil, NewVulkanError(result, "CreateShaderModule", "Vulkan shader module creation failed")
 	}
 
+	trackResource("ShaderModule", unsafe.Pointer(shaderModule))
 	return ShaderModule(shaderModule), nil
 }
 
@@ -176,6 +177,7 @@ func DestroyShaderModule(device Device, shaderModule ShaderModule) {
 		return
 	}
 	C.vkDestroyShaderModule(C.VkDevice(device), C.VkShaderModule(shaderModule), nil)
+	untrackResource("ShaderModule", unsafe.Pointer(shaderModule))
 }
 
 // CreatePipelineLayout creates a pipeline layout
@@ -222,6 +224,7 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 		return nil, NewVulkanError(result, "CreatePipelineLayout", "Vulkan pipeline layout creation failed")
 	}
 
+	trackResource("PipelineLayout", unsafe.Pointer(pipelineLayout))
 	return PipelineLayout(pipelineLayout), nil
 }
 
@@ -231,6 +234,7 @@ func DestroyPipelineLayout(device Device, pipelineLayout PipelineLayout) {
 		return
 	}
 	C.vkDestroyPipelineLayout(C.VkDevice(device), C.VkPipelineLayout(pipelineLayout), nil)
+	untrackResource("PipelineLayout", unsafe.Pointer(pipelineLayout))
 }
 
 // CreateRenderPass creates a render pass
@@ -367,6 +371,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 		return nil, NewVulkanError(result, "CreateRenderPass", "Vulkan render pass creation failed")
 	}
 
+	trackResource("RenderPass", unsafe.Pointer(renderPass))
 	return RenderPass(renderPass), nil
 }
 
@@ -376,6 +381,7 @@ func DestroyRenderPass(device Device, renderPass RenderPass) {
 		return
 	}
 	C.vkDestroyRenderPass(C.VkDevice(device), C.VkRenderPass(renderPass), nil)
+	untrackResource("RenderPass", unsafe.Pointer(renderPass))
 }
 
 // GetRenderAreaGranularity returns the render area granularity for a render pass
@@ -471,6 +477,7 @@ func DestroyPipeline(device Device, pipeline Pipeline) {
 		return
 	}
 	C.vkDestroyPipeline(C.VkDevice(device), C.VkPipeline(pipeline), nil)
+	untrackResource("Pipeline", unsafe.Pointer(pipeline))
 }
 
 // ============================================================================
@@ -1185,6 +1192,7 @@ func CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Frameb
 		return nil, NewVulkanError(result, "CreateFramebuffer", "Vulkan framebuffer creation failed")
 	}
 
+	trackResource("Framebuffer", unsafe.Pointer(framebuffer))
 	return Framebuffer(framebuffer), nil
 }
 
@@ -1192,6 +1200,7 @@ func CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Frameb
 func DestroyFramebuffer(device Device, framebuffer Framebuffer) {
 	if device != nil && framebuffer != nil {
 		C.vkDestroyFramebuffer(C.VkDevice(device), C.VkFramebuffer(framebuffer), nil)
+		untrackResource("Framebuffer", unsafe.Pointer(framebuffer))
 	}
 }
 

@@ -5,6 +5,7 @@ package vulkan
 #include <stdlib.h>
 */
 import "C"
+import "unsafe"
 
 // CommandPoolCreateInfo contains command pool creation information
 type CommandPoolCreateInfo struct {
@@ -154,6 +155,7 @@ func CreateCommandPool(device Device, createInfo *CommandPoolCreateInfo) (Comman
 		return nil, NewVulkanError(result, "CreateCommandPool", "Vulkan command pool creation failed")
 	}
 
+	trackResource("CommandPool", unsafe.Pointer(commandPool))
 	return CommandPool(commandPool), nil
 }
 
@@ -163,6 +165,7 @@ func DestroyCommandPool(device Device, commandPool CommandPool) {
 		return
 	}
 	C.vkDestroyCommandPool(C.VkDevice(device), C.VkCommandPool(commandPool), nil)
+	untrackResource("CommandPool", unsafe.Pointer(commandPool))
 }
 
 // AllocateCommandBuffers allocates command buffers
@@ -193,6 +196,7 @@ func AllocateCommandBuffers(device Device, allocateInfo *CommandBufferAllocateIn
 	commandBuffers := make([]CommandBuffer, allocateInfo.CommandBufferCount)
 	for i := range commandBuffers {
 		commandBuffers[i] = CommandBuffer(cCommandBuffers[i])
+		trackResource("CommandBuffer", unsafe.Pointer(commandBuffers[i]))
 	}
 
 	return commandBuffers, nil
@@ -207,6 +211,7 @@ func FreeCommandBuffers(device Device, commandPool CommandPool, commandBuffers [
 	cCommandBuffers := make([]C.VkCommandBuffer, len(commandBuffers))
 	for i, cb := range commandBuffers {
 		cCommandBuffers[i] = C.VkCommandBuffer(cb)
+		untrackResource("CommandBuffer", unsafe.Pointer(cb))
 	}
 
 	C.vkFreeCommandBuffers(C.VkDevice(device), C.VkCommandPool(commandPool), C.uint32_t(len(cCommandBuffers)), &cCommandBuffers[0])
@@ -360,6 +365,7 @@ func CreateSemaphore(device Device, createInfo *SemaphoreCreateInfo) (Semaphore,
 		return nil, NewVulkanError(result, "CreateSemaphore", "Vulkan semaphore creation failed")
 	}
 
+	trackResource("Semaphore", unsafe.Pointer(semaphore))
 	return Semaphore(semaphore), nil
 }
 
@@ -369,6 +375,7 @@ func DestroySemaphore(device Device, semaphore Semaphore) {
 		return
 	}
 	C.vkDestroySemaphore(C.VkDevice(device), C.VkSemaphore(semaphore), nil)
+	untrackResource("Semaphore", unsafe.Pointer(semaphore))
 }
 
 // CreateFence creates a fence
@@ -391,6 +398,7 @@ func CreateFence(device Device, createInfo *FenceCreateInfo) (Fence, error) {
 		return nil, NewVulkanError(result, "CreateFence", "Vulkan fence creation failed")
 	}
 
+	trackResource("Fence", unsafe.Pointer(fence))
 	return Fence(fence), nil
 }
 
@@ -400,6 +408,7 @@ func DestroyFence(device Device, fence Fence) {
 		return
 	}
 	C.vkDestroyFence(C.VkDevice(device), C.VkFence(fence), nil)
+	untrackResource("Fence", unsafe.Pointer(fence))
 }
 
 // WaitForFences waits for fences to be signaled

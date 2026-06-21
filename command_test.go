@@ -268,6 +268,7 @@ func TestGetFenceStatusValidation(t *testing.T) {
 		t.Errorf("Unexpected error message: %v", err)
 	}
 }
+
 // ============================================================================
 // Benchmarks
 // ============================================================================

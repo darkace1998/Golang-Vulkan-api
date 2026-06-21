@@ -433,6 +433,7 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 		return nil, NewVulkanError(result, "CreateInstance", "Vulkan instance creation failed")
 	}
 
+	trackResource("Instance", unsafe.Pointer(instance))
 	return Instance(instance), nil
 }
 
@@ -442,6 +443,7 @@ func DestroyInstance(instance Instance) {
 		return
 	}
 	C.vkDestroyInstance(C.VkInstance(instance), nil)
+	untrackResource("Instance", unsafe.Pointer(instance))
 }
 
 // EnumerateInstanceExtensionProperties enumerates available instance extensions

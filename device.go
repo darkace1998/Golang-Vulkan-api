@@ -318,6 +318,7 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 		return nil, NewVulkanError(result, "CreateDevice", "Vulkan device creation failed")
 	}
 
+	trackResource("Device", unsafe.Pointer(device))
 	return Device(device), nil
 }
 
@@ -327,6 +328,7 @@ func DestroyDevice(device Device) {
 		return
 	}
 	C.vkDestroyDevice(C.VkDevice(device), nil)
+	untrackResource("Device", unsafe.Pointer(device))
 }
 
 // GetDeviceQueue gets a device queue
