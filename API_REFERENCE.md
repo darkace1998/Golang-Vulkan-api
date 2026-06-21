@@ -14,6 +14,8 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - [Command Buffer Management](#command-buffer-management)
 - [Synchronization](#synchronization)
 - [Vulkan 1.3 Features](#vulkan-13-features)
+- [Query Management](#query-management)
+- [Swapchain Management](#swapchain-management)
 - [Pipeline Management](#pipeline-management)
 - [Descriptor Management](#descriptor-management)
 - [Command Recording](#command-recording)
@@ -89,6 +91,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `FreeMemory(device Device, memory DeviceMemory)` - Free device memory
 - `MapMemory(device Device, memory DeviceMemory, offset, size DeviceSize, flags uint32) (unsafe.Pointer, error)` - Map memory
 - `UnmapMemory(device Device, memory DeviceMemory)` - Unmap memory
+- `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query current memory commitment
 
 ### Utility Functions
 - `FindMemoryType(memProperties PhysicalDeviceMemoryProperties, typeFilter uint32, properties MemoryPropertyFlags) (uint32, bool)` - Find suitable memory type
@@ -154,6 +157,20 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `GetDeviceBufferMemoryRequirements(device Device, bufferCreateInfo *BufferCreateInfo) MemoryRequirements` - Get buffer memory requirements without creating buffer
 - `GetDeviceImageMemoryRequirements(device Device, imageCreateInfo *ImageCreateInfo) MemoryRequirements` - Get image memory requirements without creating image
 
+## Query Management
+- `CreateQueryPool(device Device, createInfo *QueryPoolCreateInfo) (QueryPool, error)` - Create a query pool
+- `DestroyQueryPool(device Device, queryPool QueryPool)` - Destroy a query pool
+- `GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, flags QueryResultFlags) ([]byte, error)` - Retrieve query results
+- `GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, error)` - Retrieve 32-bit query results
+- `GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, error)` - Retrieve 64-bit query results
+
+## Swapchain Management
+- `CreateSwapchain(device Device, createInfo *SwapchainCreateInfo) (Swapchain, error)` - Create a swapchain
+- `DestroySwapchain(device Device, swapchain Swapchain)` - Destroy a swapchain
+- `GetSwapchainImages(device Device, swapchain Swapchain) ([]Image, error)` - Get swapchain images
+- `AcquireNextImage(device Device, swapchain Swapchain, timeout uint64, semaphore Semaphore, fence Fence) (uint32, bool, error)` - Acquire next presentable image
+- `QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error)` - Queue an image for presentation
+
 ## Pipeline Management
 
 ### Shader Modules
@@ -167,6 +184,12 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ### Render Passes
 - `CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPass, error)` - Create render pass
 - `DestroyRenderPass(device Device, renderPass RenderPass)` - Destroy render pass
+- `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
+
+### Pipeline Cache
+- `CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (PipelineCache, error)` - Create pipeline cache
+- `DestroyPipelineCache(device Device, pipelineCache PipelineCache)` - Destroy pipeline cache
+- `MergePipelineCaches(device Device, dstCache PipelineCache, srcCaches []PipelineCache) error` - Merge multiple pipeline caches
 
 ## Descriptor Management
 
@@ -403,6 +426,9 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `GetAPIVersion() Version` - Get supported API version
 - `IsExtensionSupported(extensionName string, availableExtensions []ExtensionProperties) bool` - Check extension support
 - `IsLayerSupported(layerName string, availableLayers []LayerProperties) bool` - Check layer support
+
+### Image Layout and Subresources
+- `GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout` - Query image subresource layout
 
 ## Constants and Enums
 
