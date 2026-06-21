@@ -44,7 +44,6 @@ func TestIntegrationInstanceCreationWithLavapipe(t *testing.T) {
 
 	// Note: DeviceName is usually a byte array
 
-
 	if len(props.DeviceName) == 0 {
 		t.Fatal("Device name is empty")
 	}

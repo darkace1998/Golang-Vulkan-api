@@ -123,7 +123,6 @@ func getLayoutTransitionAccessAndStages(oldLayout, newLayout ImageLayout) (Acces
 	return srcAccessMask, dstAccessMask, srcStage, dstStage
 }
 
-
 // ============================================================================
 // Image Operations
 // ============================================================================
@@ -481,6 +480,38 @@ type ImageSubresource struct {
 	AspectMask ImageAspectFlags
 	MipLevel   uint32
 	ArrayLayer uint32
+}
+
+// SubresourceLayout represents an image subresource layout
+type SubresourceLayout struct {
+	Offset     DeviceSize
+	Size       DeviceSize
+	RowPitch   DeviceSize
+	ArrayPitch DeviceSize
+	DepthPitch DeviceSize
+}
+
+// GetImageSubresourceLayout queries the layout of an image subresource
+func GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout {
+	if device == nil || image == nil || subresource == nil {
+		return SubresourceLayout{}
+	}
+
+	var cSubresource C.VkImageSubresource
+	cSubresource.aspectMask = C.VkImageAspectFlags(subresource.AspectMask)
+	cSubresource.mipLevel = C.uint32_t(subresource.MipLevel)
+	cSubresource.arrayLayer = C.uint32_t(subresource.ArrayLayer)
+
+	var cLayout C.VkSubresourceLayout
+	C.vkGetImageSubresourceLayout(C.VkDevice(device), C.VkImage(image), &cSubresource, &cLayout)
+
+	return SubresourceLayout{
+		Offset:     DeviceSize(cLayout.offset),
+		Size:       DeviceSize(cLayout.size),
+		RowPitch:   DeviceSize(cLayout.rowPitch),
+		ArrayPitch: DeviceSize(cLayout.arrayPitch),
+		DepthPitch: DeviceSize(cLayout.depthPitch),
+	}
 }
 
 // SparseImageMemoryBindInfo specifies sparse image memory binding info

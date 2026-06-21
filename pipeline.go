@@ -378,6 +378,20 @@ func DestroyRenderPass(device Device, renderPass RenderPass) {
 	C.vkDestroyRenderPass(C.VkDevice(device), C.VkRenderPass(renderPass), nil)
 }
 
+// GetRenderAreaGranularity returns the render area granularity for a render pass
+func GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D {
+	if device == nil || renderPass == nil {
+		return Extent2D{}
+	}
+	var cGranularity C.VkExtent2D
+	C.vkGetRenderAreaGranularity(C.VkDevice(device), C.VkRenderPass(renderPass), &cGranularity)
+
+	return Extent2D{
+		Width:  uint32(cGranularity.width),
+		Height: uint32(cGranularity.height),
+	}
+}
+
 // ComputePipelineCreateInfo contains compute pipeline creation information
 type ComputePipelineCreateInfo struct {
 	Stage  PipelineShaderStageCreateInfo

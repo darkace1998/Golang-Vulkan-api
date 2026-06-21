@@ -6,23 +6,66 @@ import (
 	"testing"
 )
 
+func TestNewVulkanError(t *testing.T) {
+	tests := []struct {
+		name      string
+		result    Result
+		operation string
+		details   string
+	}{
+		{
+			name:      "all fields provided",
+			result:    ErrorOutOfHostMemory,
+			operation: "vkCreateInstance",
+			details:   "failed to allocate memory",
+		},
+		{
+			name:      "empty details",
+			result:    ErrorDeviceLost,
+			operation: "vkQueueSubmit",
+			details:   "",
+		},
+		{
+			name:      "empty operation",
+			result:    ErrorInitializationFailed,
+			operation: "",
+			details:   "driver not found",
+		},
+		{
+			name:      "success result",
+			result:    Success,
+			operation: "vkAllocateMemory",
+			details:   "allocated successfully",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := NewVulkanError(tt.result, tt.operation, tt.details)
+
+			if err == nil {
+				t.Fatal("Expected NewVulkanError to return a non-nil error")
+			}
+
+			if err.Result != tt.result {
+				t.Errorf("Expected Result %v, got %v", tt.result, err.Result)
+			}
+			if err.Operation != tt.operation {
+				t.Errorf("Expected Operation %q, got %q", tt.operation, err.Operation)
+			}
+			if err.Details != tt.details {
+				t.Errorf("Expected Details %q, got %q", tt.details, err.Details)
+			}
+		})
+	}
+}
+
 func TestVulkanError(t *testing.T) {
-	// Test NewVulkanError
 	result := ErrorOutOfHostMemory
 	op := "vkCreateInstance"
 	details := "failed to allocate memory"
 
 	err := NewVulkanError(result, op, details)
-
-	if err.Result != result {
-		t.Errorf("Expected Result %v, got %v", result, err.Result)
-	}
-	if err.Operation != op {
-		t.Errorf("Expected Operation %v, got %v", op, err.Operation)
-	}
-	if err.Details != details {
-		t.Errorf("Expected Details %v, got %v", details, err.Details)
-	}
 
 	// Test Error() with details
 	expectedErrorWithDetails := "vkCreateInstance failed: VK_ERROR_OUT_OF_HOST_MEMORY (failed to allocate memory)"
@@ -226,5 +269,33 @@ func TestValidationErrorStringGeneration(t *testing.T) {
 	expected := "vulkan validation error: image.format unsupported format"
 	if err.Error() != expected {
 		t.Errorf("Expected string %q, got %q", expected, err.Error())
+	}
+}
+
+func TestVulkanError_errorsUnwrap(t *testing.T) {
+	// Setup
+	result := ErrorOutOfDeviceMemory
+	op := "vkAllocateMemory"
+	details := "failed to allocate 1024 bytes"
+
+	vkErr := NewVulkanError(result, op, details)
+
+	// Test standard library unwrapping natively
+	unwrapped := errors.Unwrap(vkErr)
+	if unwrapped != result {
+		t.Errorf("Expected errors.Unwrap to yield Result %v, but got %v", result, unwrapped)
+	}
+
+	// Test standard library unwrapping when wrapped with fmt.Errorf
+	wrappedErr := fmt.Errorf("allocation failed: %w", vkErr)
+	unwrappedFromFmt := errors.Unwrap(wrappedErr)
+	if unwrappedFromFmt != vkErr {
+		t.Errorf("Expected errors.Unwrap of fmt.Errorf to yield original VulkanError, but got %v", unwrappedFromFmt)
+	}
+
+	// Unwrapping twice should get the result
+	unwrappedTwice := errors.Unwrap(unwrappedFromFmt)
+	if unwrappedTwice != result {
+		t.Errorf("Expected errors.Unwrap twice to yield Result %v, but got %v", result, unwrappedTwice)
 	}
 }

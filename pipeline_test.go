@@ -37,6 +37,28 @@ func TestDestroyPipelineNilArgs(t *testing.T) {
 	DestroyPipeline(fakeDevice(), nil)
 }
 
+func TestGetRenderAreaGranularityValidation(t *testing.T) {
+	tests := []struct {
+		name        string
+		device      Device
+		renderPass  RenderPass
+		expectParam string
+	}{
+		{testNilDevice, nil, fakeRenderPass(), testDeviceParameter},
+		{"nil renderPass", fakeDevice(), nil, "renderPass"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			GetRenderAreaGranularity(tt.device, tt.renderPass)
+			// GetRenderAreaGranularity returns an empty struct on error/nil params,
+			// it does not return an error itself to maintain API compatibility
+			// with similar query functions, but we can visually verify it handles nil
+			// safely without crashing during tests.
+		})
+	}
+}
+
 // ============================================================================
 // Validation Tests for Create Functions
 // ============================================================================
