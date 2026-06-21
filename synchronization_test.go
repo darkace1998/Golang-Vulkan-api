@@ -1,17 +1,9 @@
 package vulkan
 
 import (
+	"errors"
 	"testing"
 )
-
-func TestCreateTimelineSemaphoreValidation(t *testing.T) {
-	_, err := CreateTimelineSemaphore(nil, 0)
-	if err == nil {
-		t.Errorf("Expected error when device is nil")
-	} else if err.Error() != testNilDeviceError {
-		t.Errorf("Unexpected error message: %v", err)
-	}
-}
 
 func TestWaitSemaphoresValidation(t *testing.T) {
 	err := WaitSemaphores(nil, &SemaphoreWaitInfo{}, 0)

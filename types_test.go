@@ -1,5 +1,6 @@
 package vulkan
 
+
 import "testing"
 
 func TestResult_Error(t *testing.T) {
@@ -98,25 +99,6 @@ func TestResultHelpersTypes(t *testing.T) {
 	})
 }
 
-func TestBoolConversion(t *testing.T) {
-	t.Run("ToBool", func(t *testing.T) {
-		if !Bool32(1).ToBool() {
-			t.Error("Expected Bool32(1).ToBool() to be true")
-		}
-		if Bool32(0).ToBool() {
-			t.Error("Expected Bool32(0).ToBool() to be false")
-		}
-	})
-	t.Run("FromBool", func(t *testing.T) {
-		if FromBool(true) != 1 {
-			t.Error("Expected FromBool(true) to be 1")
-		}
-		if FromBool(false) != 0 {
-			t.Error("Expected FromBool(false) to be 0")
-		}
-	})
-}
-
 func TestVersion(t *testing.T) {
 	v := MakeVersion(1, 2, 3)
 	if v.Major() != 1 {
@@ -128,4 +110,48 @@ func TestVersion(t *testing.T) {
 	if v.Patch() != 3 {
 		t.Errorf("Expected Patch() 3, got %d", v.Patch())
 	}
+}
+
+
+
+func TestBoolConversion(t *testing.T) {
+	t.Run("ToBool", func(t *testing.T) {
+		tests := []struct {
+			name     string
+			input    Bool32
+			expected bool
+		}{
+			{"True", True, true},
+			{"False", False, false},
+			{"Other Non-zero", Bool32(2), false},
+			{"Other Non-zero 2", Bool32(100), false},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := tt.input.ToBool(); got != tt.expected {
+					t.Errorf("Bool32.ToBool() = %v, want %v", got, tt.expected)
+				}
+			})
+		}
+	})
+
+	t.Run("FromBool", func(t *testing.T) {
+		tests := []struct {
+			name     string
+			input    bool
+			expected Bool32
+		}{
+			{"true", true, True},
+			{"false", false, False},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := FromBool(tt.input); got != tt.expected {
+					t.Errorf("FromBool() = %v, want %v", got, tt.expected)
+				}
+			})
+		}
+	})
 }
