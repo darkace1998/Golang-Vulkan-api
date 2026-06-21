@@ -1,9 +1,13 @@
-🎯 **What:** Added comprehensive validation and nil-check tests for functions in `synchronization.go` to ensure robust error handling.
+🎯 **What:**
+The previous test coverage for `ToBool` and `FromBool` methods in `types_test.go` was trivial and did not cover edge cases correctly, such as mapping non-zero `Bool32` values to false.
 
 📊 **Coverage:**
-- Added test coverage for `CreateTimelineSemaphore`, `WaitSemaphores`, `SignalSemaphore`, and `GetSemaphoreCounterValue`.
-- Added test coverage for `CreateEvent`, `SetEvent`, `ResetEvent`, and `GetEventStatus`.
-- Added nil argument check coverage for `DestroyEvent`, `CmdSetEvent`, `CmdResetEvent`, `CmdPipelineBarrierFull`, and `CmdWaitEvents`.
-- Updated `test_helpers_test.go` to support `fakeEvent()` for testing synchronization events.
+The tests now exhaustively check:
+- `ToBool` correctly maps `True` (1) to `true`.
+- `ToBool` correctly maps `False` (0) to `false`.
+- `ToBool` correctly maps any other non-zero values (e.g., 2, 100) to `false` (according to the exact equality check `b == True`).
+- `FromBool` correctly maps `true` to `True`.
+- `FromBool` correctly maps `false` to `False`.
 
-✨ **Result:** Improved overall test coverage for synchronization primitives, ensuring `vulkan` package validation logic triggers correctly before making CGO calls.
+✨ **Result:**
+The test suite now provides confident assertions on Vulkan boolean type mappings and protects against regressions in case the underlying conversion rules or logic are modified.
