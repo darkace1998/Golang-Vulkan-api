@@ -1,7 +1,6 @@
 package vulkan
 
 import (
-	"errors"
 	"testing"
 )
 

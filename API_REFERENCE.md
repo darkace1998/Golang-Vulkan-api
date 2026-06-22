@@ -427,6 +427,10 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `IsExtensionSupported(extensionName string, availableExtensions []ExtensionProperties) bool` - Check extension support
 - `IsLayerSupported(layerName string, availableLayers []LayerProperties) bool` - Check layer support
 
+### Surface and WSI Integration
+- `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
+- `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
+
 ### Image Layout and Subresources
 - `GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout` - Query image subresource layout
 
