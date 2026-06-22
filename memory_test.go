@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"unsafe"
 )
 
 // ============================================================================
@@ -426,6 +427,73 @@ func TestMapMemoryValidation(t *testing.T) {
 			}
 			if valErr.Field != tt.expectParam {
 				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
+			}
+		})
+	}
+}
+
+// TestMapMemoryBoundsValidation tests offset and size validation bounds.
+func TestMapMemoryBoundsValidation(t *testing.T) {
+	device := fakeDevice()
+	memory := fakeDeviceMemory()
+
+	// Add a dummy entry to the tracker directly.
+	// Normally AllocateMemory does this, but since we are mocking, we just inject it.
+	allocationTrackerMu.Lock()
+	allocationTracker[memory] = 1024
+	allocationTrackerMu.Unlock()
+
+	defer func() {
+		allocationTrackerMu.Lock()
+		delete(allocationTracker, memory)
+		allocationTrackerMu.Unlock()
+	}()
+
+	tests := []struct {
+		name        string
+		offset      DeviceSize
+		size        DeviceSize
+		expectError bool
+		expectParam string
+	}{
+		{"Valid Bounds", 0, 1024, false, ""},
+		{"Valid Sub-Bounds", 128, 512, false, ""},
+		{"Offset Exceeds Size", 1024, 1, true, "offset"},
+		{"Offset Out of Bounds", 2048, 1, true, "offset"},
+		{"Zero Size", 0, 0, true, "size"},
+		{"Whole Size Valid", 0, DeviceSize(WholeSize), false, ""},
+		{"Whole Size Valid with Offset", 512, DeviceSize(WholeSize), false, ""},
+		{"Size Exceeds Bounds", 0, 2048, true, "size"},
+		{"Offset Plus Size Exceeds Bounds", 512, 1024, true, "size"},
+		{"Offset Plus Size Overflow", 512, DeviceSize(0xFFFFFFFFFFFFFFF0), true, "size"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Mock vkMapMemoryFunc
+			origMapMemoryFunc := vkMapMemoryFunc
+			vkMapMemoryFunc = func(device Device, memory DeviceMemory, offset, size DeviceSize, flags uint32, data *unsafe.Pointer) Result {
+				return Success
+			}
+			defer func() { vkMapMemoryFunc = origMapMemoryFunc }()
+
+			_, err := MapMemory(device, memory, tt.offset, tt.size, 0)
+			if tt.expectError {
+				if err == nil {
+					t.Fatal("Expected error, got nil")
+				}
+				var valErr *ValidationError
+				if errors.As(err, &valErr) {
+					if valErr.Field != tt.expectParam {
+						t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
+					}
+				} else {
+					t.Errorf("Expected ValidationError, got %v", err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
 			}
 		})
 	}
