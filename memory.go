@@ -55,6 +55,11 @@ const (
 	SharingModeConcurrent SharingMode = C.VK_SHARING_MODE_CONCURRENT
 )
 
+var (
+	allocationTrackerMu sync.RWMutex
+	allocationTracker   = make(map[DeviceMemory]DeviceSize)
+)
+
 // MemoryAllocateInfo contains memory allocation information
 type MemoryAllocateInfo struct {
 	AllocationSize  DeviceSize
@@ -319,6 +324,10 @@ func AllocateMemory(device Device, allocateInfo *MemoryAllocateInfo) (DeviceMemo
 		return nil, NewVulkanError(result, "AllocateMemory", "Vulkan memory allocation failed")
 	}
 
+	allocationTrackerMu.Lock()
+	allocationTracker[DeviceMemory(memory)] = allocateInfo.AllocationSize
+	allocationTrackerMu.Unlock()
+
 	trackResource("DeviceMemory", unsafe.Pointer(memory))
 	return DeviceMemory(memory), nil
 }
@@ -328,6 +337,11 @@ func FreeMemory(device Device, memory DeviceMemory) {
 	if device == nil || memory == nil {
 		return
 	}
+
+	allocationTrackerMu.Lock()
+	delete(allocationTracker, memory)
+	allocationTrackerMu.Unlock()
+
 	C.vkFreeMemory(C.VkDevice(device), C.VkDeviceMemory(memory), nil)
 	untrackResource("DeviceMemory", unsafe.Pointer(memory))
 }
@@ -351,6 +365,10 @@ func BindBufferMemory(device Device, buffer Buffer, memory DeviceMemory, memoryO
 	return nil
 }
 
+var vkMapMemoryFunc = func(device Device, memory DeviceMemory, offset, size DeviceSize, flags uint32, data *unsafe.Pointer) Result {
+	return Result(C.vkMapMemory(C.VkDevice(device), C.VkDeviceMemory(memory), C.VkDeviceSize(offset), C.VkDeviceSize(size), C.VkMemoryMapFlags(flags), data))
+}
+
 // MapMemory maps device memory
 func MapMemory(device Device, memory DeviceMemory, offset, size DeviceSize, flags uint32) (unsafe.Pointer, error) {
 	if device == nil {
@@ -360,8 +378,29 @@ func MapMemory(device Device, memory DeviceMemory, offset, size DeviceSize, flag
 		return nil, NewValidationError("memory", "cannot be nil")
 	}
 
+	allocationTrackerMu.RLock()
+	allocSize, exists := allocationTracker[memory]
+	allocationTrackerMu.RUnlock()
+
+	if exists {
+		if offset >= allocSize {
+			return nil, NewValidationError("offset", "offset exceeds allocation size")
+		}
+
+		if size != DeviceSize(WholeSize) {
+			if size == 0 {
+				return nil, NewValidationError("size", "size must be greater than zero")
+			}
+			if offset+size > allocSize || offset+size < offset { // check for overflow
+				return nil, NewValidationError("size", "offset plus size exceeds allocation size")
+			}
+		}
+	} else if size == 0 {
+		return nil, NewValidationError("size", "size must be greater than zero")
+	}
+
 	var data unsafe.Pointer
-	result := Result(C.vkMapMemory(C.VkDevice(device), C.VkDeviceMemory(memory), C.VkDeviceSize(offset), C.VkDeviceSize(size), C.VkMemoryMapFlags(flags), &data))
+	result := vkMapMemoryFunc(device, memory, offset, size, flags, &data)
 	if result != Success {
 		return nil, NewVulkanError(result, "MapMemory", "Vulkan memory map failed")
 	}
