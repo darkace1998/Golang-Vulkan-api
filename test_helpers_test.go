@@ -3,6 +3,7 @@ package vulkan
 import "unsafe"
 
 const (
+	testOpAllocateMemory    = "vkAllocateMemory"
 	testDeviceParameter     = "device"
 	testCreateInfoParameter = "createInfo"
 	testMemoryParameter     = "memory"

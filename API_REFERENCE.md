@@ -223,10 +223,16 @@ This document provides a reference for the exported functions in the Vulkan Go b
 
 ### Render Pass Commands
 - `CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginInfo, contents SubpassContents)` - Begin render pass
+- `CmdNextSubpass(commandBuffer CommandBuffer, contents SubpassContents)` - Advances to the next subpass in a render pass
 - `CmdEndRenderPass(commandBuffer CommandBuffer)` - End render pass
+
+### Execution Commands
+- `CmdExecuteCommands(commandBuffer CommandBuffer, commandBuffers []CommandBuffer)` - Executes secondary command buffers from a primary command buffer
 
 ### Pipeline Commands
 - `CmdBindPipeline(commandBuffer CommandBuffer, pipelineBindPoint PipelineBindPoint, pipeline Pipeline)` - Bind pipeline
+- `CmdPushConstants(commandBuffer CommandBuffer, layout PipelineLayout, stageFlags ShaderStageFlags, offset uint32, data []byte)` - Update the values of push constants
+- `CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLayout, stageFlags ShaderStageFlags, offset uint32, value *T)` - Convenience wrapper around CmdPushConstants for common use cases
 
 ### Compute Commands
 - `CmdDispatch(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32)` - Dispatch compute work groups
@@ -244,6 +250,10 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ### Drawing Commands
 - `CmdDraw(commandBuffer CommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance uint32)` - Draw primitives
 - `CmdDrawIndexed(commandBuffer CommandBuffer, indexCount, instanceCount, firstIndex uint32, vertexOffset int32, firstInstance uint32)` - Draw indexed
+- `CmdDrawIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32)` - Draw primitives with indirect parameters
+- `CmdDrawIndexedIndirect(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32)` - Draw indexed primitives with indirect parameters
+- `CmdDrawIndirectCount(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32)` - Draw primitives with indirect parameters and draw count
+- `CmdDrawIndexedIndirectCount(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32)` - Draw indexed primitives with indirect parameters and draw count
 
 ### Transfer Commands
 - `CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, regions []BufferCopy)` - Copy buffer data
