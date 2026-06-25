@@ -34,7 +34,7 @@ func TestNewVulkanError(t *testing.T) {
 		{
 			name:      "success result",
 			result:    Success,
-			operation: "vkAllocateMemory",
+			operation: testOpAllocateMemory,
 			details:   "allocated successfully",
 		},
 	}
@@ -182,7 +182,7 @@ func TestValidationError(t *testing.T) {
 func TestVulkanErrorUnwrapIsAs(t *testing.T) {
 	// Setup
 	result := ErrorOutOfDeviceMemory
-	op := "vkAllocateMemory"
+	op := testOpAllocateMemory
 	details := "failed to allocate 1024 bytes"
 
 	vkErr := NewVulkanError(result, op, details)
@@ -246,7 +246,7 @@ func TestValidationErrorAs(t *testing.T) {
 func TestVulkanErrorStringGeneration(t *testing.T) {
 	// 1. Without details
 	result := ErrorOutOfHostMemory
-	op := "vkAllocateMemory"
+	op := testOpAllocateMemory
 	errNoDetails := NewVulkanError(result, op, "")
 	expectedNoDetails := "vkAllocateMemory failed: VK_ERROR_OUT_OF_HOST_MEMORY"
 
@@ -275,7 +275,7 @@ func TestValidationErrorStringGeneration(t *testing.T) {
 func TestVulkanError_errorsUnwrap(t *testing.T) {
 	// Setup
 	result := ErrorOutOfDeviceMemory
-	op := "vkAllocateMemory"
+	op := testOpAllocateMemory
 	details := "failed to allocate 1024 bytes"
 
 	vkErr := NewVulkanError(result, op, details)
