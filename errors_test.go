@@ -299,3 +299,49 @@ func TestVulkanError_errorsUnwrap(t *testing.T) {
 		t.Errorf("Expected errors.Unwrap twice to yield Result %v, but got %v", result, unwrappedTwice)
 	}
 }
+
+func TestIsErrorHelpers(t *testing.T) {
+	// Setup errors
+	errDeviceLost := NewVulkanError(ErrorDeviceLost, "vkQueueSubmit", "Device got lost")
+	errSurfaceLost := NewVulkanError(ErrorSurfaceLostKHR, "vkQueuePresentKHR", "Surface lost")
+	errOutOfDate := NewVulkanError(ErrorOutOfDateKHR, "vkQueuePresentKHR", "Swapchain out of date")
+	errOther := NewVulkanError(ErrorOutOfHostMemory, "vkCreateInstance", "OOM")
+	errStandard := errors.New("standard error")
+
+	// Wrap errors to ensure the helpers can unwrap them
+	wrappedDeviceLost := fmt.Errorf("wrapped: %w", errDeviceLost)
+	wrappedSurfaceLost := fmt.Errorf("wrapped: %w", errSurfaceLost)
+	wrappedOutOfDate := fmt.Errorf("wrapped: %w", errOutOfDate)
+
+	tests := []struct {
+		name       string
+		err        error
+		deviceLost bool
+		surface    bool
+		outOfDate  bool
+	}{
+		{"DeviceLost raw", errDeviceLost, true, false, false},
+		{"DeviceLost wrapped", wrappedDeviceLost, true, false, false},
+		{"SurfaceLost raw", errSurfaceLost, false, true, false},
+		{"SurfaceLost wrapped", wrappedSurfaceLost, false, true, false},
+		{"OutOfDate raw", errOutOfDate, false, false, true},
+		{"OutOfDate wrapped", wrappedOutOfDate, false, false, true},
+		{"Other Vulkan error", errOther, false, false, false},
+		{"Standard error", errStandard, false, false, false},
+		{"Nil error", nil, false, false, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsErrorDeviceLost(tt.err); got != tt.deviceLost {
+				t.Errorf("IsErrorDeviceLost() = %v, want %v", got, tt.deviceLost)
+			}
+			if got := IsErrorSurfaceLost(tt.err); got != tt.surface {
+				t.Errorf("IsErrorSurfaceLost() = %v, want %v", got, tt.surface)
+			}
+			if got := IsErrorOutOfDate(tt.err); got != tt.outOfDate {
+				t.Errorf("IsErrorOutOfDate() = %v, want %v", got, tt.outOfDate)
+			}
+		})
+	}
+}
