@@ -1,6 +1,9 @@
 package vulkan
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // VulkanError represents a structured Vulkan error with additional context
 type VulkanError struct {
@@ -35,6 +38,27 @@ func NewVulkanError(result Result, operation string, details string) *VulkanErro
 		Operation: operation,
 		Details:   details,
 	}
+}
+
+// IsErrorDeviceLost checks if an error indicates that the Vulkan device has been lost
+// (VK_ERROR_DEVICE_LOST). It correctly unwraps nested errors.
+func IsErrorDeviceLost(err error) bool {
+	var vErr *VulkanError
+	return errors.As(err, &vErr) && vErr.Result == ErrorDeviceLost
+}
+
+// IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
+// (VK_ERROR_SURFACE_LOST_KHR). It correctly unwraps nested errors.
+func IsErrorSurfaceLost(err error) bool {
+	var vErr *VulkanError
+	return errors.As(err, &vErr) && vErr.Result == ErrorSurfaceLostKHR
+}
+
+// IsErrorOutOfDate checks if an error indicates that the Vulkan swapchain is out of date
+// (VK_ERROR_OUT_OF_DATE_KHR). It correctly unwraps nested errors.
+func IsErrorOutOfDate(err error) bool {
+	var vErr *VulkanError
+	return errors.As(err, &vErr) && vErr.Result == ErrorOutOfDateKHR
 }
 
 // ValidationError represents input validation errors
