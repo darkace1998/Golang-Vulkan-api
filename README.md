@@ -167,6 +167,10 @@ go get github.com/darkace1998/golang-vulkan-api
 
 See [ERROR_HANDLING.md](ERROR_HANDLING.md) for idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
 
+## Troubleshooting
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for solutions to common issues related to CGO, package dependencies, Vulkan drivers, and runtime segmentation faults.
+
 ## Performance Tuning
 
 See [PERFORMANCE_TUNING.md](PERFORMANCE_TUNING.md) for detailed strategies and tips for optimizing Vulkan compute workloads, particularly for AI/ML and general parallel processing tasks.
