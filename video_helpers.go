@@ -709,10 +709,18 @@ func (dpb *DPBManager) RemoveOldestReference() {
 
 // GetReferenceSlots returns all current reference slots
 func (dpb *DPBManager) GetReferenceSlots() []DPBSlot {
-	refs := make([]DPBSlot, 0, len(dpb.slots))
-	for _, slot := range dpb.slots {
-		if slot.IsReference {
-			refs = append(refs, slot)
+	count := 0
+	for i := range dpb.slots {
+		if dpb.slots[i].IsReference {
+			count++
+		}
+	}
+	refs := make([]DPBSlot, count)
+	idx := 0
+	for i := range dpb.slots {
+		if dpb.slots[i].IsReference {
+			refs[idx] = dpb.slots[i]
+			idx++
 		}
 	}
 	return refs
