@@ -582,3 +582,129 @@ func BenchmarkMemoryPoolAllocate(b *testing.B) {
 		_, _ = pool.Allocate(64, 64)
 	}
 }
+
+func TestFindMemoryType(t *testing.T) {
+	memProperties := PhysicalDeviceMemoryProperties{
+		MemoryTypeCount: 4,
+	}
+	memProperties.MemoryTypes[0] = MemoryType{PropertyFlags: MemoryPropertyDeviceLocalBit}
+	memProperties.MemoryTypes[1] = MemoryType{PropertyFlags: MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit}
+	memProperties.MemoryTypes[2] = MemoryType{PropertyFlags: MemoryPropertyHostVisibleBit | MemoryPropertyHostCachedBit}
+	memProperties.MemoryTypes[3] = MemoryType{PropertyFlags: MemoryPropertyDeviceLocalBit | MemoryPropertyHostVisibleBit}
+
+	tests := []struct {
+		name          string
+		typeFilter    uint32
+		properties    MemoryPropertyFlags
+		expectedIndex uint32
+		expectedFound bool
+	}{
+		{
+			name:          "exact match single property",
+			typeFilter:    0b1111,
+			properties:    MemoryPropertyDeviceLocalBit,
+			expectedIndex: 0,
+			expectedFound: true,
+		},
+		{
+			name:          "exact match multiple properties",
+			typeFilter:    0b1111,
+			properties:    MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit,
+			expectedIndex: 1,
+			expectedFound: true,
+		},
+		{
+			name:          "type filter excludes match",
+			typeFilter:    0b0101,                                                       // Only allows index 0 and 2
+			properties:    MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit, // This is at index 1
+			expectedIndex: 0,
+			expectedFound: false,
+		},
+		{
+			name:          "property mismatch",
+			typeFilter:    0b1111,
+			properties:    MemoryPropertyProtectedBit,
+			expectedIndex: 0,
+			expectedFound: false,
+		},
+		{
+			name:          "multiple valid matches returns lowest index",
+			typeFilter:    0b1111,
+			properties:    MemoryPropertyHostVisibleBit, // Index 1, 2, and 3 have this, returns 1
+			expectedIndex: 1,
+			expectedFound: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idx, found := FindMemoryType(memProperties, tt.typeFilter, tt.properties)
+			if found != tt.expectedFound {
+				t.Errorf("expected found %v, got %v", tt.expectedFound, found)
+			}
+			if found && idx != tt.expectedIndex {
+				t.Errorf("expected index %d, got %d", tt.expectedIndex, idx)
+			}
+		})
+	}
+}
+
+func TestCreateBufferValidation(t *testing.T) {
+	device := fakeDevice()
+
+	tests := []struct {
+		name       string
+		device     Device
+		createInfo *BufferCreateInfo
+		wantErr    string
+	}{
+		{
+			name:       "nil device",
+			device:     nil,
+			createInfo: &BufferCreateInfo{Size: 1024, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "device",
+		},
+		{
+			name:       "nil createInfo",
+			device:     device,
+			createInfo: nil,
+			wantErr:    "createInfo",
+		},
+		{
+			name:       "zero size",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 0, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "Size",
+		},
+		{
+			name:       "exceeds max size",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 1024*1024*1024 + 1, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "Size",
+		},
+		{
+			name:       "zero usage",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 1024, Usage: 0},
+			wantErr:    "Usage",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := CreateBuffer(tc.device, tc.createInfo)
+			if err == nil {
+				t.Fatal("Expected error, got nil")
+			}
+
+			var valErr *ValidationError
+			if errors.As(err, &valErr) {
+				if valErr.Field != tc.wantErr {
+					t.Errorf("Expected field %q, got %q", tc.wantErr, valErr.Field)
+				}
+			} else {
+				t.Errorf("Expected ValidationError, got %T: %v", err, err)
+			}
+		})
+	}
+}

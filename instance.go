@@ -327,6 +327,26 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	// Application info - allocate on heap to avoid Go pointer issues
 	var cAppInfo *C.VkApplicationInfo
 	var appNamePtr, engineNamePtr *C.char
+	var cLayers, cExtensions **C.char
+
+	defer func() {
+		if appNamePtr != nil {
+			C.free(unsafe.Pointer(appNamePtr))
+		}
+		if engineNamePtr != nil {
+			C.free(unsafe.Pointer(engineNamePtr))
+		}
+		if cAppInfo != nil {
+			C.free(unsafe.Pointer(cAppInfo))
+		}
+		if cLayers != nil {
+			freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
+		}
+		if cExtensions != nil {
+			freeStringArray(cExtensions, len(createInfo.EnabledExtensionNames))
+		}
+	}()
+
 	if createInfo.ApplicationInfo != nil {
 		cAppInfo = (*C.VkApplicationInfo)(C.malloc(C.size_t(unsafe.Sizeof(C.VkApplicationInfo{}))))
 		if cAppInfo == nil {
@@ -340,7 +360,6 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 		if createInfo.ApplicationInfo.ApplicationName != "" {
 			appNamePtr = C.CString(createInfo.ApplicationInfo.ApplicationName)
 			if appNamePtr == nil {
-				C.free(unsafe.Pointer(cAppInfo))
 				return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for application name")
 			}
 			cAppInfo.pApplicationName = appNamePtr
@@ -350,10 +369,6 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 		if createInfo.ApplicationInfo.EngineName != "" {
 			engineNamePtr = C.CString(createInfo.ApplicationInfo.EngineName)
 			if engineNamePtr == nil {
-				if appNamePtr != nil {
-					C.free(unsafe.Pointer(appNamePtr))
-				}
-				C.free(unsafe.Pointer(cAppInfo))
 				return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for engine name")
 			}
 			cAppInfo.pEngineName = engineNamePtr
@@ -365,20 +380,9 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	}
 
 	// Enabled layers
-	var cLayers **C.char
 	if len(createInfo.EnabledLayerNames) > 0 {
 		cLayers = stringSliceToCharArray(createInfo.EnabledLayerNames)
 		if cLayers == nil {
-			// Clean up already allocated memory
-			if appNamePtr != nil {
-				C.free(unsafe.Pointer(appNamePtr))
-			}
-			if engineNamePtr != nil {
-				C.free(unsafe.Pointer(engineNamePtr))
-			}
-			if cAppInfo != nil {
-				C.free(unsafe.Pointer(cAppInfo))
-			}
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for layer names")
 		}
 		cCreateInfo.enabledLayerCount = C.uint32_t(len(createInfo.EnabledLayerNames))
@@ -386,23 +390,9 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 	}
 
 	// Enabled extensions
-	var cExtensions **C.char
 	if len(createInfo.EnabledExtensionNames) > 0 {
 		cExtensions = stringSliceToCharArray(createInfo.EnabledExtensionNames)
 		if cExtensions == nil {
-			// Clean up already allocated memory
-			if appNamePtr != nil {
-				C.free(unsafe.Pointer(appNamePtr))
-			}
-			if engineNamePtr != nil {
-				C.free(unsafe.Pointer(engineNamePtr))
-			}
-			if cAppInfo != nil {
-				C.free(unsafe.Pointer(cAppInfo))
-			}
-			if cLayers != nil {
-				freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
-			}
 			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateInstance", "failed to allocate memory for extension names")
 		}
 		cCreateInfo.enabledExtensionCount = C.uint32_t(len(createInfo.EnabledExtensionNames))
@@ -411,23 +401,6 @@ func CreateInstance(createInfo *InstanceCreateInfo) (Instance, error) {
 
 	var instance C.VkInstance
 	result := Result(C.vkCreateInstance(&cCreateInfo, nil, &instance))
-
-	// Clean up memory
-	if appNamePtr != nil {
-		C.free(unsafe.Pointer(appNamePtr))
-	}
-	if engineNamePtr != nil {
-		C.free(unsafe.Pointer(engineNamePtr))
-	}
-	if cAppInfo != nil {
-		C.free(unsafe.Pointer(cAppInfo))
-	}
-	if cLayers != nil {
-		freeStringArray(cLayers, len(createInfo.EnabledLayerNames))
-	}
-	if cExtensions != nil {
-		freeStringArray(cExtensions, len(createInfo.EnabledExtensionNames))
-	}
 
 	if result != Success {
 		return nil, NewVulkanError(result, "CreateInstance", "Vulkan instance creation failed")
