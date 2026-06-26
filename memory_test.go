@@ -242,6 +242,51 @@ func TestDestroyBufferNilArgs(t *testing.T) {
 	DestroyBuffer(fakeDevice(), nil)
 }
 
+// TestGetBufferMemoryRequirements tests the GetBufferMemoryRequirements function
+func TestGetBufferMemoryRequirements(t *testing.T) {
+	t.Run("nil device", func(t *testing.T) {
+		reqs := GetBufferMemoryRequirements(nil, fakeBuffer())
+		if reqs.Size != 0 || reqs.Alignment != 0 || reqs.MemoryTypeBits != 0 {
+			t.Errorf("Expected empty memory requirements for nil device, got: %+v", reqs)
+		}
+	})
+
+	t.Run("nil buffer", func(t *testing.T) {
+		reqs := GetBufferMemoryRequirements(fakeDevice(), nil)
+		if reqs.Size != 0 || reqs.Alignment != 0 || reqs.MemoryTypeBits != 0 {
+			t.Errorf("Expected empty memory requirements for nil buffer, got: %+v", reqs)
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		// Mock the CGO function
+		originalFunc := getBufferMemoryRequirementsFunc
+		defer func() { getBufferMemoryRequirementsFunc = originalFunc }()
+
+		expectedReqs := MemoryRequirements{
+			Size:           1024,
+			Alignment:      256,
+			MemoryTypeBits: 7,
+		}
+
+		getBufferMemoryRequirementsFunc = func(device Device, buffer Buffer) MemoryRequirements {
+			return expectedReqs
+		}
+
+		reqs := GetBufferMemoryRequirements(fakeDevice(), fakeBuffer())
+
+		if reqs.Size != expectedReqs.Size {
+			t.Errorf("Expected size %d, got %d", expectedReqs.Size, reqs.Size)
+		}
+		if reqs.Alignment != expectedReqs.Alignment {
+			t.Errorf("Expected alignment %d, got %d", expectedReqs.Alignment, reqs.Alignment)
+		}
+		if reqs.MemoryTypeBits != expectedReqs.MemoryTypeBits {
+			t.Errorf("Expected memoryTypeBits %d, got %d", expectedReqs.MemoryTypeBits, reqs.MemoryTypeBits)
+		}
+	})
+}
+
 // TestFreeMemoryNilArgs tests that FreeMemory handles nil gracefully
 func TestFreeMemoryNilArgs(t *testing.T) {
 	FreeMemory(nil, nil)
@@ -570,7 +615,7 @@ func TestFindMemoryType(t *testing.T) {
 		},
 		{
 			name:          "type filter excludes match",
-			typeFilter:    0b0101, // Only allows index 0 and 2
+			typeFilter:    0b0101,                                                       // Only allows index 0 and 2
 			properties:    MemoryPropertyHostVisibleBit | MemoryPropertyHostCoherentBit, // This is at index 1
 			expectedIndex: 0,
 			expectedFound: false,
@@ -599,8 +644,14 @@ func TestFindMemoryType(t *testing.T) {
 			}
 			if found && idx != tt.expectedIndex {
 				t.Errorf("expected index %d, got %d", tt.expectedIndex, idx)
+			}
+		})
+	}
+}
+
 func TestCreateBufferValidation(t *testing.T) {
 	device := fakeDevice()
+	const maxBufferSize = 1024 * 1024 * 1024
 
 	tests := []struct {
 		name       string
@@ -629,7 +680,7 @@ func TestCreateBufferValidation(t *testing.T) {
 		{
 			name:       "exceeds max size",
 			device:     device,
-			createInfo: &BufferCreateInfo{Size: 1024*1024*1024 + 1, Usage: BufferUsageTransferSrcBit},
+			createInfo: &BufferCreateInfo{Size: maxBufferSize + 1, Usage: BufferUsageTransferSrcBit},
 			wantErr:    "Size",
 		},
 		{
