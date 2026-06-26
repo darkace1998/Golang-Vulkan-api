@@ -1,13 +1,12 @@
 🎯 **What:**
-The previous test coverage for `ToBool` and `FromBool` methods in `types_test.go` was trivial and did not cover edge cases correctly, such as mapping non-zero `Bool32` values to false.
+- Added missing `nil` validation for the `device` and `buffer` parameters in `GetBufferMemoryRequirements`.
+- Extracted the CGO wrapper logic into a package-level variable `getBufferMemoryRequirementsFunc` to enable headless testing.
+- Added a `TestGetBufferMemoryRequirements` function to verify `GetBufferMemoryRequirements`.
 
 📊 **Coverage:**
-The tests now exhaustively check:
-- `ToBool` correctly maps `True` (1) to `true`.
-- `ToBool` correctly maps `False` (0) to `false`.
-- `ToBool` correctly maps any other non-zero values (e.g., 2, 100) to `false` (according to the exact equality check `b == True`).
-- `FromBool` correctly maps `true` to `True`.
-- `FromBool` correctly maps `false` to `False`.
+- Now covers testing parameter validation (for a nil `device` and a nil `buffer`) where an empty `MemoryRequirements` object should be returned without causing a segment fault.
+- Tests the happy path success scenario where `GetBufferMemoryRequirements` correctly delegates to the C wrapper and correctly populates and translates the underlying structure fields.
 
 ✨ **Result:**
-The test suite now provides confident assertions on Vulkan boolean type mappings and protects against regressions in case the underlying conversion rules or logic are modified.
+- Enhanced overall safety of the memory operations API by guarding against driver crashes that occur when accessing missing references in parameters.
+- Improved explicit memory test coverage to include `GetBufferMemoryRequirements`.
