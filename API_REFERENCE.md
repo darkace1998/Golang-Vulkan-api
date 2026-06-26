@@ -22,6 +22,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - [Compute Pipeline Management](#compute-pipeline-management)
 - [Video Codec Support](#video-codec-support)
 - [Utility Functions](#utility-functions)
+  - [Debugging and Resource Tracking](#debugging-and-resource-tracking)
 - [Constants and Enums](#constants-and-enums)
 - [Important Constants](#important-constants)
 - [Notes](#notes)
@@ -431,6 +432,12 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 **Note**: Full video codec functionality requires the Vulkan Video extensions to be enabled on the device and supported by the GPU driver. Hardware support varies by GPU model and driver version.
 
 ## Utility Functions
+
+### Debugging and Resource Tracking
+- `EnableLeakTracker()` - Turn on tracking of Vulkan object allocations
+- `DisableLeakTracker()` - Turn off tracking of Vulkan object allocations
+- `ClearLeaks()` - Reset the current list of tracked allocations
+- `ReportLeaks() string` - Return a formatted string containing information about any un-freed resources
 
 ### Version and Feature Queries
 - `GetAPIVersion() Version` - Get supported API version

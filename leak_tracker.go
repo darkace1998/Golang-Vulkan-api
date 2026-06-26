@@ -20,18 +20,21 @@ var globalTracker = &LeakTracker{
 	enabled:   false,
 }
 
+// EnableLeakTracker turns on tracking of Vulkan object allocations.
 func EnableLeakTracker() {
 	globalTracker.mu.Lock()
 	defer globalTracker.mu.Unlock()
 	globalTracker.enabled = true
 }
 
+// DisableLeakTracker turns off tracking of Vulkan object allocations.
 func DisableLeakTracker() {
 	globalTracker.mu.Lock()
 	defer globalTracker.mu.Unlock()
 	globalTracker.enabled = false
 }
 
+// ClearLeaks resets the current list of tracked allocations.
 func ClearLeaks() {
 	globalTracker.mu.Lock()
 	defer globalTracker.mu.Unlock()
@@ -66,6 +69,7 @@ func untrackResource(resourceType string, handle unsafe.Pointer) {
 	delete(globalTracker.resources, key)
 }
 
+// ReportLeaks returns a formatted string containing information about any un-freed resources.
 func ReportLeaks() string {
 	globalTracker.mu.Lock()
 	defer globalTracker.mu.Unlock()
