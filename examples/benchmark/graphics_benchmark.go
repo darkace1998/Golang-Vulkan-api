@@ -794,6 +794,7 @@ func (app *BenchmarkApp) readMemoryInfo() map[string]uint64 {
 
 	meminfoPath := os.Getenv("MEMINFO_PATH")
 	if meminfoPath == "" {
+		// Allow tests or non-standard Linux setups to override the default source.
 		meminfoPath = "/proc/meminfo"
 	}
 

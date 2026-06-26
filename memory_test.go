@@ -651,6 +651,7 @@ func TestFindMemoryType(t *testing.T) {
 
 func TestCreateBufferValidation(t *testing.T) {
 	device := fakeDevice()
+	const maxBufferSize = 1024 * 1024 * 1024
 
 	tests := []struct {
 		name       string
@@ -679,7 +680,7 @@ func TestCreateBufferValidation(t *testing.T) {
 		{
 			name:       "exceeds max size",
 			device:     device,
-			createInfo: &BufferCreateInfo{Size: 1024*1024*1024 + 1, Usage: BufferUsageTransferSrcBit},
+			createInfo: &BufferCreateInfo{Size: maxBufferSize + 1, Usage: BufferUsageTransferSrcBit},
 			wantErr:    "Size",
 		},
 		{
