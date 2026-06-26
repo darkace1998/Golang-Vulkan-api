@@ -163,6 +163,30 @@ go get github.com/darkace1998/golang-vulkan-api
 ```
 
 
+## Debugging and Resource Tracking
+
+The library includes a built-in `LeakTracker` utility to help you monitor Vulkan object allocations and identify potential memory leaks (e.g., calling `CreateBuffer` without a corresponding `DestroyBuffer`).
+
+```go
+package main
+
+import (
+    "fmt"
+    vulkan "github.com/darkace1998/golang-vulkan-api"
+)
+
+func main() {
+    // Enable tracking before creating objects
+    vulkan.EnableLeakTracker()
+    defer func() {
+        // Report any un-freed resources at exit
+        fmt.Println(vulkan.ReportLeaks())
+    }()
+
+    // ... your Vulkan code ...
+}
+```
+
 ## Error Handling Patterns
 
 See [ERROR_HANDLING.md](ERROR_HANDLING.md) for idiomatic Go patterns for handling `VulkanError` vs. `ValidationError`, including retry logic for transient failures like `VK_ERROR_DEVICE_LOST`.
