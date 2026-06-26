@@ -170,3 +170,76 @@ func BenchmarkUpdateDescriptorSets(b *testing.B) {
 		UpdateDescriptorSets(device, writes, copies)
 	}
 }
+
+// TestAllocateDescriptorSetsValidation tests nil parameter validation
+func TestAllocateDescriptorSetsValidation(t *testing.T) {
+	tests := []struct {
+		name         string
+		device       Device
+		allocateInfo *DescriptorSetAllocateInfo
+		expectParam  string
+	}{
+		{testNilDevice, nil, &DescriptorSetAllocateInfo{}, testDeviceParameter},
+		{"nil allocateInfo", fakeDevice(), nil, "allocateInfo"},
+		{"nil DescriptorPool", fakeDevice(), &DescriptorSetAllocateInfo{DescriptorPool: nil}, "DescriptorPool"},
+		{"empty SetLayouts", fakeDevice(), &DescriptorSetAllocateInfo{DescriptorPool: fakeDescriptorPool(), SetLayouts: []DescriptorSetLayout{}}, "SetLayouts"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := AllocateDescriptorSets(tt.device, tt.allocateInfo)
+			if err == nil {
+				t.Fatal("Expected error, got nil")
+			}
+			var valErr *ValidationError
+			if !errors.As(err, &valErr) {
+				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
+			}
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
+			}
+		})
+	}
+}
+
+// TestFreeDescriptorSetsValidation tests nil parameter validation
+func TestFreeDescriptorSetsValidation(t *testing.T) {
+	tests := []struct {
+		name           string
+		device         Device
+		descriptorPool DescriptorPool
+		expectParam    string
+	}{
+		{testNilDevice, nil, fakeDescriptorPool(), testDeviceParameter},
+		{"nil descriptorPool", fakeDevice(), nil, "descriptorPool"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := FreeDescriptorSets(tt.device, tt.descriptorPool, []DescriptorSet{fakeDescriptorSet()})
+			if err == nil {
+				t.Fatal("Expected error, got nil")
+			}
+			var valErr *ValidationError
+			if !errors.As(err, &valErr) {
+				t.Fatalf("Expected ValidationError, got %T: %v", err, err)
+			}
+			if valErr.Field != tt.expectParam {
+				t.Errorf("Expected error param '%s', got '%s'", tt.expectParam, valErr.Field)
+			}
+		})
+	}
+}
+
+// TestFreeDescriptorSetsEmpty tests that empty slices are handled correctly
+func TestFreeDescriptorSetsEmpty(t *testing.T) {
+	err := FreeDescriptorSets(fakeDevice(), fakeDescriptorPool(), []DescriptorSet{})
+	if err != nil {
+		t.Fatalf("Expected nil for empty descriptorSets, got: %v", err)
+	}
+
+	err = FreeDescriptorSets(fakeDevice(), fakeDescriptorPool(), nil)
+	if err != nil {
+		t.Fatalf("Expected nil for nil descriptorSets, got: %v", err)
+	}
+}

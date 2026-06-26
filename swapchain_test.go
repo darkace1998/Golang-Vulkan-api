@@ -29,3 +29,11 @@ func TestGetSwapchainImages_NilValidation(t *testing.T) {
 		t.Errorf("expected error message to contain 'swapchain', got %q", err.Error())
 	}
 }
+
+// TestDestroySwapchainNilArgs tests that DestroySwapchain handles nil gracefully
+func TestDestroySwapchainNilArgs(t *testing.T) {
+	// Should not panic
+	DestroySwapchain(nil, nil)
+	DestroySwapchain(nil, fakeSwapchain())
+	DestroySwapchain(fakeDevice(), nil)
+}

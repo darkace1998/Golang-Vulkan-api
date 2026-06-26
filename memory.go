@@ -291,8 +291,8 @@ func DestroyBuffer(device Device, buffer Buffer) {
 	untrackResource("Buffer", unsafe.Pointer(buffer))
 }
 
-// GetBufferMemoryRequirements gets buffer memory requirements
-func GetBufferMemoryRequirements(device Device, buffer Buffer) MemoryRequirements {
+// getBufferMemoryRequirementsFunc is a variable allowing us to mock C.vkGetBufferMemoryRequirements in tests
+var getBufferMemoryRequirementsFunc = func(device Device, buffer Buffer) MemoryRequirements {
 	var cReqs C.VkMemoryRequirements
 	C.vkGetBufferMemoryRequirements(C.VkDevice(device), C.VkBuffer(buffer), &cReqs)
 
@@ -301,6 +301,14 @@ func GetBufferMemoryRequirements(device Device, buffer Buffer) MemoryRequirement
 		Alignment:      DeviceSize(cReqs.alignment),
 		MemoryTypeBits: uint32(cReqs.memoryTypeBits),
 	}
+}
+
+// GetBufferMemoryRequirements gets buffer memory requirements
+func GetBufferMemoryRequirements(device Device, buffer Buffer) MemoryRequirements {
+	if device == nil || buffer == nil {
+		return MemoryRequirements{}
+	}
+	return getBufferMemoryRequirementsFunc(device, buffer)
 }
 
 // AllocateMemory allocates device memory

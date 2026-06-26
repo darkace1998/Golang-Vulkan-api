@@ -625,6 +625,10 @@ func (app *BenchmarkApp) getNvidiaGPUStats() *GPUStats {
 }
 
 func (app *BenchmarkApp) getGenericGPUStats() *GPUStats {
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+
 	// Try to read from common Linux GPU monitoring locations
 	stats := &GPUStats{
 		Timestamp: time.Now(),
@@ -784,7 +788,17 @@ func (app *BenchmarkApp) readIntFromFile(filename string) int64 {
 }
 
 func (app *BenchmarkApp) readMemoryInfo() map[string]uint64 {
-	data, err := os.ReadFile("/proc/meminfo")
+	if runtime.GOOS != "linux" {
+		return nil
+	}
+
+	meminfoPath := os.Getenv("MEMINFO_PATH")
+	if meminfoPath == "" {
+		// Allow tests or non-standard Linux setups to override the default source via MEMINFO_PATH.
+		meminfoPath = "/proc/meminfo"
+	}
+
+	data, err := os.ReadFile(meminfoPath)
 	if err != nil {
 		return nil
 	}

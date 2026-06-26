@@ -345,3 +345,27 @@ func TestIsErrorHelpers(t *testing.T) {
 		})
 	}
 }
+
+func TestErrorUnwrapping(t *testing.T) {
+	// Setup
+	result := ErrorOutOfDeviceMemory
+	op := testOpAllocateMemory
+	details := "failed to allocate 1024 bytes"
+
+	vkErr := NewVulkanError(result, op, details)
+
+	// Validate unwrapping functionality
+	unwrapped := errors.Unwrap(vkErr)
+	if unwrapped == nil {
+		t.Fatal("Expected unwrapped error to not be nil")
+	}
+
+	if unwrapped != result {
+		t.Errorf("Expected unwrapped error to equal %v, but got %v", result, unwrapped)
+	}
+
+	// Verify standard library errors.Is works with the custom error type
+	if !errors.Is(vkErr, result) {
+		t.Errorf("Expected errors.Is to return true when comparing VulkanError to its underlying Result")
+	}
+}
