@@ -87,7 +87,7 @@
 ## API Coverage
 
 - [ ] **Add sparse memory binding support** — `SparseMemoryBind` and related types are partially defined; complete the binding functions (`QueueBindSparse`, sparse image/buffer support).
-- [ ] **Add pipeline cache support** — `VkPipelineCache` creation, retrieval, and merging functions are not yet wrapped.
+- [x] **Add pipeline cache support** — `VkPipelineCache` creation, retrieval, and merging functions are wrapped and tested.
 - [x] **Add secondary command buffer support** — `CommandBufferInheritanceInfo` is defined but secondary command buffer recording and execution (`CmdExecuteCommands`) need examples and tests.
 - [ ] **Add subpass dependency support** — `SubpassDependency` is defined but subpass dependency chains and self-dependencies are not demonstrated.
 - [ ] **Complete surface/WSI integration** — Surface creation functions (`vkCreateXlibSurfaceKHR`, `vkCreateWin32SurfaceKHR`, `vkCreateMetalSurfaceKHR`) are not yet wrapped; these are needed for on-screen rendering. (Wrappers for `vkGetRenderAreaGranularity`, `vkGetDeviceMemoryCommitment`, `vkGetImageSubresourceLayout` are completed).
