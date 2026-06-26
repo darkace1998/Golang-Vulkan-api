@@ -1,13 +1,4 @@
-🎯 **What:**
-The previous test coverage for `ToBool` and `FromBool` methods in `types_test.go` was trivial and did not cover edge cases correctly, such as mapping non-zero `Bool32` values to false.
-
-📊 **Coverage:**
-The tests now exhaustively check:
-- `ToBool` correctly maps `True` (1) to `true`.
-- `ToBool` correctly maps `False` (0) to `false`.
-- `ToBool` correctly maps any other non-zero values (e.g., 2, 100) to `false` (according to the exact equality check `b == True`).
-- `FromBool` correctly maps `true` to `True`.
-- `FromBool` correctly maps `false` to `False`.
-
-✨ **Result:**
-The test suite now provides confident assertions on Vulkan boolean type mappings and protects against regressions in case the underlying conversion rules or logic are modified.
+🎯 **What:** Extracted manual C array cleanup code from `CreateInstance` and placed it into a single `defer` statement at the top of the function to reduce repetitive memory cleanups.
+💡 **Why:** `CreateInstance` contained a lot of repetitive manual cleanup if early allocations failed, making it error-prone and overly complex. Moving cleanup logic into a unified `defer` block ensures reliable and DRY resource teardown on error exits.
+✅ **Verification:** Verified changes through inspection of `git diff` output, ensuring redundant `C.free` code segments were removed. Verified code functionality by ensuring no regressions by running tests via `make test` and specific matching via `go test -v ./... | grep -C 5 "CreateInstance"`.
+✨ **Result:** Improved overall codebase maintainability by reducing function length and decreasing probability of memory leaks on function failures.
