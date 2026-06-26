@@ -1,7 +1,17 @@
-# 🧪 [Testing improvement for errors_test.go]
+# 🧪 [Testing Improvement] Add TestCreateBufferValidation
 
 ## Description
 
-* 🎯 **What:** The testing gap in `errors_test.go` for managing unwrapping behaviour has been addressed. The missing test function has been added.
-* 📊 **Coverage:** `TestVulkanError_errorsUnwrap` was added, providing coverage for standard library errors behaviour for `VulkanError.Unwrap`. Scenarios tested include standard behaviour via `errors.Unwrap()`, behaviour when double wrapped with `fmt.Errorf()`, and repeated chained unwrapping.
-* ✨ **Result:** The improvement in test coverage provides a baseline safety net for refactoring the Vulkan library errors, ensuring any error handling changes remain standard-library compliant.
+🎯 **What:**
+Added unit tests to cover input validation for the `CreateBuffer` function. Specifically, it verifies that the function correctly returns a `ValidationError` when provided with invalid inputs.
+
+📊 **Coverage:**
+The following scenarios are now tested:
+*   **nil device:** Verifies that passing a `nil` device handle returns an error for the `"device"` field.
+*   **nil createInfo:** Verifies that passing a `nil` `BufferCreateInfo` pointer returns an error for the `"createInfo"` field.
+*   **zero size:** Verifies that attempting to create a buffer with a size of 0 returns an error for the `"Size"` field.
+*   **exceeds max size:** Verifies that attempting to create a buffer exceeding the 1GB safety limit returns an error for the `"Size"` field.
+*   **zero usage:** Verifies that attempting to create a buffer with 0 usage flags returns an error for the `"Usage"` field.
+
+✨ **Result:**
+This testing improvement increases the test coverage of `memory.go` by properly testing all of the preliminary validation checks within the `CreateBuffer` function. This provides a safety net ensuring that future refactoring will not accidentally remove or break these critical validation checks.
