@@ -1,3 +1,10 @@
+# 🧪 Test Error unwrapping
+
+## Description
+
+* 🎯 **What:** A test for explicit standard library error unwrapping of `VulkanError` has been added.
+* 📊 **Coverage:** A new `TestErrorUnwrapping` function has been added to `errors_test.go` which validates the interaction of `VulkanError`'s `Unwrap()` function with `errors.Unwrap` and `errors.Is`.
+* ✨ **Result:** Enhanced test coverage that explicitly verifies custom error implementations comply with the standard library's unwrapping interfaces, establishing better safety against regressions.
 🧪 Add test for DestroySwapchain nil validation
 
 🎯 **What:** The testing gap addressed

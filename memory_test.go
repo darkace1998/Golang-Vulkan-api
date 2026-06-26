@@ -599,6 +599,61 @@ func TestFindMemoryType(t *testing.T) {
 			}
 			if found && idx != tt.expectedIndex {
 				t.Errorf("expected index %d, got %d", tt.expectedIndex, idx)
+func TestCreateBufferValidation(t *testing.T) {
+	device := fakeDevice()
+
+	tests := []struct {
+		name       string
+		device     Device
+		createInfo *BufferCreateInfo
+		wantErr    string
+	}{
+		{
+			name:       "nil device",
+			device:     nil,
+			createInfo: &BufferCreateInfo{Size: 1024, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "device",
+		},
+		{
+			name:       "nil createInfo",
+			device:     device,
+			createInfo: nil,
+			wantErr:    "createInfo",
+		},
+		{
+			name:       "zero size",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 0, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "Size",
+		},
+		{
+			name:       "exceeds max size",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 1024*1024*1024 + 1, Usage: BufferUsageTransferSrcBit},
+			wantErr:    "Size",
+		},
+		{
+			name:       "zero usage",
+			device:     device,
+			createInfo: &BufferCreateInfo{Size: 1024, Usage: 0},
+			wantErr:    "Usage",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := CreateBuffer(tc.device, tc.createInfo)
+			if err == nil {
+				t.Fatal("Expected error, got nil")
+			}
+
+			var valErr *ValidationError
+			if errors.As(err, &valErr) {
+				if valErr.Field != tc.wantErr {
+					t.Errorf("Expected field %q, got %q", tc.wantErr, valErr.Field)
+				}
+			} else {
+				t.Errorf("Expected ValidationError, got %T: %v", err, err)
 			}
 		})
 	}

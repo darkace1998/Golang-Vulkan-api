@@ -41,6 +41,7 @@ func fakeDescriptorPool() DescriptorPool           { return DescriptorPool(fakeH
 func fakePhysicalDevice() PhysicalDevice           { return PhysicalDevice(fakeHandle()) }
 func fakeVideoSession() VideoSession               { return VideoSession(fakeHandle()) }
 func fakeSwapchain() Swapchain                     { return Swapchain(fakeHandle()) }
+func fakePipelineCache() PipelineCache             { return PipelineCache(fakeHandle()) }
 
 const (
 	testNilDeviceError = "vulkan validation error: device cannot be nil"
