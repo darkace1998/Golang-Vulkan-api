@@ -99,15 +99,75 @@ func TestResultHelpersTypes(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	v := MakeVersion(1, 2, 3)
-	if v.Major() != 1 {
-		t.Errorf("Expected Major() 1, got %d", v.Major())
+	tests := []struct {
+		name  string
+		major uint32
+		minor uint32
+		patch uint32
+	}{
+		{
+			name:  "Standard 1.2.3",
+			major: 1,
+			minor: 2,
+			patch: 3,
+		},
+		{
+			name:  "Zero values",
+			major: 0,
+			minor: 0,
+			patch: 0,
+		},
+		{
+			name:  "Max values (127, 1023, 4095)",
+			major: 127,
+			minor: 1023,
+			patch: 4095,
+		},
+		{
+			name:  "Vulkan 1.0.0",
+			major: 1,
+			minor: 0,
+			patch: 0,
+		},
+		{
+			name:  "Vulkan 1.1.0",
+			major: 1,
+			minor: 1,
+			patch: 0,
+		},
+		{
+			name:  "Vulkan 1.2.0",
+			major: 1,
+			minor: 2,
+			patch: 0,
+		},
+		{
+			name:  "Vulkan 1.3.0",
+			major: 1,
+			minor: 3,
+			patch: 0,
+		},
+		{
+			name:  "Mixed values",
+			major: 42,
+			minor: 512,
+			patch: 2048,
+		},
 	}
-	if v.Minor() != 2 {
-		t.Errorf("Expected Minor() 2, got %d", v.Minor())
-	}
-	if v.Patch() != 3 {
-		t.Errorf("Expected Patch() 3, got %d", v.Patch())
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			v := MakeVersion(tc.major, tc.minor, tc.patch)
+			if v.Major() != tc.major {
+				t.Errorf("Expected Major() %d, got %d", tc.major, v.Major())
+			}
+			if v.Minor() != tc.minor {
+				t.Errorf("Expected Minor() %d, got %d", tc.minor, v.Minor())
+			}
+			if v.Patch() != tc.patch {
+				t.Errorf("Expected Patch() %d, got %d", tc.patch, v.Patch())
+			}
+		})
 	}
 }
 
