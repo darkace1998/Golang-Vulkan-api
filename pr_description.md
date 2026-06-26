@@ -1,13 +1,13 @@
-🎯 **What:**
-The previous test coverage for `ToBool` and `FromBool` methods in `types_test.go` was trivial and did not cover edge cases correctly, such as mapping non-zero `Bool32` values to false.
+🧪 Add test for DestroySwapchain nil validation
 
-📊 **Coverage:**
-The tests now exhaustively check:
-- `ToBool` correctly maps `True` (1) to `true`.
-- `ToBool` correctly maps `False` (0) to `false`.
-- `ToBool` correctly maps any other non-zero values (e.g., 2, 100) to `false` (according to the exact equality check `b == True`).
-- `FromBool` correctly maps `true` to `True`.
-- `FromBool` correctly maps `false` to `False`.
+🎯 **What:** The testing gap addressed
+The `DestroySwapchain` function in `swapchain.go` was missing a test to ensure it handles nil arguments correctly without panicking. This aligns it with other destroy functions like `DestroyBuffer` or `DestroyCommandPool` which already have similar nil validation tests.
 
-✨ **Result:**
-The test suite now provides confident assertions on Vulkan boolean type mappings and protects against regressions in case the underlying conversion rules or logic are modified.
+📊 **Coverage:** What scenarios are now tested
+The `TestDestroySwapchainNilArgs` test case covers the scenario of calling `DestroySwapchain` with:
+- `nil` for both `device` and `swapchain`.
+- `nil` for `device` and a valid `swapchain`.
+- A valid `device` and `nil` for `swapchain`.
+
+✨ **Result:** The improvement in test coverage
+Increased test coverage for `swapchain.go` and improved the reliability by verifying that `DestroySwapchain` behaves safely even when provided with invalid/nil handles.
