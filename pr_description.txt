@@ -1,17 +1,7 @@
-# Title
-🧪 [Testing] Add exhaustive testing for Bool32 conversion methods
+# 🧪 Test Error unwrapping
 
-# Description
-🎯 **What:**
-The previous test coverage for `ToBool` and `FromBool` methods in `types_test.go` was trivial and did not cover edge cases correctly, such as mapping non-zero `Bool32` values to false.
+## Description
 
-📊 **Coverage:**
-The tests now exhaustively check:
-- `ToBool` correctly maps `True` (1) to `true`.
-- `ToBool` correctly maps `False` (0) to `false`.
-- `ToBool` correctly maps any other non-zero values (e.g., 2, 100) to `false` (according to the exact equality check `b == True`).
-- `FromBool` correctly maps `true` to `True`.
-- `FromBool` correctly maps `false` to `False`.
-
-✨ **Result:**
-The test suite now provides confident assertions on Vulkan boolean type mappings and protects against regressions in case the underlying conversion rules or logic are modified.
+* 🎯 **What:** A test for explicit standard library error unwrapping of `VulkanError` has been added.
+* 📊 **Coverage:** A new `TestErrorUnwrapping` function has been added to `errors_test.go` which validates the interaction of `VulkanError`'s `Unwrap()` function with `errors.Unwrap` and `errors.Is`.
+* ✨ **Result:** Enhanced test coverage that explicitly verifies custom error implementations comply with the standard library's unwrapping interfaces, establishing better safety against regressions.
