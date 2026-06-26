@@ -1,6 +1,5 @@
 package vulkan
 
-
 import "testing"
 
 func TestResult_Error(t *testing.T) {
@@ -111,8 +110,6 @@ func TestVersion(t *testing.T) {
 		t.Errorf("Expected Patch() 3, got %d", v.Patch())
 	}
 }
-
-
 
 func TestBoolConversion(t *testing.T) {
 	t.Run("ToBool", func(t *testing.T) {
