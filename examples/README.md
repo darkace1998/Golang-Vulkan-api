@@ -11,6 +11,7 @@ This directory contains various examples demonstrating how to use the `golang-vu
 - **`descriptor_update`**: Demonstrates how to bind uniform buffers and combined image samplers by updating descriptor sets.
 - **`graphics_pipeline`**: A comprehensive graphics pipeline example showing offscreen rendering with vertex buffers, shader modules, render pass, framebuffer, graphics pipeline creation, and draw commands.
 - **`multi_queue`**: Shows how to discover, create, and use multiple Vulkan queues, specifically focusing on parallel transfer and graphics operations.
+- **`pipeline_cache`**: Example demonstrating pipeline cache creation, retrieval, merging, and loading data.
 - **`push_constants`**: Demonstrates how to use push constants to pass small amounts of data to shaders efficiently.
 - **`render_to_texture`**: Demonstrates framebuffer creation, render pass, and reading back pixels without a window/surface.
 - **`secondary_command_buffer`**: Shows how to record and execute secondary command buffers.
