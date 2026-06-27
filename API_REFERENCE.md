@@ -191,6 +191,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (PipelineCache, error)` - Create pipeline cache
 - `DestroyPipelineCache(device Device, pipelineCache PipelineCache)` - Destroy pipeline cache
 - `MergePipelineCaches(device Device, dstCache PipelineCache, srcCaches []PipelineCache) error` - Merge multiple pipeline caches
+- `GetPipelineCacheData(device Device, pipelineCache PipelineCache) ([]byte, error)` - Retrieve data from pipeline cache
 
 ## Descriptor Management
 
