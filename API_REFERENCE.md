@@ -47,6 +47,10 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ## Instance Management
 
 ### Instance Creation/Destruction
+- `CreateXlibSurfaceKHR(instance Instance, createInfo *XlibSurfaceCreateInfoKHR) (Surface, error)` - Create Xlib surface (Linux)
+- `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
+- `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
+- `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS)
 - `CreateInstance(createInfo *InstanceCreateInfo) (Instance, error)` - Create Vulkan instance
 - `DestroyInstance(instance Instance)` - Destroy Vulkan instance
 
