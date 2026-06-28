@@ -445,6 +445,11 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `IsLayerSupported(layerName string, availableLayers []LayerProperties) bool` - Check layer support
 
 ### Surface and WSI Integration
+- `CreateXlibSurfaceKHR(instance Instance, dpy unsafe.Pointer, window uint64) (Surface, error)` - Create Xlib surface (Linux)
+- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - Create XCB surface (Linux)
+- `CreateWaylandSurfaceKHR(instance Instance, display unsafe.Pointer, surface unsafe.Pointer) (Surface, error)` - Create Wayland surface (Linux)
+- `CreateWin32SurfaceKHR(instance Instance, hinstance unsafe.Pointer, hwnd unsafe.Pointer) (Surface, error)` - Create Win32 surface (Windows)
+- `CreateMetalSurfaceEXT(instance Instance, layer unsafe.Pointer) (Surface, error)` - Create Metal surface (macOS/iOS)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
 - `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
 
