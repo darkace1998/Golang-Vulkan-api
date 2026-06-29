@@ -47,10 +47,6 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ## Instance Management
 
 ### Instance Creation/Destruction
-- `CreateXlibSurfaceKHR(instance Instance, createInfo *XlibSurfaceCreateInfoKHR) (Surface, error)` - Create Xlib surface (Linux)
-- `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
-- `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
-- `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS)
 - `CreateInstance(createInfo *InstanceCreateInfo) (Instance, error)` - Create Vulkan instance
 - `DestroyInstance(instance Instance)` - Destroy Vulkan instance
 
@@ -231,6 +227,12 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginInfo, contents SubpassContents)` - Begin render pass
 - `CmdNextSubpass(commandBuffer CommandBuffer, contents SubpassContents)` - Advances to the next subpass in a render pass
 - `CmdEndRenderPass(commandBuffer CommandBuffer)` - End render pass
+
+
+### Clear Commands
+- `CmdClearAttachments(commandBuffer CommandBuffer, attachments []ClearAttachment, rects []ClearRect)` - Clear attachment regions within a render pass
+- `CmdClearColorImage(commandBuffer CommandBuffer, image Image, imageLayout ImageLayout, color *ClearColorValue, ranges []ImageSubresourceRange)` - Clear a color image outside of a render pass
+- `CmdClearDepthStencilImage(commandBuffer CommandBuffer, image Image, imageLayout ImageLayout, depthStencil *ClearDepthStencilValue, ranges []ImageSubresourceRange)` - Clear a depth/stencil image outside of a render pass
 
 ### Execution Commands
 - `CmdExecuteCommands(commandBuffer CommandBuffer, commandBuffers []CommandBuffer)` - Executes secondary command buffers from a primary command buffer
@@ -450,13 +452,19 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `IsLayerSupported(layerName string, availableLayers []LayerProperties) bool` - Check layer support
 
 ### Surface and WSI Integration
-- `CreateXlibSurfaceKHR(instance Instance, dpy unsafe.Pointer, window uint64) (Surface, error)` - Create Xlib surface (Linux)
-- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - Create XCB surface (Linux)
-- `CreateWaylandSurfaceKHR(instance Instance, display unsafe.Pointer, surface unsafe.Pointer) (Surface, error)` - Create Wayland surface (Linux)
-- `CreateWin32SurfaceKHR(instance Instance, hinstance unsafe.Pointer, hwnd unsafe.Pointer) (Surface, error)` - Create Win32 surface (Windows)
-- `CreateMetalSurfaceEXT(instance Instance, layer unsafe.Pointer) (Surface, error)` - Create Metal surface (macOS/iOS)
+- `CreateXlibSurfaceKHR(instance Instance, createInfo *XlibSurfaceCreateInfoKHR) (Surface, error)` - Create Xlib surface (Linux)
+- `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
+- `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
+- `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS/iOS)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
 - `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
+
+### Surface Queries
+- `GetPhysicalDeviceSurfaceSupport(physicalDevice PhysicalDevice, queueFamilyIndex uint32, surface Surface) (bool, error)` - Query if a queue family supports a surface
+- `GetPhysicalDeviceSurfaceCapabilities(physicalDevice PhysicalDevice, surface Surface) (SurfaceCapabilities, error)` - Get surface capabilities
+- `GetPhysicalDeviceSurfaceFormats(physicalDevice PhysicalDevice, surface Surface) ([]SurfaceFormat, error)` - Get supported surface formats
+- `GetPhysicalDeviceSurfacePresentModes(physicalDevice PhysicalDevice, surface Surface) ([]PresentMode, error)` - Get supported present modes
+- `DestroySurface(instance Instance, surface Surface)` - Destroy surface
 
 ### Image Layout and Subresources
 - `GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout` - Query image subresource layout
@@ -537,3 +545,87 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 4. CGO is required and the appropriate Vulkan development libraries must be installed for your platform
 5. The current verified Linux setup uses `libvulkan-dev`; other platforms still need their own SDK/loader validation
 6. Some advanced features may require additional implementation or device extensions, and runtime support depends on the installed loader, driver, and enabled extensions
+
+
+
+
+## Additional API Reference
+
+- `CmdBeginQuery(commandBuffer CommandBuffer, queryPool QueryPool, query uint32, flags QueryControlFlags)` - CmdBeginQuery begins a query
+- `CmdControlVideoCodingReset(commandBuffer CommandBuffer) error` - CmdControlVideoCodingReset issues a reset control command for video coding
+- `CmdCopyQueryPoolResults(commandBuffer CommandBuffer, queryPool QueryPool, firstQuery, queryCount uint32, dstBuffer Buffer, dstOffset DeviceSize, stride DeviceSize, flags QueryResultFlags)` - CmdCopyQueryPoolResults copies the results of queries in a query pool to a buffer object
+- `CmdEndQuery(commandBuffer CommandBuffer, queryPool QueryPool, query uint32)` - CmdEndQuery ends a query
+- `CmdResetEvent(commandBuffer CommandBuffer, event Event, stageMask PipelineStageFlags)` - CmdResetEvent resets an event object to unsignaled state from the device
+- `CmdResetQueryPool(commandBuffer CommandBuffer, queryPool QueryPool, firstQuery, queryCount uint32)` - CmdResetQueryPool resets a range of queries in a query pool on the GPU
+- `CmdSetEvent(commandBuffer CommandBuffer, event Event, stageMask PipelineStageFlags)` - CmdSetEvent sets an event object to signaled state from the device
+- `CmdWriteTimestamp(commandBuffer CommandBuffer, pipelineStage PipelineStageFlags, queryPool QueryPool, query uint32)` - CmdWriteTimestamp writes a device timestamp into a query object
+- `CopyDataToStagingBuffer(stagingBuffer *StagingBuffer, data []byte) error` - CopyDataToStagingBuffer copies data to a staging buffer
+- `CreateAV1DecodeSession(device Device, createInfo *AV1DecodeSessionCreateInfo) (VideoSession, error)` - CreateAV1DecodeSession creates an AV1 decode session with the given configuration
+- `CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInfo) (VideoSession, error)` - CreateAV1EncodeSession creates an AV1 encode session with the given configuration
+- `CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferView, error)` - CreateBufferView creates a buffer view
+- `CreateDPBManager(maxSlots uint32) *DPBManager` - CreateDPBManager creates a new DPB manager with the specified number of slots
+- `CreateEvent(device Device, createInfo *EventCreateInfo) (Event, error)` - CreateEvent creates an event object
+- `CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Framebuffer, error)` - CreateFramebuffer creates a framebuffer
+- `CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createInfos []GraphicsPipelineCreateInfo) ([]Pipeline, error)` - CreateGraphicsPipelines creates graphics pipelines
+- `CreateH264DecodeSession(device Device, createInfo *H264DecodeSessionCreateInfo) (VideoSession, error)` - CreateH264DecodeSession creates an H.264 decode session with the given configuration
+- `CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateInfo) (VideoSession, error)` - CreateH264EncodeSession creates an H.264 encode session with the given configuration
+- `CreateH265DecodeSession(device Device, createInfo *H265DecodeSessionCreateInfo) (VideoSession, error)` - CreateH265DecodeSession creates an H.265 decode session with the given configuration
+- `CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateInfo) (VideoSession, error)` - CreateH265EncodeSession creates an H.265 encode session with the given configuration
+- `CreateMemoryPool(device Device, size DeviceSize, memoryTypeIndex uint32, alignment DeviceSize) (*MemoryPool, error)` - CreateMemoryPool creates a memory pool for efficient sub-allocations
+- `CreateStagingBuffer(device Device, physicalDevice PhysicalDevice, size DeviceSize) (*StagingBuffer, error)` - CreateStagingBuffer creates a staging buffer for host-to-device transfers
+- `CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error)` - CreateThreadLocalCommandPool creates a thread local command pool
+- `CreateTimelineSemaphore(device Device, initialValue uint64) (Semaphore, error)` - CreateTimelineSemaphore creates a timeline semaphore (Vulkan 1.2+)
+- `CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error)` - CreateVideoDeviceFunctions creates and loads video functions for a device
+- `CreateVideoPictureResource(imageView ImageView, imageLayout ImageLayout, codedExtent Extent2D) VideoPictureResource` - CreateVideoPictureResource creates a VideoPictureResource from an image view
+- `CreateVideoPictureResourceWithOffset(imageView ImageView, imageLayout ImageLayout, codedOffset Offset2D, codedExtent Extent2D, baseArrayLayer uint32) VideoPictureResource` - CreateVideoPictureResourceWithOffset creates a VideoPictureResource with a specific offset
+- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - CreateXcbSurfaceKHR creates an XCB surface
+- `DefaultAV1DecodeSessionCreateInfo(width, height uint32) *AV1DecodeSessionCreateInfo` - DefaultAV1DecodeSessionCreateInfo returns a default AV1 decode session configuration
+- `DefaultAV1EncodeSessionCreateInfo(width, height uint32) *AV1EncodeSessionCreateInfo` - DefaultAV1EncodeSessionCreateInfo returns a default AV1 encode session configuration
+- `DefaultH264DecodeSessionCreateInfo(width, height uint32) *H264DecodeSessionCreateInfo` - DefaultH264DecodeSessionCreateInfo returns a default H.264 decode session configuration
+- `DefaultH264EncodeSessionCreateInfo(width, height uint32) *H264EncodeSessionCreateInfo` - DefaultH264EncodeSessionCreateInfo returns a default H.264 encode session configuration
+- `DefaultH265DecodeSessionCreateInfo(width, height uint32) *H265DecodeSessionCreateInfo` - DefaultH265DecodeSessionCreateInfo returns a default H.265 decode session configuration
+- `DefaultH265EncodeSessionCreateInfo(width, height uint32) *H265EncodeSessionCreateInfo` - DefaultH265EncodeSessionCreateInfo returns a default H.265 encode session configuration
+- `DestroyBufferView(device Device, bufferView BufferView)` - DestroyBufferView destroys a buffer view
+- `DestroyEvent(device Device, event Event)` - DestroyEvent destroys an event object
+- `DestroyFramebuffer(device Device, framebuffer Framebuffer)` - DestroyFramebuffer destroys a framebuffer
+- `DestroyStagingBuffer(device Device, stagingBuffer *StagingBuffer)` - DestroyStagingBuffer destroys a staging buffer and frees its memory
+- `EnumeratePhysicalDeviceGroups(instance Instance) ([]PhysicalDeviceGroupProperties, error)` - EnumeratePhysicalDeviceGroups enumerates physical device groups for multi-GPU
+- `FindMemoryTypeForUsage(memProperties PhysicalDeviceMemoryProperties, typeFilter uint32, usage MemoryUsage) (uint32, bool)` - FindMemoryTypeForUsage finds a suitable memory type based on common usage patterns
+- `FindVideoDecodeQueueFamily(physicalDevice PhysicalDevice) (uint32, bool)` - FindVideoDecodeQueueFamily finds a queue family that supports video decode
+- `FindVideoEncodeQueueFamily(physicalDevice PhysicalDevice) (uint32, bool)` - FindVideoEncodeQueueFamily finds a queue family that supports video encode
+- `FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error` - FlushMappedMemoryRanges flushes mapped memory ranges to make host writes visible to device
+- `FreeDescriptorSets(device Device, descriptorPool DescriptorPool, descriptorSets []DescriptorSet) error` - FreeDescriptorSets frees one or more descriptor sets
+- `GetBitDepthForYUVFormat(yuvFormat YUVFormat) VideoComponentBitDepth` - GetBitDepthForYUVFormat returns the luma bit depth for a YUV format
+- `GetChromaSubsamplingForYUVFormat(yuvFormat YUVFormat) VideoChromaSubsampling` - GetChromaSubsamplingForYUVFormat returns the chroma subsampling for a YUV format
+- `GetEventStatus(device Device, event Event) (Result, error)` - GetEventStatus gets the status of an event
+- `GetImageSparseMemoryRequirements(device Device, image Image) []SparseImageMemoryRequirements` - GetImageSparseMemoryRequirements returns sparse memory requirements for an image
+- `GetPhysicalDeviceFeatures2(physicalDevice PhysicalDevice) (PhysicalDeviceFeatures, error)` - GetPhysicalDeviceFeatures2 gets extended physical device features (Vulkan 1.1+)
+- `GetPhysicalDeviceFormatProperties(physicalDevice PhysicalDevice, format Format) FormatProperties` - GetPhysicalDeviceFormatProperties returns format properties for a physical device
+- `GetPhysicalDeviceImageFormatProperties(physicalDevice PhysicalDevice, format Format, imageType ImageType, tiling ImageTiling, usage ImageUsageFlags, flags ImageCreateFlags) (ImageFormatProperties, error)` - GetPhysicalDeviceImageFormatProperties returns image format properties for a physical device
+- `GetPhysicalDeviceSparseImageFormatProperties(physicalDevice PhysicalDevice, format Format, imageType ImageType, samples SampleCountFlags, usage ImageUsageFlags, tiling ImageTiling) []SparseImageFormatProperties` - GetPhysicalDeviceSparseImageFormatProperties returns sparse image format properties
+- `GetSemaphoreCounterValue(device Device, semaphore Semaphore) (uint64, error)` - GetSemaphoreCounterValue gets the current counter value of a timeline semaphore (Vulkan 1.2+)
+- `GetVideoDeviceFunctions(device Device) *VideoDeviceFunctions` - GetVideoDeviceFunctions returns the video functions for a device
+- `GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *VideoProfileInfo, imageUsage ImageUsageFlags) ([]VideoFormatProperties, error)` - GetVideoFormatProperties queries the video format properties for a physical device
+- `InvalidateMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error` - InvalidateMappedMemoryRanges invalidates mapped memory ranges to make device writes visible to host
+- `IsErrorDeviceLost(err error) bool` - IsErrorDeviceLost checks if an error indicates that the Vulkan device has been lost
+- `IsErrorOutOfDate(err error) bool` - IsErrorOutOfDate checks if an error indicates that the Vulkan swapchain is out of date
+- `IsErrorSurfaceLost(err error) bool` - IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
+- `IsVulkanError(err error) bool` - IsVulkanError checks if an error is a VulkanError
+- `LoadVideoDeviceFunctions(device Device) bool` - LoadVideoDeviceFunctions loads video device functions
+- `LoadVideoFormatFunctions(instance Instance) bool` - LoadVideoFormatFunctions loads video format query functions
+- `LoadVideoInstanceFunctions(instance Instance) bool` - LoadVideoInstanceFunctions loads video instance functions
+- `NewValidationError(field, reason string) *ValidationError` - NewValidationError creates a new ValidationError
+- `NewVulkanError(result Result, operation string, details string) *VulkanError` - NewVulkanError creates a new VulkanError
+- `QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error` - QueueBindSparse binds sparse resources on a queue
+- `ResetCommandPool(device Device, commandPool CommandPool, flags CommandPoolResetFlags) error` - ResetCommandPool resets a command pool
+- `ResetDescriptorPool(device Device, descriptorPool DescriptorPool) error` - ResetDescriptorPool resets a descriptor pool
+- `ResetEvent(device Device, event Event) error` - ResetEvent resets an event to unsignaled state from the host
+- `ResetQueryPool(device Device, queryPool QueryPool, firstQuery, queryCount uint32)` - ResetQueryPool resets a range of queries in a query pool on the host (Vulkan 1.2+)
+- `ResetVideoDeviceFunctions()` - ResetVideoDeviceFunctions resets the device function loader
+- `ResetVideoInstanceFunctions()` - ResetVideoInstanceFunctions resets the instance function loader
+- `SetEvent(device Device, event Event) error` - SetEvent sets an event to signaled state from the host
+- `SignalSemaphore(device Device, signalInfo *SemaphoreSignalInfo) error` - SignalSemaphore signals a timeline semaphore (Vulkan 1.2+)
+- `TrimCommandPool(device Device, commandPool CommandPool)` - TrimCommandPool trims a command pool (Vulkan 1.1+)
+- `UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters, updateInfo *VideoSessionParametersUpdateInfo) error` - UpdateVideoSessionParameters updates video session parameters
+- `WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) error` - WaitSemaphores waits for timeline semaphores (Vulkan 1.2+)
+- `YUVFormatToVulkanFormat(yuvFormat YUVFormat) Format` - YUVFormatToVulkanFormat converts a YUV format to the corresponding Vulkan format
