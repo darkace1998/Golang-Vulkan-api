@@ -2,6 +2,41 @@ package vulkan
 
 /*
 #include <vulkan/vulkan.h>
+
+static PFN_vkCmdDrawMeshTasksEXT pfn_vkCmdDrawMeshTasksEXT = NULL;
+static PFN_vkCmdDrawMeshTasksIndirectEXT pfn_vkCmdDrawMeshTasksIndirectEXT = NULL;
+static PFN_vkCmdDrawMeshTasksIndirectCountEXT pfn_vkCmdDrawMeshTasksIndirectCountEXT = NULL;
+
+static void loadMeshShaderFunctions(VkDevice device) {
+    if (device == NULL) return;
+    if (pfn_vkCmdDrawMeshTasksEXT == NULL) {
+        pfn_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksEXT");
+    }
+    if (pfn_vkCmdDrawMeshTasksIndirectEXT == NULL) {
+        pfn_vkCmdDrawMeshTasksIndirectEXT = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectEXT");
+    }
+    if (pfn_vkCmdDrawMeshTasksIndirectCountEXT == NULL) {
+        pfn_vkCmdDrawMeshTasksIndirectCountEXT = (PFN_vkCmdDrawMeshTasksIndirectCountEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectCountEXT");
+    }
+}
+
+static void call_vkCmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    if (pfn_vkCmdDrawMeshTasksEXT != NULL) {
+        pfn_vkCmdDrawMeshTasksEXT(commandBuffer, groupCountX, groupCountY, groupCountZ);
+    }
+}
+
+static void call_vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) {
+    if (pfn_vkCmdDrawMeshTasksIndirectEXT != NULL) {
+        pfn_vkCmdDrawMeshTasksIndirectEXT(commandBuffer, buffer, offset, drawCount, stride);
+    }
+}
+
+static void call_vkCmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) {
+    if (pfn_vkCmdDrawMeshTasksIndirectCountEXT != NULL) {
+        pfn_vkCmdDrawMeshTasksIndirectCountEXT(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+    }
+}
 */
 import "C"
 
@@ -53,6 +88,13 @@ type Offset2D struct {
 type Extent2D struct {
 	Width  uint32
 	Height uint32
+}
+
+// DrawMeshTasksIndirectCommandEXT contains parameters for indirect mesh tasks draw
+type DrawMeshTasksIndirectCommandEXT struct {
+	GroupCountX uint32
+	GroupCountY uint32
+	GroupCountZ uint32
 }
 
 // Viewport represents a viewport
@@ -449,4 +491,39 @@ func CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLa
 	size := unsafe.Sizeof(*value)
 	data := unsafe.Slice((*byte)(unsafe.Pointer(value)), size)
 	CmdPushConstants(commandBuffer, layout, stageFlags, offset, data)
+}
+
+// LoadMeshShaderFunctions loads the device-level mesh shader functions.
+// This must be called before using any CmdDrawMeshTasks* functions.
+func LoadMeshShaderFunctions(device Device) {
+	if device != nil {
+		C.loadMeshShaderFunctions(C.VkDevice(device))
+	}
+}
+
+// CmdDrawMeshTasksEXT executes the operation
+// CmdDrawMeshTasksEXT draws mesh tasks.
+func CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32) {
+	if commandBuffer == nil {
+		return
+	}
+	C.call_vkCmdDrawMeshTasksEXT(C.VkCommandBuffer(commandBuffer), C.uint32_t(groupCountX), C.uint32_t(groupCountY), C.uint32_t(groupCountZ))
+}
+
+// CmdDrawMeshTasksIndirectEXT executes the operation
+// CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters.
+func CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil {
+		return
+	}
+	C.call_vkCmdDrawMeshTasksIndirectEXT(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
+}
+
+// CmdDrawMeshTasksIndirectCountEXT executes the operation
+// CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters and indirect count.
+func CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
+	if commandBuffer == nil || buffer == nil || countBuffer == nil {
+		return
+	}
+	C.call_vkCmdDrawMeshTasksIndirectCountEXT(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
 }
