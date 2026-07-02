@@ -265,9 +265,18 @@ This document provides a reference for the exported functions in the Vulkan Go b
 
 ### Transfer Commands
 - `CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, regions []BufferCopy)` - Copy buffer data
+- `CmdBlitImage(commandBuffer CommandBuffer, srcImage Image, srcImageLayout ImageLayout, dstImage Image, dstImageLayout ImageLayout, regions []ImageBlit, filter Filter)` - Copies regions of an image with potential format conversion and scaling
+- `CmdCopyBufferToImage(commandBuffer CommandBuffer, srcBuffer Buffer, dstImage Image, dstImageLayout ImageLayout, regions []BufferImageCopy)` - Copies data from a buffer to an image
+- `CmdCopyImage(commandBuffer CommandBuffer, srcImage Image, srcImageLayout ImageLayout, dstImage Image, dstImageLayout ImageLayout, regions []ImageCopy)` - Copies data between images
+- `CmdCopyImageToBuffer(commandBuffer CommandBuffer, srcImage Image, srcImageLayout ImageLayout, dstBuffer Buffer, regions []BufferImageCopy)` - Copies data from an image to a buffer
+- `CmdFillBuffer(commandBuffer CommandBuffer, dstBuffer Buffer, dstOffset DeviceSize, size DeviceSize, data uint32)` - Fills a buffer with a fixed 32-bit value
+- `CmdResolveImage(commandBuffer CommandBuffer, srcImage Image, srcImageLayout ImageLayout, dstImage Image, dstImageLayout ImageLayout, regions []ImageResolve)` - Resolves a multisample image to a non-multisample image
+- `CmdUpdateBuffer(commandBuffer CommandBuffer, dstBuffer Buffer, dstOffset DeviceSize, data []byte)` - Updates buffer contents inline from host memory
 
 ### Synchronization Commands
 - `CmdPipelineBarrier(commandBuffer CommandBuffer, srcStageMask, dstStageMask PipelineStageFlags, dependencyFlags uint32)` - Insert pipeline barrier
+- `CmdPipelineBarrierFull(commandBuffer CommandBuffer, srcStageMask, dstStageMask PipelineStageFlags, dependencyFlags uint32, memoryBarriers []MemoryBarrier, bufferMemoryBarriers []BufferMemoryBarrier, imageMemoryBarriers []ImageMemoryBarrier)` - Insert a full pipeline barrier with memory barriers
+- `CmdWaitEvents(commandBuffer CommandBuffer, events []Event, srcStageMask, dstStageMask PipelineStageFlags, memoryBarriers []MemoryBarrier, bufferMemoryBarriers []BufferMemoryBarrier, imageMemoryBarriers []ImageMemoryBarrier)` - Waits for one or more events and inserts a set of memory barriers
 
 ## Compute Pipeline Management
 
@@ -468,6 +477,7 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 
 ### Image Layout and Subresources
 - `GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout` - Query image subresource layout
+- `TransitionImageLayout(commandBuffer CommandBuffer, image Image, format Format, oldLayout, newLayout ImageLayout, subresourceRange ImageSubresourceRange)` - Transitions an image from one layout to another
 
 ## Constants and Enums
 
@@ -564,6 +574,11 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInfo) (VideoSession, error)` - CreateAV1EncodeSession creates an AV1 encode session with the given configuration
 - `CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferView, error)` - CreateBufferView creates a buffer view
 - `CreateDPBManager(maxSlots uint32) *DPBManager` - CreateDPBManager creates a new DPB manager with the specified number of slots
+- `(dpb *DPBManager) AddSlot(imageView ImageView, imageLayout ImageLayout, poc int32) (*DPBSlot, error)` - Adds a picture to the DPB
+- `(dpb *DPBManager) CalculatePOC() int32` - Calculates the Picture Order Count for the next frame
+- `(dpb *DPBManager) GetReferenceSlots() []DPBSlot` - Returns all current reference slots
+- `(dpb *DPBManager) MarkAsLongTerm(slotIndex int32)` - Marks a slot as a long-term reference
+- `(dpb *DPBManager) RemoveOldestReference()` - Removes the oldest short-term reference from the DPB
 - `CreateEvent(device Device, createInfo *EventCreateInfo) (Event, error)` - CreateEvent creates an event object
 - `CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Framebuffer, error)` - CreateFramebuffer creates a framebuffer
 - `CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createInfos []GraphicsPipelineCreateInfo) ([]Pipeline, error)` - CreateGraphicsPipelines creates graphics pipelines
@@ -574,6 +589,8 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateMemoryPool(device Device, size DeviceSize, memoryTypeIndex uint32, alignment DeviceSize) (*MemoryPool, error)` - CreateMemoryPool creates a memory pool for efficient sub-allocations
 - `CreateStagingBuffer(device Device, physicalDevice PhysicalDevice, size DeviceSize) (*StagingBuffer, error)` - CreateStagingBuffer creates a staging buffer for host-to-device transfers
 - `CreateThreadLocalCommandPool(device Device, queueFamilyIndex uint32) (*ThreadLocalCommandPool, error)` - CreateThreadLocalCommandPool creates a thread local command pool
+- `(pool *ThreadLocalCommandPool) AllocatePrimaryCommandBuffer() (CommandBuffer, error)` - Allocates a primary command buffer from the pool
+- `(pool *ThreadLocalCommandPool) AllocateSecondaryCommandBuffer() (CommandBuffer, error)` - Allocates a secondary command buffer from the pool
 - `CreateTimelineSemaphore(device Device, initialValue uint64) (Semaphore, error)` - CreateTimelineSemaphore creates a timeline semaphore (Vulkan 1.2+)
 - `CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error)` - CreateVideoDeviceFunctions creates and loads video functions for a device
 - `CreateVideoPictureResource(imageView ImageView, imageLayout ImageLayout, codedExtent Extent2D) VideoPictureResource` - CreateVideoPictureResource creates a VideoPictureResource from an image view
@@ -605,6 +622,7 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `GetPhysicalDeviceSparseImageFormatProperties(physicalDevice PhysicalDevice, format Format, imageType ImageType, samples SampleCountFlags, usage ImageUsageFlags, tiling ImageTiling) []SparseImageFormatProperties` - GetPhysicalDeviceSparseImageFormatProperties returns sparse image format properties
 - `GetSemaphoreCounterValue(device Device, semaphore Semaphore) (uint64, error)` - GetSemaphoreCounterValue gets the current counter value of a timeline semaphore (Vulkan 1.2+)
 - `GetVideoDeviceFunctions(device Device) *VideoDeviceFunctions` - GetVideoDeviceFunctions returns the video functions for a device
+- `(vdf *VideoDeviceFunctions) IsLoaded() bool` - Returns whether the video functions are loaded
 - `GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *VideoProfileInfo, imageUsage ImageUsageFlags) ([]VideoFormatProperties, error)` - GetVideoFormatProperties queries the video format properties for a physical device
 - `InvalidateMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error` - InvalidateMappedMemoryRanges invalidates mapped memory ranges to make device writes visible to host
 - `IsErrorDeviceLost(err error) bool` - IsErrorDeviceLost checks if an error indicates that the Vulkan device has been lost
@@ -616,6 +634,7 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `LoadVideoInstanceFunctions(instance Instance) bool` - LoadVideoInstanceFunctions loads video instance functions
 - `NewValidationError(field, reason string) *ValidationError` - NewValidationError creates a new ValidationError
 - `NewVulkanError(result Result, operation string, details string) *VulkanError` - NewVulkanError creates a new VulkanError
+- `(e *VulkanError) Unwrap() error` - Returns the underlying Result as an error for error unwrapping
 - `QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error` - QueueBindSparse binds sparse resources on a queue
 - `ResetCommandPool(device Device, commandPool CommandPool, flags CommandPoolResetFlags) error` - ResetCommandPool resets a command pool
 - `ResetDescriptorPool(device Device, descriptorPool DescriptorPool) error` - ResetDescriptorPool resets a descriptor pool
