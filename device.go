@@ -84,6 +84,47 @@ type PhysicalDeviceFeatures struct {
 	InheritedQueries                        bool
 }
 
+// PhysicalDeviceMeshShaderFeaturesEXT represents the VK_EXT_mesh_shader features
+type PhysicalDeviceMeshShaderFeaturesEXT struct {
+	TaskShader                             Bool32
+	MeshShader                             Bool32
+	MultiviewMeshShader                    Bool32
+	PrimitiveFragmentShadingRateMeshShader Bool32
+	MeshShaderQueries                      Bool32
+}
+
+// PhysicalDeviceMeshShaderPropertiesEXT represents the VK_EXT_mesh_shader properties
+type PhysicalDeviceMeshShaderPropertiesEXT struct {
+	MaxTaskWorkGroupTotalCount            uint32
+	MaxTaskWorkGroupCount                 [3]uint32
+	MaxTaskWorkGroupInvocations           uint32
+	MaxTaskWorkGroupSize                  [3]uint32
+	MaxTaskPayloadSize                    uint32
+	MaxTaskSharedMemorySize               uint32
+	MaxTaskPayloadAndSharedMemorySize     uint32
+	MaxMeshWorkGroupTotalCount            uint32
+	MaxMeshWorkGroupCount                 [3]uint32
+	MaxMeshWorkGroupInvocations           uint32
+	MaxMeshWorkGroupSize                  [3]uint32
+	MaxMeshSharedMemorySize               uint32
+	MaxMeshPayloadAndSharedMemorySize     uint32
+	MaxMeshOutputMemorySize               uint32
+	MaxMeshPayloadAndOutputMemorySize     uint32
+	MaxMeshOutputComponents               uint32
+	MaxMeshOutputVertices                 uint32
+	MaxMeshOutputPrimitives               uint32
+	MaxMeshOutputLayers                   uint32
+	MaxMeshMultiviewViewCount             uint32
+	MeshOutputPerVertexGranularity        uint32
+	MeshOutputPerPrimitiveGranularity     uint32
+	MaxPreferredTaskWorkGroupInvocations  uint32
+	MaxPreferredMeshWorkGroupInvocations  uint32
+	PrefersLocalInvocationVertexOutput    Bool32
+	PrefersLocalInvocationPrimitiveOutput Bool32
+	PrefersCompactVertexOutput            Bool32
+	PrefersCompactPrimitiveOutput         Bool32
+}
+
 // PhysicalDeviceMemoryProperties contains memory properties
 type PhysicalDeviceMemoryProperties struct {
 	MemoryTypeCount uint32

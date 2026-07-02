@@ -35,6 +35,8 @@ const (
 	ShaderStageComputeBit                ShaderStageFlags = C.VK_SHADER_STAGE_COMPUTE_BIT
 	ShaderStageAllGraphics               ShaderStageFlags = C.VK_SHADER_STAGE_ALL_GRAPHICS
 	ShaderStageAll                       ShaderStageFlags = C.VK_SHADER_STAGE_ALL
+	ShaderStageMeshBitEXT                ShaderStageFlags = C.VK_SHADER_STAGE_MESH_BIT_EXT
+	ShaderStageTaskBitEXT                ShaderStageFlags = C.VK_SHADER_STAGE_TASK_BIT_EXT
 )
 
 // PipelineLayoutCreateInfo contains pipeline layout creation information
