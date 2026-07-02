@@ -300,6 +300,7 @@ See the `examples/` directory for example programs:
 - `examples/descriptor_update/main.go`: Binding uniform buffers and image samplers
 - `examples/graphics_pipeline/main.go`: Graphics pipeline example
 - `examples/multi_queue/main.go`: Parallel transfer and graphics operations
+- `examples/pipeline_cache/main.go`: Pipeline cache creation and merging
 - `examples/push_constants/main.go`: Push constants usage
 - `examples/render_to_texture/main.go`: Offscreen rendering
 - `examples/secondary_command_buffer/main.go`: Secondary command buffers
