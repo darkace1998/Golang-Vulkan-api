@@ -547,7 +547,6 @@ func buildMappedMemoryRanges(memoryRanges []MappedMemoryRange) ([]C.VkMappedMemo
 	return cRanges, nil
 }
 
-// FlushMappedMemoryRanges performs the operation
 // FlushMappedMemoryRanges flushes mapped memory ranges to make host writes visible to device
 // This is required for non-coherent memory after the host writes to mapped memory
 func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
@@ -568,7 +567,6 @@ func FlushMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) er
 	return nil
 }
 
-// InvalidateMappedMemoryRanges performs the operation
 // InvalidateMappedMemoryRanges invalidates mapped memory ranges to make device writes visible to host
 // This is required for non-coherent memory before the host reads from mapped memory
 func InvalidateMappedMemoryRanges(device Device, memoryRanges []MappedMemoryRange) error {
@@ -603,7 +601,6 @@ const (
 	MemoryUsageGPUToCPU
 )
 
-// FindMemoryTypeForUsage performs the operation
 // FindMemoryTypeForUsage finds a suitable memory type based on common usage patterns
 // This provides automatic memory type selection for common use cases
 func FindMemoryTypeForUsage(memProperties PhysicalDeviceMemoryProperties, typeFilter uint32, usage MemoryUsage) (uint32, bool) {
@@ -659,7 +656,6 @@ type StagingBuffer struct {
 	Data   unsafe.Pointer // Mapped pointer (nil if not mapped)
 }
 
-// CreateStagingBuffer performs the operation
 // CreateStagingBuffer creates a staging buffer for host-to-device transfers
 // The buffer is created with TRANSFER_SRC usage and host-visible, coherent memory
 func CreateStagingBuffer(device Device, physicalDevice PhysicalDevice, size DeviceSize) (*StagingBuffer, error) {
@@ -822,7 +818,6 @@ func CreateMemoryPool(device Device, size DeviceSize, memoryTypeIndex uint32, al
 	}, nil
 }
 
-// Allocate performs the operation
 // Allocate allocates memory from the pool
 // Returns the offset within the pool memory, or an error if there's not enough space.
 // This method is safe for concurrent use.
@@ -859,7 +854,6 @@ func (pool *MemoryPool) Allocate(size DeviceSize, alignment DeviceSize) (DeviceS
 	return alignedOffset, nil
 }
 
-// Reset performs the operation
 // Reset resets the pool for reuse (does not free memory).
 // This method is safe for concurrent use.
 func (pool *MemoryPool) Reset() {

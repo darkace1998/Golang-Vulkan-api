@@ -11,7 +11,6 @@ import "unsafe"
 // Image Layout Transition Helpers
 // ============================================================================
 
-// TransitionImageLayout performs the operation
 // TransitionImageLayout transitions an image from one layout to another
 // This is a helper function for common layout transitions
 func TransitionImageLayout(

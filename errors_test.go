@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+const (
+	testFailedToAllocate1024Bytes = "failed to allocate 1024 bytes"
+)
+
 func TestNewVulkanError(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -183,7 +187,7 @@ func TestVulkanErrorUnwrapIsAs(t *testing.T) {
 	// Setup
 	result := ErrorOutOfDeviceMemory
 	op := testOpAllocateMemory
-	details := "failed to allocate 1024 bytes"
+	details := testFailedToAllocate1024Bytes
 
 	vkErr := NewVulkanError(result, op, details)
 
@@ -276,7 +280,7 @@ func TestVulkanError_errorsUnwrap(t *testing.T) {
 	// Setup
 	result := ErrorOutOfDeviceMemory
 	op := testOpAllocateMemory
-	details := "failed to allocate 1024 bytes"
+	details := testFailedToAllocate1024Bytes
 
 	vkErr := NewVulkanError(result, op, details)
 
@@ -350,7 +354,7 @@ func TestErrorUnwrapping(t *testing.T) {
 	// Setup
 	result := ErrorOutOfDeviceMemory
 	op := testOpAllocateMemory
-	details := "failed to allocate 1024 bytes"
+	details := testFailedToAllocate1024Bytes
 
 	vkErr := NewVulkanError(result, op, details)
 
