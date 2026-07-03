@@ -1,4 +1,4 @@
-# TODO — Golang-Vulkan-api
+# Codebase Roadmap — Golang-Vulkan-api
 
 > Codebase analysis and improvement roadmap for the Go Vulkan 1.3+ binding library.
 > Verified on the current `origin/main` checkout with `libvulkan-dev` installed; `go build ./...`, `go test ./...`, and `go test -race ./...` all pass.

@@ -236,7 +236,6 @@ func ResetEvent(device Device, event Event) error {
 	return nil
 }
 
-// GetEventStatus performs the operation
 // GetEventStatus gets the status of an event
 // Returns Success if the event is signaled, EventReset if unsignaled
 func GetEventStatus(device Device, event Event) (Result, error) {

@@ -346,7 +346,6 @@ type VideoEncodeInfo struct {
 	}
 }
 
-// LoadVideoInstanceFunctions performs the operation
 // LoadVideoInstanceFunctions loads video extension functions that require a Vulkan instance.
 //
 // This function MUST be called after creating a Vulkan instance and before using any video-related
@@ -365,7 +364,6 @@ func LoadVideoInstanceFunctions(instance Instance) bool {
 	return videoInstanceLoaded
 }
 
-// ResetVideoInstanceFunctions performs the operation
 // ResetVideoInstanceFunctions resets the instance function loader so that
 // LoadVideoInstanceFunctions can be called again with a different instance.
 // This is NOT thread-safe and must not be called concurrently with
@@ -375,7 +373,6 @@ func ResetVideoInstanceFunctions() {
 	videoInstanceLoaded = false
 }
 
-// LoadVideoDeviceFunctions performs the operation
 // LoadVideoDeviceFunctions loads video extension functions that require a Vulkan device.
 //
 // This function MUST be called after creating a logical device and before using any video-related
@@ -393,7 +390,6 @@ func LoadVideoDeviceFunctions(device Device) bool {
 	return videoDeviceLoaded
 }
 
-// ResetVideoDeviceFunctions performs the operation
 // ResetVideoDeviceFunctions resets the device function loader so that
 // LoadVideoDeviceFunctions can be called again with a different device.
 // This is NOT thread-safe and must not be called concurrently with
