@@ -16,6 +16,7 @@ This directory contains various examples demonstrating how to use the `golang-vu
 - **`render_to_texture`**: Demonstrates framebuffer creation, render pass, and reading back pixels without a window/surface.
 - **`secondary_command_buffer`**: Shows how to record and execute secondary command buffers.
 - **`simple`**: Minimal example for Vulkan instance creation.
+- **`subpass_dependencies`**: Demonstrates creating a multi-subpass render pass with a dependency chain and self-dependency.
 - **`swapchain`**: Demonstrates all swapchain types, constants, input validation, synchronization objects, and the full present loop workflow.
 - **`type`**: Type system and constant validation example.
 - **`video`**: Demonstrates video codec support detection.
