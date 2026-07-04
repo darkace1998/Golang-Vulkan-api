@@ -114,12 +114,13 @@ type AttachmentReference struct {
 
 // SubpassDependency describes subpass dependencies
 type SubpassDependency struct {
-	SrcSubpass    uint32
-	DstSubpass    uint32
-	SrcStageMask  PipelineStageFlags
-	DstStageMask  PipelineStageFlags
-	SrcAccessMask AccessFlags
-	DstAccessMask AccessFlags
+	SrcSubpass      uint32
+	DstSubpass      uint32
+	SrcStageMask    PipelineStageFlags
+	DstStageMask    PipelineStageFlags
+	SrcAccessMask   AccessFlags
+	DstAccessMask   AccessFlags
+	DependencyFlags DependencyFlags
 }
 
 // AccessFlags represents memory access flags
@@ -361,7 +362,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 			cDependencies[i].dstStageMask = C.VkPipelineStageFlags(dep.DstStageMask)
 			cDependencies[i].srcAccessMask = C.VkAccessFlags(dep.SrcAccessMask)
 			cDependencies[i].dstAccessMask = C.VkAccessFlags(dep.DstAccessMask)
-			cDependencies[i].dependencyFlags = 0
+			cDependencies[i].dependencyFlags = C.VkDependencyFlags(dep.DependencyFlags)
 		}
 		cCreateInfo.dependencyCount = C.uint32_t(len(cDependencies))
 		cCreateInfo.pDependencies = &cDependencies[0]
