@@ -38,3 +38,17 @@ Timeline semaphores (`VK_KHR_timeline_semaphore`) offer a much more flexible syn
 - **Monotonic Progress**: Use a single timeline semaphore to track the progress of a sequence of compute dispatches. The CPU can easily query the current value to know exactly which stages of the pipeline have completed.
 - **Wait-Before-Signal**: You can submit a compute workload that waits on a timeline value that *has not yet been signaled* by the host or another queue. This allows you to build an entire command graph upfront and submit it, reducing CPU bottlenecks.
 - **Host Integration**: Use `WaitSemaphores` on the CPU to block until the GPU finishes a specific batch of ML processing, eliminating the need for coarse-grained fences (`vkWaitForFences`) per task.
+
+## CGO Overhead and Handle Caching
+
+The `golang-vulkan-api` relies on CGO to communicate with the Vulkan C API. CGO calls inherently carry a small overhead per invocation compared to pure Go function calls or direct C-to-C calls. In high-performance, tight rendering or compute loops, minimizing this overhead can be critical.
+
+### 1. Profiling CGO Overhead
+If your application is CPU-bound and profiling reveals a significant amount of time spent in Vulkan API calls (e.g., in functions like `CmdBindDescriptorSets`, `CmdDraw`, or `CmdDispatch`), consider the following approaches:
+- **Batching:** Group multiple similar operations into a single API call if possible, or organize your command recording to minimize state changes and binding calls.
+- **Pre-recording:** Pre-record static command buffers during initialization instead of re-recording them every frame. This completely eliminates CGO overhead during the main loop for those commands.
+
+### 2. Object Handle Caching
+Vulkan handles (like `Device`, `Queue`, `Pipeline`, etc.) are frequently retrieved or used.
+- **Cache locally in Go:** Instead of repeatedly querying properties or retrieving handles (e.g., calling `GetDeviceQueue` in a tight loop), retrieve them once during setup and cache them in Go structs.
+- **Avoid repeated property queries:** Functions like `GetPhysicalDeviceProperties` or `GetPhysicalDeviceMemoryProperties` involve CGO calls and structural conversions. Cache the results of these calls in your application state if you need to consult them frequently.
