@@ -98,8 +98,8 @@
 
 ## Performance
 
-- [ ] **Profile CGO overhead** — Measure and document the cost of CGO calls per Vulkan function; identify hot paths where batching or caching would help.
-- [ ] **Add object handle caching** — Frequently retrieved handles (queue, device properties) could be cached on the Go side to avoid repeated CGO roundtrips.
+- [x] **Profile CGO overhead** — Measure and document the cost of CGO calls per Vulkan function; identify hot paths where batching or caching would help.
+- [x] **Add object handle caching** — Frequently retrieved handles (queue, device properties) could be cached on the Go side to avoid repeated CGO roundtrips.
 - [x] **Pool allocator for descriptor sets** — Provide a higher-level descriptor set pool manager that reduces allocation overhead.
 
 ---
