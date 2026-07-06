@@ -107,7 +107,7 @@
 ## Security & Robustness
 
 - [ ] **Audit CGO pointer passing** — Review all `unsafe.Pointer` usage for correctness under Go's CGO pointer passing rules; ensure no Go pointers are stored on the C side.
-- [ ] **Add resource leak detection** — Provide a debug mode or utility that tracks `Create*` / `Destroy*` call pairs and reports leaks.
+- [x] **Add resource leak detection** — Provide a debug mode or utility that tracks `Create*` / `Destroy*` call pairs and reports leaks.
 - [x] **Validate memory mapping bounds** — `MapMemory()` should validate offset + size against allocation size where possible.
 - [x] **Handle GPU device loss gracefully** — Add helper utilities for detecting and recovering from `VK_ERROR_DEVICE_LOST`.
 

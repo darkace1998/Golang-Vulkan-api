@@ -19,8 +19,19 @@ To build and test the project, you need the following installed:
 *   **Vulkan SDK or development libraries**: (e.g., `libvulkan-dev` on Linux).
 *   **pkg-config**
 *   **CGO** must be enabled (`CGO_ENABLED=1`).
+*   **Additional libraries for test execution (Linux)**: `mesa-vulkan-drivers`, `vulkan-tools`, `libwayland-dev`, and `libx11-dev`.
 
 See the [main README](README.md#platform-specific-setup) for platform-specific setup instructions.
+
+## CGO and Platform-Specific Guidelines
+
+When working with CGO and platform-specific Vulkan extensions, please adhere to the following conventions:
+
+*   **WSI Macros:** When wrapping platform-specific Vulkan extensions (like WSI surfaces), the required platform macros (e.g., `#define VK_USE_PLATFORM_XLIB_KHR`) must be defined in the CGO preamble before `#include <vulkan/vulkan.h>` to expose the structs to Go.
+*   **Surface Creation Files:** WSI surface creation functions are consolidated in `surface_<os>.go` files (e.g., `surface_linux.go`). Do not define them in `wsi_<os>.go` files to avoid CGO redeclaration build errors.
+*   **Handle Wrappers:** Surface creation APIs (e.g., `CreateXlibSurfaceKHR`, `CreateWin32SurfaceKHR`) should use `*CreateInfo` structs (e.g., `*XlibSurfaceCreateInfoKHR`) rather than raw `unsafe.Pointer` arguments for platform-specific handles.
+*   **Extension Loading:** When implementing non-core Vulkan extensions (e.g., `VK_EXT_mesh_shader`), the C commands must be dynamically loaded at runtime using `vkGetDeviceProcAddr` (or instance equivalent) and wrapped with static C function pointers in the CGO preamble, rather than relying on direct static linking.
+*   **Slice and Pointer Bounds Checking:** When wrapping Vulkan C functions using CGO, explicitly verify that Go handles and slices are not `nil` and do not have a length of 0 before referencing their memory addresses (e.g., `&slice[0]`) to pass to C functions. Failing to do so can cause SIGABRT crashes during testing or execution.
 
 ## Building the Project
 

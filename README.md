@@ -152,7 +152,7 @@ imageMemReqs := vulkan.GetDeviceImageMemoryRequirements(device, &vulkan.ImageCre
 - Go 1.22 or later
 - CGO enabled
 - Vulkan SDK or development libraries installed (Linux: `libvulkan-dev`)
-  - Linux: `libvulkan-dev` package
+  - Linux: `libvulkan-dev` package. Testing requires `mesa-vulkan-drivers vulkan-tools libwayland-dev libx11-dev`.
   - Windows: Vulkan SDK from LunarG
   - macOS: Vulkan SDK with MoltenVK
 
@@ -210,6 +210,10 @@ If you are new to Vulkan or this library, check out the **[Getting Started Tutor
 ## Vulkan 1.4 Readiness
 
 See [VULKAN_1_4_READINESS.md](VULKAN_1_4_READINESS.md) for detailed information about the current state of Vulkan 1.4 support and our roadmap for future implementation.
+
+## Architecture
+
+See [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md) for visual representations of the extension loading mechanism, error handling paths, and thread safety models used by this library.
 
 ## Quick Start
 
