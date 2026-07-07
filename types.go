@@ -236,6 +236,7 @@ type (
 	Semaphore                unsafe.Pointer
 	CommandBuffer            unsafe.Pointer
 	Fence                    unsafe.Pointer
+	DebugUtilsMessengerEXT   unsafe.Pointer
 	DeviceMemory             unsafe.Pointer
 	Buffer                   unsafe.Pointer
 	Image                    unsafe.Pointer
