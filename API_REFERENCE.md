@@ -50,6 +50,11 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CreateInstance(createInfo *InstanceCreateInfo) (Instance, error)` - Create Vulkan instance
 - `DestroyInstance(instance Instance)` - Destroy Vulkan instance
 
+### Debug Utilities
+- `LoadDebugUtilsFunctions(instance Instance)` - Load VK_EXT_debug_utils functions
+- `CreateDebugUtilsMessengerEXT(instance Instance, createInfo *DebugUtilsMessengerCreateInfo, callback DebugCallbackFunc) (DebugUtilsMessengerEXT, error)` - Create debug messenger
+- `DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessengerEXT)` - Destroy debug messenger
+
 ### Extension/Layer Enumeration
 - `EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperties, error)` - List instance extensions
 - `EnumerateInstanceLayerProperties() ([]LayerProperties, error)` - List instance layers
