@@ -26,6 +26,7 @@ type PushConstantsData struct {
 	ColorR, ColorG, ColorB float32
 }
 
+// Vertex represents a vertex with a 2D position and an RGB color
 type Vertex struct {
 	PosX, PosY             float32
 	ColorR, ColorG, ColorB float32
