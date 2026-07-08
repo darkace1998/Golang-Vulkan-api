@@ -82,3 +82,8 @@ The codebase demonstrates strong security practices with:
 - ⚠️ Dedicated security scans still need rerun for a formal audit
 
 The only expected security caveat is the `unsafe` usage required for CGO integration with the Vulkan C API. Documentation gaps remain around fresh security-scan results and non-Linux verification.
+
+### Important Disclaimers
+
+- **No Formal Audit:** This document provides a conceptual security overview; a formal security audit has not been conducted, and users should run their own scanners in production.
+- **Cross-Platform Limitations:** Cross-platform verification is limited; currently only Linux is verified in CI.
