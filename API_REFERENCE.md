@@ -278,6 +278,10 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `(m *DescriptorPoolManager) Destroy()` - Destroy all managed descriptor pools
 
 ## Command Recording
+- `LoadMeshShaderFunctions(device Device)` - LoadMeshShaderFunctions loads the device-level mesh shader functions.
+- `CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32)` - CmdDrawMeshTasksEXT draws mesh tasks.
+- `CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32)` - CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters.
+- `CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32)` - CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters and indirect count.
 
 ### Render Pass Commands
 - `CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginInfo, contents SubpassContents)` - Begin render pass

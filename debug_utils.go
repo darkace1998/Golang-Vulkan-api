@@ -73,7 +73,11 @@ func debugUtilsCallbackEXT(
 
 	// Restore the Go callback from the handle
 	handle := *(*cgo.Handle)(pUserData)
-	callback := handle.Value().(DebugCallbackFunc)
+	val := handle.Value()
+	callback, ok := val.(DebugCallbackFunc)
+	if !ok {
+		return C.VK_FALSE
+	}
 
 	data := &DebugUtilsMessengerCallbackData{
 		MessageIDName:   C.GoString(pCallbackData.pMessageIdName),
