@@ -1,0 +1,226 @@
+package vulkan
+
+/*
+#include <stdlib.h>
+#include <vulkan/vulkan.h>
+
+static PFN_vkCreateRayTracingPipelinesKHR pfn_vkCreateRayTracingPipelinesKHR = NULL;
+static PFN_vkCmdTraceRaysKHR pfn_vkCmdTraceRaysKHR = NULL;
+
+static void loadRayTracingPipelineFunctions(VkDevice device) {
+    if (device == NULL) return;
+    if (pfn_vkCreateRayTracingPipelinesKHR == NULL) {
+        pfn_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR");
+    }
+    if (pfn_vkCmdTraceRaysKHR == NULL) {
+        pfn_vkCmdTraceRaysKHR = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR");
+    }
+}
+
+static VkResult call_vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) {
+    if (pfn_vkCreateRayTracingPipelinesKHR != NULL) {
+        return pfn_vkCreateRayTracingPipelinesKHR(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
+    }
+    return VK_ERROR_EXTENSION_NOT_PRESENT;
+}
+
+static void call_vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) {
+    if (pfn_vkCmdTraceRaysKHR != NULL) {
+        pfn_vkCmdTraceRaysKHR(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
+    }
+}
+*/
+import "C"
+import "unsafe"
+
+// LoadRayTracingPipelineFunctions loads the device-level ray tracing pipeline functions.
+// This must be called before using any ray tracing pipeline functions.
+func LoadRayTracingPipelineFunctions(device Device) {
+	if device != nil {
+		C.loadRayTracingPipelineFunctions(C.VkDevice(device))
+	}
+}
+
+// RayTracingShaderGroupTypeKHR represents the type of a ray tracing shader group.
+type RayTracingShaderGroupTypeKHR int32
+
+const (
+	RayTracingShaderGroupTypeGeneralKHR              RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR
+	RayTracingShaderGroupTypeTrianglesHitGroupKHR    RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR
+	RayTracingShaderGroupTypeProceduralHitGroupKHR   RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR
+)
+
+const ShaderUnusedKHR uint32 = C.VK_SHADER_UNUSED_KHR
+
+// RayTracingShaderGroupCreateInfoKHR represents the VkRayTracingShaderGroupCreateInfoKHR structure.
+type RayTracingShaderGroupCreateInfoKHR struct {
+	Type               RayTracingShaderGroupTypeKHR
+	GeneralShader      uint32
+	ClosestHitShader   uint32
+	AnyHitShader       uint32
+	IntersectionShader uint32
+	AnyHitShaderDefault uint32
+}
+
+// PipelineCreateFlags represents pipeline creation flags.
+type PipelineCreateFlags uint32
+
+const (
+    PipelineCreateDisableOptimizationBit PipelineCreateFlags = C.VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT
+    PipelineCreateAllowDerivativesBit    PipelineCreateFlags = C.VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT
+    PipelineCreateDerivativeBit          PipelineCreateFlags = C.VK_PIPELINE_CREATE_DERIVATIVE_BIT
+)
+
+// RayTracingPipelineCreateInfoKHR represents the VkRayTracingPipelineCreateInfoKHR structure.
+type RayTracingPipelineCreateInfoKHR struct {
+	Flags                        PipelineCreateFlags
+	Stages                       []PipelineShaderStageCreateInfo
+	Groups                       []RayTracingShaderGroupCreateInfoKHR
+	MaxPipelineRayRecursionDepth uint32
+	LibraryInfo                  *PipelineLibraryCreateInfoKHR
+	LibraryInterface             *RayTracingPipelineInterfaceCreateInfoKHR
+	DynamicState                 *PipelineDynamicStateCreateInfo
+	Layout                       PipelineLayout
+	BasePipelineHandle           Pipeline
+	BasePipelineIndex            int32
+}
+
+// PipelineLibraryCreateInfoKHR represents VkPipelineLibraryCreateInfoKHR (stub)
+type PipelineLibraryCreateInfoKHR struct{}
+
+// RayTracingPipelineInterfaceCreateInfoKHR represents VkRayTracingPipelineInterfaceCreateInfoKHR (stub)
+type RayTracingPipelineInterfaceCreateInfoKHR struct{}
+
+// StridedDeviceAddressRegionKHR represents the VkStridedDeviceAddressRegionKHR structure.
+type StridedDeviceAddressRegionKHR struct {
+	DeviceAddress DeviceAddress
+	Stride        DeviceSize
+	Size          DeviceSize
+}
+
+// CreateRayTracingPipelinesKHR creates ray tracing pipelines.
+func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error) {
+	if device == nil {
+		return nil, &ValidationError{Field: "Device", Reason: "cannot be nil"}
+	}
+	if len(createInfos) == 0 {
+		return nil, &ValidationError{Field: "createInfos", Reason: "cannot be empty"}
+	}
+
+	cCreateInfos := make([]C.VkRayTracingPipelineCreateInfoKHR, len(createInfos))
+
+	// Keep slices alive to prevent GC during C calls
+	var keepAliveSlices [][]C.VkPipelineShaderStageCreateInfo
+	var keepAliveGroups [][]C.VkRayTracingShaderGroupCreateInfoKHR
+	var keepAliveStrings [][]byte
+
+	for i, ci := range createInfos {
+		cCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR
+		cCreateInfos[i].flags = C.VkPipelineCreateFlags(ci.Flags)
+		cCreateInfos[i].maxPipelineRayRecursionDepth = C.uint32_t(ci.MaxPipelineRayRecursionDepth)
+		cCreateInfos[i].layout = C.VkPipelineLayout(ci.Layout)
+		cCreateInfos[i].basePipelineHandle = C.VkPipeline(ci.BasePipelineHandle)
+		cCreateInfos[i].basePipelineIndex = C.int32_t(ci.BasePipelineIndex)
+
+		// Stages
+		cCreateInfos[i].stageCount = C.uint32_t(len(ci.Stages))
+		if len(ci.Stages) > 0 {
+			cStages := make([]C.VkPipelineShaderStageCreateInfo, len(ci.Stages))
+			for j, stage := range ci.Stages {
+				cStages[j].sType = C.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO
+				cStages[j].stage = C.VkShaderStageFlagBits(stage.Stage)
+				cStages[j].module = C.VkShaderModule(stage.Module)
+
+				nameBytes := []byte(stage.Name + "\x00")
+				keepAliveStrings = append(keepAliveStrings, nameBytes)
+				cStages[j].pName = (*C.char)(unsafe.Pointer(&nameBytes[0]))
+			}
+			keepAliveSlices = append(keepAliveSlices, cStages)
+			cCreateInfos[i].pStages = &cStages[0]
+		}
+
+		// Groups
+		cCreateInfos[i].groupCount = C.uint32_t(len(ci.Groups))
+		if len(ci.Groups) > 0 {
+			cGroups := make([]C.VkRayTracingShaderGroupCreateInfoKHR, len(ci.Groups))
+			for j, group := range ci.Groups {
+				cGroups[j].sType = C.VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR
+				cGroups[j]._type = C.VkRayTracingShaderGroupTypeKHR(group.Type)
+				cGroups[j].generalShader = C.uint32_t(group.GeneralShader)
+				cGroups[j].closestHitShader = C.uint32_t(group.ClosestHitShader)
+				cGroups[j].anyHitShader = C.uint32_t(group.AnyHitShader)
+				cGroups[j].intersectionShader = C.uint32_t(group.IntersectionShader)
+			}
+			keepAliveGroups = append(keepAliveGroups, cGroups)
+			cCreateInfos[i].pGroups = &cGroups[0]
+		}
+	}
+
+	cPipelines := make([]C.VkPipeline, len(createInfos))
+
+	result := C.call_vkCreateRayTracingPipelinesKHR(
+		C.VkDevice(device),
+		C.VkDeferredOperationKHR(nil), // deferred operation not supported yet
+		C.VkPipelineCache(pipelineCache),
+		C.uint32_t(len(createInfos)),
+		&cCreateInfos[0],
+		nil,
+		&cPipelines[0],
+	)
+
+	_ = keepAliveSlices
+	_ = keepAliveGroups
+	_ = keepAliveStrings
+
+	if Result(result) != Success {
+		return nil, &VulkanError{Result: Result(result), Command: "vkCreateRayTracingPipelinesKHR"}
+	}
+
+	pipelines := make([]Pipeline, len(createInfos))
+	for i, p := range cPipelines {
+		pipelines[i] = Pipeline(p)
+	}
+
+	return pipelines, nil
+}
+
+// CmdTraceRaysKHR executes the operation
+func CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32) {
+	if commandBuffer == nil {
+		return
+	}
+
+	var cRaygen, cMiss, cHit, cCallable C.VkStridedDeviceAddressRegionKHR
+
+	if raygen != nil {
+		cRaygen.deviceAddress = C.VkDeviceAddress(raygen.DeviceAddress)
+		cRaygen.stride = C.VkDeviceSize(raygen.Stride)
+		cRaygen.size = C.VkDeviceSize(raygen.Size)
+	}
+	if miss != nil {
+		cMiss.deviceAddress = C.VkDeviceAddress(miss.DeviceAddress)
+		cMiss.stride = C.VkDeviceSize(miss.Stride)
+		cMiss.size = C.VkDeviceSize(miss.Size)
+	}
+	if hit != nil {
+		cHit.deviceAddress = C.VkDeviceAddress(hit.DeviceAddress)
+		cHit.stride = C.VkDeviceSize(hit.Stride)
+		cHit.size = C.VkDeviceSize(hit.Size)
+	}
+	if callable != nil {
+		cCallable.deviceAddress = C.VkDeviceAddress(callable.DeviceAddress)
+		cCallable.stride = C.VkDeviceSize(callable.Stride)
+		cCallable.size = C.VkDeviceSize(callable.Size)
+	}
+
+	C.call_vkCmdTraceRaysKHR(
+		C.VkCommandBuffer(commandBuffer),
+		&cRaygen,
+		&cMiss,
+		&cHit,
+		&cCallable,
+		C.uint32_t(width),
+		C.uint32_t(height),
+		C.uint32_t(depth),
+	)
+}
