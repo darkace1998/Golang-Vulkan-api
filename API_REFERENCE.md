@@ -562,7 +562,6 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
 - `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS/iOS)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
-- `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
 
 - `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - CreateXcbSurfaceKHR creates an XCB surface
 - `IsErrorSurfaceLost(err error) bool` - IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
