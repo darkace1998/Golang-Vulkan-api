@@ -6,6 +6,7 @@ package vulkan
 
 static PFN_vkCreateDebugUtilsMessengerEXT pfn_vkCreateDebugUtilsMessengerEXT = NULL;
 static PFN_vkDestroyDebugUtilsMessengerEXT pfn_vkDestroyDebugUtilsMessengerEXT = NULL;
+static PFN_vkSetDebugUtilsObjectNameEXT pfn_vkSetDebugUtilsObjectNameEXT = NULL;
 
 static void loadDebugUtilsFunctions(VkInstance instance) {
     if (instance == NULL) return;
@@ -14,6 +15,9 @@ static void loadDebugUtilsFunctions(VkInstance instance) {
     }
     if (pfn_vkDestroyDebugUtilsMessengerEXT == NULL) {
         pfn_vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    }
+    if (pfn_vkSetDebugUtilsObjectNameEXT == NULL) {
+        pfn_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     }
 }
 
@@ -38,6 +42,11 @@ static void call_vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUti
     if (pfn_vkDestroyDebugUtilsMessengerEXT != NULL) {
         pfn_vkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
     }
+}
+
+static VkResult call_vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) {
+    if (pfn_vkSetDebugUtilsObjectNameEXT == NULL) return VK_ERROR_EXTENSION_NOT_PRESENT;
+    return pfn_vkSetDebugUtilsObjectNameEXT(device, pNameInfo);
 }
 */
 import "C"
@@ -145,4 +154,34 @@ func DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessen
 	// To fix this fully, we would need a map from messenger to the pUserData/Handle, or store it elsewhere.
 	// However, it is typical to leave debug messengers alive until shutdown.
 	C.call_vkDestroyDebugUtilsMessengerEXT(C.VkInstance(instance), C.VkDebugUtilsMessengerEXT(messenger), nil)
+}
+
+// SetDebugUtilsObjectNameEXT gives a user-friendly name to a Vulkan object.
+func SetDebugUtilsObjectNameEXT(device Device, info *DebugUtilsObjectNameInfo) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if info == nil {
+		return NewValidationError("info", "cannot be nil")
+	}
+
+	var cInfo C.VkDebugUtilsObjectNameInfoEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT
+	cInfo.pNext = nil
+	cInfo.objectType = C.VkObjectType(info.ObjectType)
+	cInfo.objectHandle = C.uint64_t(info.ObjectHandle)
+
+	if info.ObjectName != "" {
+		cInfo.pObjectName = C.CString(info.ObjectName)
+		defer C.free(unsafe.Pointer(cInfo.pObjectName))
+	} else {
+		cInfo.pObjectName = nil
+	}
+
+	res := C.call_vkSetDebugUtilsObjectNameEXT(C.VkDevice(device), &cInfo)
+	if Result(res) != Success {
+		return NewVulkanError(Result(res), "vkSetDebugUtilsObjectNameEXT", "failed to set debug object name")
+	}
+
+	return nil
 }

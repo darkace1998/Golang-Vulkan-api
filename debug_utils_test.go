@@ -28,3 +28,15 @@ func TestDebugUtilsMessengerValidation(t *testing.T) {
 		t.Error("Expected error when creating debug messenger with nil callback")
 	}
 }
+
+func TestSetDebugUtilsObjectNameValidation(t *testing.T) {
+	err := SetDebugUtilsObjectNameEXT(nil, &DebugUtilsObjectNameInfo{})
+	if err == nil {
+		t.Error("Expected error when setting debug object name with nil device")
+	}
+
+	err = SetDebugUtilsObjectNameEXT(fakeDevice(), nil)
+	if err == nil {
+		t.Error("Expected error when setting debug object name with nil info")
+	}
+}

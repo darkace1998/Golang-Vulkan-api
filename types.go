@@ -403,3 +403,10 @@ const (
 	ObjectTypeDeviceMemory   ObjectType = C.VK_OBJECT_TYPE_DEVICE_MEMORY
 	ObjectTypeBuffer         ObjectType = C.VK_OBJECT_TYPE_BUFFER
 )
+
+// DebugUtilsObjectNameInfo specifies parameters for setting an object name
+type DebugUtilsObjectNameInfo struct {
+	ObjectType   ObjectType
+	ObjectHandle uint64
+	ObjectName   string
+}
