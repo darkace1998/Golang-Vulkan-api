@@ -60,6 +60,13 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `LoadDebugUtilsFunctions(instance Instance)` - Load VK_EXT_debug_utils functions
 - `CreateDebugUtilsMessengerEXT(instance Instance, createInfo *DebugUtilsMessengerCreateInfo, callback DebugCallbackFunc) (DebugUtilsMessengerEXT, error)` - Create debug messenger
 - `DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessengerEXT)` - Destroy debug messenger
+- `SetDebugUtilsObjectNameEXT(device Device, nameInfo *DebugUtilsObjectNameInfo) error` - Gives a user-friendly name to an object
+- `CmdBeginDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Opens a command buffer debug label region
+- `CmdEndDebugUtilsLabelEXT(commandBuffer CommandBuffer)` - Closes a command buffer debug label region
+- `CmdInsertDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a command buffer
+- `QueueBeginDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Opens a queue debug label region
+- `QueueEndDebugUtilsLabelEXT(queue Queue)` - Closes a queue debug label region
+- `QueueInsertDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a queue
 
 ### Extension/Layer Enumeration
 - `EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperties, error)` - List instance extensions
@@ -561,10 +568,11 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
 - `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
 - `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS/iOS)
+- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - Create XCB surface (Linux)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
+- `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
+- `IsErrorSurfaceLost(err error) bool` - Check if an error indicates that the Vulkan surface has been lost
 
-- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - CreateXcbSurfaceKHR creates an XCB surface
-- `IsErrorSurfaceLost(err error) bool` - IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
 ### Surface Queries
 - `GetPhysicalDeviceSurfaceSupport(physicalDevice PhysicalDevice, queueFamilyIndex uint32, surface Surface) (bool, error)` - Query if a queue family supports a surface
 - `GetPhysicalDeviceSurfaceCapabilities(physicalDevice PhysicalDevice, surface Surface) (SurfaceCapabilities, error)` - Get surface capabilities

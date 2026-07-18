@@ -6,6 +6,13 @@ package vulkan
 
 static PFN_vkCreateDebugUtilsMessengerEXT pfn_vkCreateDebugUtilsMessengerEXT = NULL;
 static PFN_vkDestroyDebugUtilsMessengerEXT pfn_vkDestroyDebugUtilsMessengerEXT = NULL;
+static PFN_vkSetDebugUtilsObjectNameEXT pfn_vkSetDebugUtilsObjectNameEXT = NULL;
+static PFN_vkCmdBeginDebugUtilsLabelEXT pfn_vkCmdBeginDebugUtilsLabelEXT = NULL;
+static PFN_vkCmdEndDebugUtilsLabelEXT pfn_vkCmdEndDebugUtilsLabelEXT = NULL;
+static PFN_vkCmdInsertDebugUtilsLabelEXT pfn_vkCmdInsertDebugUtilsLabelEXT = NULL;
+static PFN_vkQueueBeginDebugUtilsLabelEXT pfn_vkQueueBeginDebugUtilsLabelEXT = NULL;
+static PFN_vkQueueEndDebugUtilsLabelEXT pfn_vkQueueEndDebugUtilsLabelEXT = NULL;
+static PFN_vkQueueInsertDebugUtilsLabelEXT pfn_vkQueueInsertDebugUtilsLabelEXT = NULL;
 
 static void loadDebugUtilsFunctions(VkInstance instance) {
     if (instance == NULL) return;
@@ -14,6 +21,27 @@ static void loadDebugUtilsFunctions(VkInstance instance) {
     }
     if (pfn_vkDestroyDebugUtilsMessengerEXT == NULL) {
         pfn_vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    }
+    if (pfn_vkSetDebugUtilsObjectNameEXT == NULL) {
+        pfn_vkSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+    }
+    if (pfn_vkCmdBeginDebugUtilsLabelEXT == NULL) {
+        pfn_vkCmdBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT");
+    }
+    if (pfn_vkCmdEndDebugUtilsLabelEXT == NULL) {
+        pfn_vkCmdEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT");
+    }
+    if (pfn_vkCmdInsertDebugUtilsLabelEXT == NULL) {
+        pfn_vkCmdInsertDebugUtilsLabelEXT = (PFN_vkCmdInsertDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdInsertDebugUtilsLabelEXT");
+    }
+    if (pfn_vkQueueBeginDebugUtilsLabelEXT == NULL) {
+        pfn_vkQueueBeginDebugUtilsLabelEXT = (PFN_vkQueueBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueBeginDebugUtilsLabelEXT");
+    }
+    if (pfn_vkQueueEndDebugUtilsLabelEXT == NULL) {
+        pfn_vkQueueEndDebugUtilsLabelEXT = (PFN_vkQueueEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueEndDebugUtilsLabelEXT");
+    }
+    if (pfn_vkQueueInsertDebugUtilsLabelEXT == NULL) {
+        pfn_vkQueueInsertDebugUtilsLabelEXT = (PFN_vkQueueInsertDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkQueueInsertDebugUtilsLabelEXT");
     }
 }
 
@@ -37,6 +65,47 @@ static VkResult call_vkCreateDebugUtilsMessengerEXT(VkInstance instance, const V
 static void call_vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) {
     if (pfn_vkDestroyDebugUtilsMessengerEXT != NULL) {
         pfn_vkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
+    }
+}
+
+static VkResult call_vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) {
+    if (pfn_vkSetDebugUtilsObjectNameEXT == NULL) return VK_ERROR_EXTENSION_NOT_PRESENT;
+    return pfn_vkSetDebugUtilsObjectNameEXT(device, pNameInfo);
+}
+
+static void call_vkCmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (pfn_vkCmdBeginDebugUtilsLabelEXT != NULL) {
+        pfn_vkCmdBeginDebugUtilsLabelEXT(commandBuffer, pLabelInfo);
+    }
+}
+
+static void call_vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) {
+    if (pfn_vkCmdEndDebugUtilsLabelEXT != NULL) {
+        pfn_vkCmdEndDebugUtilsLabelEXT(commandBuffer);
+    }
+}
+
+static void call_vkCmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (pfn_vkCmdInsertDebugUtilsLabelEXT != NULL) {
+        pfn_vkCmdInsertDebugUtilsLabelEXT(commandBuffer, pLabelInfo);
+    }
+}
+
+static void call_vkQueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (pfn_vkQueueBeginDebugUtilsLabelEXT != NULL) {
+        pfn_vkQueueBeginDebugUtilsLabelEXT(queue, pLabelInfo);
+    }
+}
+
+static void call_vkQueueEndDebugUtilsLabelEXT(VkQueue queue) {
+    if (pfn_vkQueueEndDebugUtilsLabelEXT != NULL) {
+        pfn_vkQueueEndDebugUtilsLabelEXT(queue);
+    }
+}
+
+static void call_vkQueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) {
+    if (pfn_vkQueueInsertDebugUtilsLabelEXT != NULL) {
+        pfn_vkQueueInsertDebugUtilsLabelEXT(queue, pLabelInfo);
     }
 }
 */
@@ -145,4 +214,144 @@ func DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessen
 	// To fix this fully, we would need a map from messenger to the pUserData/Handle, or store it elsewhere.
 	// However, it is typical to leave debug messengers alive until shutdown.
 	C.call_vkDestroyDebugUtilsMessengerEXT(C.VkInstance(instance), C.VkDebugUtilsMessengerEXT(messenger), nil)
+}
+
+
+// DebugUtilsObjectNameInfo defines parameters for naming an object
+type DebugUtilsObjectNameInfo struct {
+	ObjectType   ObjectType
+	ObjectHandle uint64
+	ObjectName   string
+}
+
+// DebugUtilsLabel specifies parameters for a debug label
+type DebugUtilsLabel struct {
+	LabelName string
+	Color     [4]float32
+}
+
+// SetDebugUtilsObjectNameEXT gives a user-friendly name to an object
+func SetDebugUtilsObjectNameEXT(device Device, nameInfo *DebugUtilsObjectNameInfo) error {
+	if device == nil {
+		return NewValidationError("device", "cannot be nil")
+	}
+	if nameInfo == nil {
+		return NewValidationError("nameInfo", "cannot be nil")
+	}
+
+	cName := C.CString(nameInfo.ObjectName)
+	defer C.free(unsafe.Pointer(cName))
+
+	var cInfo C.VkDebugUtilsObjectNameInfoEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT
+	cInfo.pNext = nil
+	cInfo.objectType = C.VkObjectType(nameInfo.ObjectType)
+	cInfo.objectHandle = C.uint64_t(nameInfo.ObjectHandle)
+	cInfo.pObjectName = cName
+
+	res := C.call_vkSetDebugUtilsObjectNameEXT(C.VkDevice(device), &cInfo)
+	if Result(res) != Success {
+		return NewVulkanError(Result(res), "vkSetDebugUtilsObjectNameEXT", "failed to set debug utils object name")
+	}
+	return nil
+}
+
+// CmdBeginDebugUtilsLabelEXT opens a command buffer debug label region
+func CmdBeginDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel) {
+	if commandBuffer == nil || labelInfo == nil {
+		return
+	}
+
+	cLabelName := C.CString(labelInfo.LabelName)
+	defer C.free(unsafe.Pointer(cLabelName))
+
+	var cInfo C.VkDebugUtilsLabelEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT
+	cInfo.pNext = nil
+	cInfo.pLabelName = cLabelName
+	cInfo.color[0] = C.float(labelInfo.Color[0])
+	cInfo.color[1] = C.float(labelInfo.Color[1])
+	cInfo.color[2] = C.float(labelInfo.Color[2])
+	cInfo.color[3] = C.float(labelInfo.Color[3])
+
+	C.call_vkCmdBeginDebugUtilsLabelEXT(C.VkCommandBuffer(commandBuffer), &cInfo)
+}
+
+// CmdEndDebugUtilsLabelEXT closes a command buffer debug label region
+func CmdEndDebugUtilsLabelEXT(commandBuffer CommandBuffer) {
+	if commandBuffer == nil {
+		return
+	}
+	C.call_vkCmdEndDebugUtilsLabelEXT(C.VkCommandBuffer(commandBuffer))
+}
+
+// CmdInsertDebugUtilsLabelEXT inserts a single debug label into a command buffer
+func CmdInsertDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel) {
+	if commandBuffer == nil || labelInfo == nil {
+		return
+	}
+
+	cLabelName := C.CString(labelInfo.LabelName)
+	defer C.free(unsafe.Pointer(cLabelName))
+
+	var cInfo C.VkDebugUtilsLabelEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT
+	cInfo.pNext = nil
+	cInfo.pLabelName = cLabelName
+	cInfo.color[0] = C.float(labelInfo.Color[0])
+	cInfo.color[1] = C.float(labelInfo.Color[1])
+	cInfo.color[2] = C.float(labelInfo.Color[2])
+	cInfo.color[3] = C.float(labelInfo.Color[3])
+
+	C.call_vkCmdInsertDebugUtilsLabelEXT(C.VkCommandBuffer(commandBuffer), &cInfo)
+}
+
+// QueueBeginDebugUtilsLabelEXT opens a queue debug label region
+func QueueBeginDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel) {
+	if queue == nil || labelInfo == nil {
+		return
+	}
+
+	cLabelName := C.CString(labelInfo.LabelName)
+	defer C.free(unsafe.Pointer(cLabelName))
+
+	var cInfo C.VkDebugUtilsLabelEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT
+	cInfo.pNext = nil
+	cInfo.pLabelName = cLabelName
+	cInfo.color[0] = C.float(labelInfo.Color[0])
+	cInfo.color[1] = C.float(labelInfo.Color[1])
+	cInfo.color[2] = C.float(labelInfo.Color[2])
+	cInfo.color[3] = C.float(labelInfo.Color[3])
+
+	C.call_vkQueueBeginDebugUtilsLabelEXT(C.VkQueue(queue), &cInfo)
+}
+
+// QueueEndDebugUtilsLabelEXT closes a queue debug label region
+func QueueEndDebugUtilsLabelEXT(queue Queue) {
+	if queue == nil {
+		return
+	}
+	C.call_vkQueueEndDebugUtilsLabelEXT(C.VkQueue(queue))
+}
+
+// QueueInsertDebugUtilsLabelEXT inserts a single debug label into a queue
+func QueueInsertDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel) {
+	if queue == nil || labelInfo == nil {
+		return
+	}
+
+	cLabelName := C.CString(labelInfo.LabelName)
+	defer C.free(unsafe.Pointer(cLabelName))
+
+	var cInfo C.VkDebugUtilsLabelEXT
+	cInfo.sType = C.VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT
+	cInfo.pNext = nil
+	cInfo.pLabelName = cLabelName
+	cInfo.color[0] = C.float(labelInfo.Color[0])
+	cInfo.color[1] = C.float(labelInfo.Color[1])
+	cInfo.color[2] = C.float(labelInfo.Color[2])
+	cInfo.color[3] = C.float(labelInfo.Color[3])
+
+	C.call_vkQueueInsertDebugUtilsLabelEXT(C.VkQueue(queue), &cInfo)
 }
