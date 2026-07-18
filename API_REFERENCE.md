@@ -60,6 +60,13 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `LoadDebugUtilsFunctions(instance Instance)` - Load VK_EXT_debug_utils functions
 - `CreateDebugUtilsMessengerEXT(instance Instance, createInfo *DebugUtilsMessengerCreateInfo, callback DebugCallbackFunc) (DebugUtilsMessengerEXT, error)` - Create debug messenger
 - `DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessengerEXT)` - Destroy debug messenger
+- `SetDebugUtilsObjectNameEXT(device Device, nameInfo *DebugUtilsObjectNameInfo) error` - Gives a user-friendly name to an object
+- `CmdBeginDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Opens a command buffer debug label region
+- `CmdEndDebugUtilsLabelEXT(commandBuffer CommandBuffer)` - Closes a command buffer debug label region
+- `CmdInsertDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a command buffer
+- `QueueBeginDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Opens a queue debug label region
+- `QueueEndDebugUtilsLabelEXT(queue Queue)` - Closes a queue debug label region
+- `QueueInsertDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a queue
 
 ### Extension/Layer Enumeration
 - `EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperties, error)` - List instance extensions
