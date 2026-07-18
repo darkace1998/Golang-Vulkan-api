@@ -309,6 +309,7 @@ See the `examples/` directory for example programs:
 - `examples/render_to_texture/main.go`: Offscreen rendering
 - `examples/secondary_command_buffer/main.go`: Secondary command buffers
 - `examples/simple/main.go`: Minimal Vulkan instance creation
+- `examples/subpass_dependencies/main.go`: Multi-subpass render pass with dependencies
 - `examples/swapchain/main.go`: Swapchain example
 - `examples/type/main.go`: Type system and constant validation
 - `examples/video/main.go`: Video codec support detection
