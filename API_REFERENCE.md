@@ -561,11 +561,11 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
 - `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
 - `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS/iOS)
+- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - Create XCB surface (Linux)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
 - `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
+- `IsErrorSurfaceLost(err error) bool` - Check if an error indicates that the Vulkan surface has been lost
 
-- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - CreateXcbSurfaceKHR creates an XCB surface
-- `IsErrorSurfaceLost(err error) bool` - IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
 ### Surface Queries
 - `GetPhysicalDeviceSurfaceSupport(physicalDevice PhysicalDevice, queueFamilyIndex uint32, surface Surface) (bool, error)` - Query if a queue family supports a surface
 - `GetPhysicalDeviceSurfaceCapabilities(physicalDevice PhysicalDevice, surface Surface) (SurfaceCapabilities, error)` - Get surface capabilities
