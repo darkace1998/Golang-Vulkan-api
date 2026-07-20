@@ -9,6 +9,7 @@ import "unsafe"
 // ColorSpace represents color space values
 type ColorSpace uint32
 
+// ColorSpace constants for supported color spaces
 const (
 	ColorSpaceSRGBNonlinear         ColorSpace = C.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 	ColorSpaceDisplayP3Nonlinear    ColorSpace = C.VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT
@@ -30,6 +31,7 @@ const (
 // SurfaceTransformFlags represents surface transform flags
 type SurfaceTransformFlags uint32
 
+// SurfaceTransformFlags constants for surface transformations
 const (
 	SurfaceTransformIdentity                  SurfaceTransformFlags = C.VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR
 	SurfaceTransformRotate90                  SurfaceTransformFlags = C.VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR
@@ -45,6 +47,7 @@ const (
 // CompositeAlphaFlags represents composite alpha flags
 type CompositeAlphaFlags uint32
 
+// CompositeAlphaFlags constants for composite alpha blending
 const (
 	CompositeAlphaOpaque         CompositeAlphaFlags = C.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
 	CompositeAlphaPreMultiplied  CompositeAlphaFlags = C.VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR
@@ -55,6 +58,7 @@ const (
 // SwapchainCreateFlags represents swapchain creation flags
 type SwapchainCreateFlags uint32
 
+// SwapchainCreateFlags constants for swapchain creation options
 const (
 	SwapchainCreateSplitInstanceBindRegions SwapchainCreateFlags = C.VK_SWAPCHAIN_CREATE_SPLIT_INSTANCE_BIND_REGIONS_BIT_KHR
 	SwapchainCreateProtected                SwapchainCreateFlags = C.VK_SWAPCHAIN_CREATE_PROTECTED_BIT_KHR
@@ -194,8 +198,8 @@ func GetSwapchainImages(device Device, swapchain Swapchain) ([]Image, error) {
 	return images, nil
 }
 
-// AcquireNextImage acquires the next presentable image from a swapchain
-// Returns the index of the next image to use, and whether the swapchain is suboptimal
+// AcquireNextImage retrieves the index of the next available presentable image.
+// Returns the index of the next image to use, and whether the swapchain is suboptimal.
 func AcquireNextImage(device Device, swapchain Swapchain, timeout uint64, semaphore Semaphore, fence Fence) (uint32, bool, error) {
 	if device == nil {
 		return 0, false, NewValidationError("device", "cannot be nil")
@@ -243,8 +247,8 @@ type PresentInfo struct {
 	ImageIndices   []uint32
 }
 
-// QueuePresent queues an image for presentation
-// Returns true if the swapchain is suboptimal
+// QueuePresent queues an image for presentation.
+// Returns true if the swapchain is suboptimal.
 func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {
 	if queue == nil {
 		return false, NewValidationError("queue", "cannot be nil")

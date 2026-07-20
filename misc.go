@@ -141,6 +141,7 @@ func CmdClearDepthStencilImage(commandBuffer CommandBuffer, image Image, imageLa
 // PipelineCacheCreateFlags represents pipeline cache creation flags
 type PipelineCacheCreateFlags uint32
 
+// PipelineCacheCreateFlags constants
 const (
 	PipelineCacheCreateExternallySynchronized PipelineCacheCreateFlags = 0x00000001
 )
@@ -308,6 +309,7 @@ func DestroyBufferView(device Device, bufferView BufferView) {
 // FormatFeatureFlags represents format feature flags
 type FormatFeatureFlags uint32
 
+// FormatFeatureFlags constants
 const (
 	FormatFeatureSampledImageBit                            FormatFeatureFlags = C.VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
 	FormatFeatureStorageImageBit                            FormatFeatureFlags = C.VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT
@@ -402,6 +404,7 @@ func GetPhysicalDeviceImageFormatProperties(physicalDevice PhysicalDevice, forma
 // SparseImageFormatFlags represents sparse image format flags
 type SparseImageFormatFlags uint32
 
+// SparseImageFormatFlags constants
 const (
 	SparseImageFormatSingleMiptailBit        SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_SINGLE_MIPTAIL_BIT
 	SparseImageFormatAlignedMipSizeBit       SparseImageFormatFlags = C.VK_SPARSE_IMAGE_FORMAT_ALIGNED_MIP_SIZE_BIT

@@ -17,6 +17,7 @@ import (
 // QueryType represents the type of queries managed by a query pool
 type QueryType uint32
 
+// QueryType constants represent the types of queries supported
 const (
 	QueryTypeOcclusion          QueryType = C.VK_QUERY_TYPE_OCCLUSION
 	QueryTypePipelineStatistics QueryType = C.VK_QUERY_TYPE_PIPELINE_STATISTICS
@@ -37,6 +38,7 @@ type QueryPoolCreateInfo struct {
 // QueryResultFlags represents query result retrieval flags
 type QueryResultFlags uint32
 
+// QueryResultFlags constants represent flags for retrieving query results
 const (
 	QueryResult64Bit            QueryResultFlags = C.VK_QUERY_RESULT_64_BIT
 	QueryResultWait             QueryResultFlags = C.VK_QUERY_RESULT_WAIT_BIT
