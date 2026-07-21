@@ -664,3 +664,41 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 
 
 
+
+## Miscellaneous
+
+*   **`vulkan.CmdClearAttachments`**: Clears attachment regions within a render pass.
+*   **`vulkan.CmdClearColorImage`**: Clears a color image outside of a render pass.
+*   **`vulkan.CmdClearDepthStencilImage`**: Clears a depth/stencil image outside of a render pass.
+*   **`vulkan.CreatePipelineCache`**: Creates a pipeline cache.
+*   **`vulkan.DestroyPipelineCache`**: Destroys a pipeline cache.
+*   **`vulkan.GetPipelineCacheData`**: Retrieves the data from a pipeline cache.
+*   **`vulkan.MergePipelineCaches`**: Merges multiple pipeline caches into a destination cache.
+*   **`vulkan.CreateBufferView`**: Creates a buffer view.
+*   **`vulkan.DestroyBufferView`**: Destroys a buffer view.
+*   **`vulkan.GetPhysicalDeviceFormatProperties`**: Returns format properties for a physical device.
+*   **`vulkan.GetPhysicalDeviceImageFormatProperties`**: Returns image format properties for a physical device.
+*   **`vulkan.GetPhysicalDeviceSparseImageFormatProperties`**: Returns sparse image format properties.
+*   **`vulkan.GetImageSparseMemoryRequirements`**: Returns sparse memory requirements for an image.
+
+## Swapchain & Presentation
+
+*   **`vulkan.CreateSwapchain`**: Creates a swapchain.
+*   **`vulkan.DestroySwapchain`**: Destroys a swapchain.
+*   **`vulkan.GetSwapchainImages`**: Gets the swapchain images.
+*   **`vulkan.AcquireNextImage`**: Acquires the next presentable image from a swapchain. Returns the index of the next image to use, and whether the swapchain is suboptimal.
+*   **`vulkan.QueuePresent`**: Queues an image for presentation. Returns true if the swapchain is suboptimal.
+
+## Queries
+
+*   **`vulkan.CreateQueryPool`**: Creates a query pool for managing a number of queries.
+*   **`vulkan.DestroyQueryPool`**: Destroys a query pool.
+*   **`vulkan.GetQueryPoolResults`**: Retrieves results from a query pool as a byte slice, or an error if the operation fails. Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned.
+*   **`vulkan.GetQueryPoolResultsUint32`**: Retrieves 32-bit query results.
+*   **`vulkan.GetQueryPoolResultsUint64`**: Retrieves 64-bit query results.
+*   **`vulkan.CmdBeginQuery`**: Begins a query.
+*   **`vulkan.CmdEndQuery`**: Ends a query.
+*   **`vulkan.CmdResetQueryPool`**: Resets a range of queries in a query pool on the GPU.
+*   **`vulkan.CmdWriteTimestamp`**: Writes a device timestamp into a query object.
+*   **`vulkan.CmdCopyQueryPoolResults`**: Copies the results of queries in a query pool to a buffer object.
+*   **`vulkan.ResetQueryPool`**: Resets a range of queries in a query pool on the host (Vulkan 1.2+).

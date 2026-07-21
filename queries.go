@@ -86,9 +86,8 @@ func DestroyQueryPool(device Device, queryPool QueryPool) {
 	C.vkDestroyQueryPool(C.VkDevice(device), C.VkQueryPool(queryPool), nil)
 }
 
-// GetQueryPoolResults retrieves results from a query pool
-// Returns the query results as a byte slice, or an error if the operation fails
-// Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned
+// GetQueryPoolResults retrieves results from a query pool as a byte slice, or an error if the operation fails
+// Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned.
 func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, flags QueryResultFlags) ([]byte, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
