@@ -584,6 +584,96 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `GetImageSubresourceLayout(device Device, image Image, subresource *ImageSubresource) SubresourceLayout` - Query image subresource layout
 - `TransitionImageLayout(commandBuffer CommandBuffer, image Image, format Format, oldLayout, newLayout ImageLayout, subresourceRange ImageSubresourceRange)` - Transitions an image from one layout to another
 
+
+### Subpass Description and Dependencies
+- `SubpassDescription` - Describes a subpass
+- `SubpassDependency` - Describes subpass dependencies
+
+### Video Encoding and Decoding Types
+- `VideoCodecOperationFlags` - Video codec operations
+- `VideoCodingControlFlags` - Video coding control flags
+- `VideoEncodeRateControlInfo` - Video encode rate control info
+- `VideoEncodeRateControlMode` - Video encode rate control mode
+- `H264Profile`, `H264Level` - H264 profile and level
+- `H265Profile`, `H265Level` - H265 profile and level
+- `AV1Profile`, `AV1Level` - AV1 profile and level
+
+### Sparse Memory Types
+- `SparseBufferMemoryBindInfo` - Sparse buffer memory bind info
+- `SparseImageOpaqueMemoryBindInfo` - Sparse image opaque memory bind info
+- `SparseImageMemoryBindInfo` - Sparse image memory bind info
+- `SparseImageMemoryBind` - Sparse image memory bind
+- `SparseMemoryBind` - Sparse memory bind
+- `SparseMemoryBindFlags` - Sparse memory bind flags
+- `SparseImageFormatFlags` - Sparse image format flags
+
+### Pipeline Cache and Feedback Types
+- `PipelineCacheCreateFlags` - Pipeline cache create flags
+- `PipelineCreationFeedback` - Pipeline creation feedback
+- `PipelineCreationFeedbackCreateInfo` - Pipeline creation feedback create info
+- `PipelineCreationFeedbackFlags` - Pipeline creation feedback flags
+
+### Mesh Shader Types
+- `PhysicalDeviceMeshShaderFeaturesEXT` - Physical device mesh shader features
+- `PhysicalDeviceMeshShaderPropertiesEXT` - Physical device mesh shader properties
+- `DrawMeshTasksIndirectCommandEXT` - Draw mesh tasks indirect command
+
+### Render Pass and Pipeline Types
+- `AttachmentDescription`, `AttachmentReference`, `AttachmentLoadOp`, `AttachmentStoreOp`
+- `ClearValue`
+- `PushConstantRange`
+- `DynamicState`, `PolygonMode`, `BlendOp`, `BlendFactor`, `LogicOp`
+- `PipelineVertexInputStateCreateInfo`, `VertexInputBindingDescription`, `VertexInputAttributeDescription`, `VertexInputRate`
+- `PipelineInputAssemblyStateCreateInfo`
+- `PipelineTessellationStateCreateInfo`
+- `PipelineViewportStateCreateInfo`
+- `PipelineRasterizationStateCreateInfo`
+- `PipelineMultisampleStateCreateInfo`
+- `PipelineDepthStencilStateCreateInfo`, `StencilOpState`
+- `PipelineColorBlendStateCreateInfo`, `PipelineColorBlendAttachmentState`, `ColorComponentFlags`
+- `PipelineDynamicStateCreateInfo`
+- `PipelineShaderStageCreateInfo`
+
+### Sync and Command Types
+- `CommandBufferInheritanceInfo`, `CommandBufferLevel`, `CommandBufferUsageFlags`, `CommandBufferSubmitInfo`
+- `CommandPoolCreateFlags`
+- `EventCreateFlags`, `FenceCreateFlags`, `SemaphoreType`, `SemaphoreTypeCreateInfo`, `SemaphoreWaitFlags`, `SemaphoreSubmitInfo`
+- `SubmitFlags`, `DependencyFlags`
+
+### Dynamic Rendering Types
+- `RenderingAttachmentInfo`, `RenderingFlags`, `ResolveModeFlagBits`
+- `PipelineStageFlags2`
+
+### Query Types
+- `QueryPoolCreateFlags`, `QueryType`, `QueryPipelineStatisticFlags`
+
+### Memory and Format Types
+- `BufferCreateFlags`, `BufferUsageFlags`
+- `ImageAspectFlags`, `ImageViewType`, `ImageSubresourceLayers`
+- `FormatFeatureFlags`
+- `MemoryHeapFlags`
+- `SharingMode`
+
+### Device and Instance Types
+- `ApplicationInfo`
+- `DeviceQueueCreateInfo`, `DeviceGroupDeviceCreateInfo`
+- `PhysicalDeviceLimits`, `PhysicalDeviceType`, `PhysicalDeviceSparseProperties`
+- `PhysicalDeviceVulkan11Features`, `PhysicalDeviceVulkan12Features`, `PhysicalDeviceVulkan13Features`
+- `Extent3D`, `Offset3D`
+
+### Swapchain and Surface Types
+- `SwapchainCreateFlags`, `SurfaceTransformFlags`, `CompositeAlphaFlags`, `ColorSpace`
+
+### Descriptor Types
+- `DescriptorBufferInfo`, `DescriptorImageInfo`
+- `DescriptorSetLayoutBinding`, `SamplerAddressMode`
+
+### Debug Types
+- `DebugUtilsMessageSeverityFlags`, `DebugUtilsMessageTypeFlags`, `DebugUtilsMessengerCallbackData`
+
+### Device Address
+- `DeviceAddress`
+
 ## Constants and Enums
 
 ### API Versions

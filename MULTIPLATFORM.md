@@ -61,15 +61,6 @@ Not reverified in the current repo state. Uses pkg-config as the fallback:
 go build
 ```
 
-## Testing Multiplatform Support
-
-Run the included test script when validating additional targets:
-```bash
-./test_multiplatform.sh
-```
-
-This remains a documentation/example check; only the Linux build/test/race path has been verified in the current repo state.
-
 ## Documentation Gaps
 
-Cross-platform verification is still incomplete. Windows, macOS, and other Unix-like platforms should be revalidated before this guide is treated as fully current.
+Cross-platform verification is still incomplete in CI. Currently, only the Linux build/test/race path has been verified. Windows, macOS, and other Unix-like platforms are supported via Go build tags, but they should be revalidated locally before this guide is treated as fully current.
