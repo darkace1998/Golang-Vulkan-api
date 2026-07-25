@@ -298,23 +298,23 @@ func main() {
 
 See the `examples/` directory for example programs:
 
-- `examples/basic/main.go`: Basic Vulkan setup and device enumeration
-- `examples/compute/main.go`: Compute shader example
-- `examples/descriptor_manager/main.go`: High-level DescriptorPoolManager usage
-- `examples/descriptor_update/main.go`: Binding uniform buffers and image samplers
-- `examples/graphics_pipeline/main.go`: Graphics pipeline example
-- `examples/multi_queue/main.go`: Parallel transfer and graphics operations
-- `examples/pipeline_cache/main.go`: Pipeline cache creation and merging
-- `examples/push_constants/main.go`: Push constants usage
-- `examples/render_to_texture/main.go`: Offscreen rendering
-- `examples/secondary_command_buffer/main.go`: Secondary command buffers
-- `examples/simple/main.go`: Minimal Vulkan instance creation
-- `examples/subpass_dependencies/main.go`: Multi-subpass render pass with dependencies
-- `examples/swapchain/main.go`: Swapchain example
-- `examples/type/main.go`: Type system and constant validation
-- `examples/video/main.go`: Video codec support detection
-- `examples/vulkan13/main.go`: Vulkan 1.3 feature demonstration
-- `examples/benchmark/graphics_benchmark.go`: GPU stress testing and benchmarking tool
+- **`basic`**: Basic Vulkan setup and physical device enumeration.
+- **`benchmark`**: A GPU stress testing and benchmarking tool. See `examples/benchmark/README.md` for more details.
+- **`compute`**: Demonstrates how to run a compute shader, including buffer creation and memory binding.
+- **`descriptor_manager`**: Example demonstrating the usage of the high-level `DescriptorPoolManager` to easily allocate descriptor sets.
+- **`descriptor_update`**: Demonstrates how to bind uniform buffers and combined image samplers by updating descriptor sets.
+- **`graphics_pipeline`**: A comprehensive graphics pipeline example showing offscreen rendering with vertex buffers, shader modules, render pass, framebuffer, graphics pipeline creation, and draw commands.
+- **`multi_queue`**: Shows how to discover, create, and use multiple Vulkan queues, specifically focusing on parallel transfer and graphics operations.
+- **`pipeline_cache`**: Example demonstrating pipeline cache creation, retrieval, merging, and loading data.
+- **`push_constants`**: Demonstrates how to use push constants to pass small amounts of data to shaders efficiently.
+- **`render_to_texture`**: Demonstrates framebuffer creation, render pass, and reading back pixels without a window/surface.
+- **`secondary_command_buffer`**: Shows how to record and execute secondary command buffers.
+- **`simple`**: Minimal example for Vulkan instance creation.
+- **`subpass_dependencies`**: Demonstrates creating a multi-subpass render pass with a dependency chain and self-dependency.
+- **`swapchain`**: Demonstrates all swapchain types, constants, input validation, synchronization objects, and the full present loop workflow.
+- **`type`**: Type system and constant validation example.
+- **`video`**: Demonstrates video codec support detection.
+- **`vulkan13`**: Vulkan 1.3 feature demonstration, including dynamic state and rendering info.
 
 See [examples/benchmark/README.md](examples/benchmark/README.md) for detailed information about the GPU benchmark tool.
 
