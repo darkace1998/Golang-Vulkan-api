@@ -54,7 +54,7 @@ func exampleErrorHandling(device vulkan.Device) {
 		}
 		return
 	}
-	defer vulkan.DestroyBuffer(device, buffer, nil)
+	defer vulkan.DestroyBuffer(device, buffer)
 }
 ```
 

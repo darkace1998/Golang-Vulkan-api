@@ -60,6 +60,13 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `LoadDebugUtilsFunctions(instance Instance)` - Load VK_EXT_debug_utils functions
 - `CreateDebugUtilsMessengerEXT(instance Instance, createInfo *DebugUtilsMessengerCreateInfo, callback DebugCallbackFunc) (DebugUtilsMessengerEXT, error)` - Create debug messenger
 - `DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessengerEXT)` - Destroy debug messenger
+- `SetDebugUtilsObjectNameEXT(device Device, nameInfo *DebugUtilsObjectNameInfo) error` - Gives a user-friendly name to an object
+- `CmdBeginDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Opens a command buffer debug label region
+- `CmdEndDebugUtilsLabelEXT(commandBuffer CommandBuffer)` - Closes a command buffer debug label region
+- `CmdInsertDebugUtilsLabelEXT(commandBuffer CommandBuffer, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a command buffer
+- `QueueBeginDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Opens a queue debug label region
+- `QueueEndDebugUtilsLabelEXT(queue Queue)` - Closes a queue debug label region
+- `QueueInsertDebugUtilsLabelEXT(queue Queue, labelInfo *DebugUtilsLabel)` - Inserts a single debug label into a queue
 
 ### Extension/Layer Enumeration
 - `EnumerateInstanceExtensionProperties(layerName string) ([]ExtensionProperties, error)` - List instance extensions
@@ -278,6 +285,10 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `(m *DescriptorPoolManager) Destroy()` - Destroy all managed descriptor pools
 
 ## Command Recording
+- `LoadMeshShaderFunctions(device Device)` - LoadMeshShaderFunctions loads the device-level mesh shader functions.
+- `CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32)` - CmdDrawMeshTasksEXT draws mesh tasks.
+- `CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32)` - CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters.
+- `CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32)` - CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters and indirect count.
 
 ### Render Pass Commands
 - `CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginInfo, contents SubpassContents)` - Begin render pass
@@ -557,11 +568,11 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CreateWaylandSurfaceKHR(instance Instance, createInfo *WaylandSurfaceCreateInfoKHR) (Surface, error)` - Create Wayland surface (Linux)
 - `CreateWin32SurfaceKHR(instance Instance, createInfo *Win32SurfaceCreateInfoKHR) (Surface, error)` - Create Win32 surface (Windows)
 - `CreateMetalSurfaceEXT(instance Instance, createInfo *MetalSurfaceCreateInfoEXT) (Surface, error)` - Create Metal surface (macOS/iOS)
+- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - Create XCB surface (Linux)
 - `GetRenderAreaGranularity(device Device, renderPass RenderPass) Extent2D` - Get render area granularity
 - `GetDeviceMemoryCommitment(device Device, memory DeviceMemory) DeviceSize` - Query device memory commitment
+- `IsErrorSurfaceLost(err error) bool` - Check if an error indicates that the Vulkan surface has been lost
 
-- `CreateXcbSurfaceKHR(instance Instance, connection unsafe.Pointer, window uint32) (Surface, error)` - CreateXcbSurfaceKHR creates an XCB surface
-- `IsErrorSurfaceLost(err error) bool` - IsErrorSurfaceLost checks if an error indicates that the Vulkan surface has been lost
 ### Surface Queries
 - `GetPhysicalDeviceSurfaceSupport(physicalDevice PhysicalDevice, queueFamilyIndex uint32, surface Surface) (bool, error)` - Query if a queue family supports a surface
 - `GetPhysicalDeviceSurfaceCapabilities(physicalDevice PhysicalDevice, surface Surface) (SurfaceCapabilities, error)` - Get surface capabilities
@@ -653,3 +664,41 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 
 
 
+
+## Miscellaneous
+
+*   **`vulkan.CmdClearAttachments`**: Clears attachment regions within a render pass.
+*   **`vulkan.CmdClearColorImage`**: Clears a color image outside of a render pass.
+*   **`vulkan.CmdClearDepthStencilImage`**: Clears a depth/stencil image outside of a render pass.
+*   **`vulkan.CreatePipelineCache`**: Creates a pipeline cache.
+*   **`vulkan.DestroyPipelineCache`**: Destroys a pipeline cache.
+*   **`vulkan.GetPipelineCacheData`**: Retrieves the data from a pipeline cache.
+*   **`vulkan.MergePipelineCaches`**: Merges multiple pipeline caches into a destination cache.
+*   **`vulkan.CreateBufferView`**: Creates a buffer view.
+*   **`vulkan.DestroyBufferView`**: Destroys a buffer view.
+*   **`vulkan.GetPhysicalDeviceFormatProperties`**: Returns format properties for a physical device.
+*   **`vulkan.GetPhysicalDeviceImageFormatProperties`**: Returns image format properties for a physical device.
+*   **`vulkan.GetPhysicalDeviceSparseImageFormatProperties`**: Returns sparse image format properties.
+*   **`vulkan.GetImageSparseMemoryRequirements`**: Returns sparse memory requirements for an image.
+
+## Swapchain & Presentation
+
+*   **`vulkan.CreateSwapchain`**: Creates a swapchain.
+*   **`vulkan.DestroySwapchain`**: Destroys a swapchain.
+*   **`vulkan.GetSwapchainImages`**: Gets the swapchain images.
+*   **`vulkan.AcquireNextImage`**: Acquires the next presentable image from a swapchain. Returns the index of the next image to use, and whether the swapchain is suboptimal.
+*   **`vulkan.QueuePresent`**: Queues an image for presentation. Returns true if the swapchain is suboptimal.
+
+## Queries
+
+*   **`vulkan.CreateQueryPool`**: Creates a query pool for managing a number of queries.
+*   **`vulkan.DestroyQueryPool`**: Destroys a query pool.
+*   **`vulkan.GetQueryPoolResults`**: Retrieves results from a query pool as a byte slice, or an error if the operation fails. Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned.
+*   **`vulkan.GetQueryPoolResultsUint32`**: Retrieves 32-bit query results.
+*   **`vulkan.GetQueryPoolResultsUint64`**: Retrieves 64-bit query results.
+*   **`vulkan.CmdBeginQuery`**: Begins a query.
+*   **`vulkan.CmdEndQuery`**: Ends a query.
+*   **`vulkan.CmdResetQueryPool`**: Resets a range of queries in a query pool on the GPU.
+*   **`vulkan.CmdWriteTimestamp`**: Writes a device timestamp into a query object.
+*   **`vulkan.CmdCopyQueryPoolResults`**: Copies the results of queries in a query pool to a buffer object.
+*   **`vulkan.ResetQueryPool`**: Resets a range of queries in a query pool on the host (Vulkan 1.2+).

@@ -63,9 +63,19 @@ go build
 
 ## Testing Multiplatform Support
 
-Run the included test script when validating additional targets:
+Run the following commands to validate additional targets:
 ```bash
-./test_multiplatform.sh
+# Linux (amd64)
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build ./...
+
+# Windows (amd64)
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build ./...
+
+# macOS (amd64)
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ./...
+
+# macOS (arm64)
+CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ./...
 ```
 
 This remains a documentation/example check; only the Linux build/test/race path has been verified in the current repo state.
