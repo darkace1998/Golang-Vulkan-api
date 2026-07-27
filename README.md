@@ -211,6 +211,15 @@ If you are new to Vulkan or this library, check out the **[Getting Started Tutor
 
 See [VULKAN_1_4_READINESS.md](VULKAN_1_4_READINESS.md) for detailed information about the current state of Vulkan 1.4 support and our roadmap for future implementation.
 
+## Additional Documentation
+
+The repository includes comprehensive documentation files to help you better understand and utilize the API:
+
+- [API_REFERENCE.md](API_REFERENCE.md): Comprehensive API mappings and documentation for core features.
+- [SECURITY.md](SECURITY.md): Security analysis and posture.
+- [MULTIPLATFORM.md](MULTIPLATFORM.md): Cross-platform build support details.
+- [todo.md](todo.md): Roadmap for planned features and API coverage tracking.
+
 ## Architecture
 
 See [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md) for visual representations of the extension loading mechanism, error handling paths, and thread safety models used by this library.
