@@ -91,7 +91,7 @@
 - [x] **Add secondary command buffer support** — `CommandBufferInheritanceInfo` is defined but secondary command buffer recording and execution (`CmdExecuteCommands`) need examples and tests.
 - [x] **Add subpass dependency support** — `SubpassDependency` is defined and subpass dependency chains and self-dependencies are demonstrated in the `subpass_dependencies` example.
 - [x] **Complete surface/WSI integration** — Surface creation functions (`vkCreateXlibSurfaceKHR`, `vkCreateWin32SurfaceKHR`, `vkCreateMetalSurfaceEXT`) are wrapped with appropriate CGO build tags for Linux, Windows, and Darwin. (Wrappers for `vkGetRenderAreaGranularity`, `vkGetDeviceMemoryCommitment`, `vkGetImageSubresourceLayout` are completed).
-- [ ] **Add ray tracing extension support** — `VK_KHR_ray_tracing_pipeline` and acceleration structure extensions for modern GPU ray tracing.
+- [x] **Add ray tracing extension support** — `VK_KHR_ray_tracing_pipeline` and acceleration structure extensions for modern GPU ray tracing.
 - [x] **Add `VK_EXT_mesh_shader` support** — Mesh and task shader pipeline stages for advanced geometry processing.
 
 ---
