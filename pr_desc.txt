@@ -1,5 +1,0 @@
-🎯 **What:** The testing gap addressed: Missing unit test coverage for validation errors when calling `AllocateDescriptorSets` and `FreeDescriptorSets`. Also covers the early return when passing an empty slice to `FreeDescriptorSets`.
-
-📊 **Coverage:** Added coverage for `nil` device, `nil` `allocateInfo`, `nil` pool, and empty layouts scenarios for allocation. Added tests for `nil` device, pool, and empty slices for free operations.
-
-✨ **Result:** Improved test coverage and reliability for descriptor set memory management APIs.
