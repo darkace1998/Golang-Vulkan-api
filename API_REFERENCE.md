@@ -18,6 +18,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - [Swapchain Management](#swapchain-management)
 - [Pipeline Management](#pipeline-management)
 - [Descriptor Management](#descriptor-management)
+- [Ray Tracing Management](#ray-tracing-management)
 - [Command Recording](#command-recording)
 - [Compute Pipeline Management](#compute-pipeline-management)
 - [Video Codec Support](#video-codec-support)
@@ -702,3 +703,16 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 *   **`vulkan.CmdWriteTimestamp`**: Writes a device timestamp into a query object.
 *   **`vulkan.CmdCopyQueryPoolResults`**: Copies the results of queries in a query pool to a buffer object.
 *   **`vulkan.ResetQueryPool`**: Resets a range of queries in a query pool on the host (Vulkan 1.2+).
+
+## Ray Tracing Management
+
+### Acceleration Structures
+- `LoadAccelerationStructureFunctions(device Device)` - Load device-level acceleration structure functions
+- `CreateAccelerationStructureKHR(device Device, createInfo *AccelerationStructureCreateInfoKHR) (AccelerationStructureKHR, error)` - Create a new acceleration structure
+- `DestroyAccelerationStructureKHR(device Device, accelerationStructure AccelerationStructureKHR)` - Destroy an acceleration structure
+- `CmdBuildAccelerationStructuresKHR(commandBuffer CommandBuffer, infos []AccelerationStructureBuildGeometryInfoKHR)` - Build acceleration structures
+
+### Ray Tracing Pipelines
+- `LoadRayTracingPipelineFunctions(device Device)` - Load device-level ray tracing pipeline functions
+- `CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error)` - Create ray tracing pipelines
+- `CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32)` - Execute a ray tracing operation

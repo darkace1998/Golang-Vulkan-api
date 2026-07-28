@@ -32,6 +32,8 @@ This library provides a type-safe Go interface to the Vulkan APIs used by the pr
 - ✅ **Compute Shaders**: Compute pipeline support and example workloads
 - ✅ **Storage Buffers**: Large dataset handling for compute operations
 - ✅ **Dispatch Commands**: Efficient compute work group dispatching
+- ✅ **Ray Tracing**: Ray tracing pipelines and commands (VK_KHR_ray_tracing_pipeline)
+- ✅ **Acceleration Structures**: Create and manage acceleration structures (VK_KHR_acceleration_structure)
 - ✅ **Platform Setup**: Linux, Windows, and macOS setup notes are included
 
 ## Video Codec Support 🎬
