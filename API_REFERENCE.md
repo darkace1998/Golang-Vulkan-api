@@ -352,6 +352,16 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CreateComputePipelines(device Device, pipelineCache PipelineCache, createInfos []ComputePipelineCreateInfo) ([]Pipeline, error)` - Create compute pipelines
 - `DestroyPipeline(device Device, pipeline Pipeline)` - Destroy pipeline (graphics or compute)
 
+## Ray Tracing and Acceleration Structures
+
+- `LoadRayTracingPipelineFunctions(device Device)` - Load the device-level ray tracing pipeline functions.
+- `CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error)` - Create ray tracing pipelines.
+- `CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32)` - Dispatch a ray tracing grid.
+- `LoadAccelerationStructureFunctions(device Device)` - Load the device-level acceleration structure functions.
+- `CreateAccelerationStructureKHR(device Device, createInfo *AccelerationStructureCreateInfoKHR) (AccelerationStructureKHR, error)` - Create an acceleration structure.
+- `DestroyAccelerationStructureKHR(device Device, accelerationStructure AccelerationStructureKHR)` - Destroy an acceleration structure.
+- `CmdBuildAccelerationStructuresKHR(commandBuffer CommandBuffer, infos []AccelerationStructureBuildGeometryInfoKHR)` - Build acceleration structures.
+
 ## Video Codec Support
 
 ### Video Codec Extensions
