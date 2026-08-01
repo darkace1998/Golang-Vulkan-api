@@ -226,12 +226,6 @@ The repository includes comprehensive documentation files to help you better und
 
 See [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md) for visual representations of the extension loading mechanism, error handling paths, and thread safety models used by this library.
 
-## Additional Documentation
-
-- [SECURITY.md](SECURITY.md): Security posture and analysis report.
-- [MULTIPLATFORM.md](MULTIPLATFORM.md): Multiplatform build support and platform-specific notes.
-- [todo.md](todo.md): Codebase analysis and improvement roadmap.
-
 ## Quick Start
 
 ```go
