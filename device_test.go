@@ -58,8 +58,19 @@ func TestValidateDeviceCreateInfo(t *testing.T) {
 		{
 			name:           "Valid CreateInfo",
 			physicalDevice: physicalDevice,
+			createInfo: &DeviceCreateInfo{
+				QueueCreateInfos: []DeviceQueueCreateInfo{
+					{QueuePriorities: []float32{1.0}},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name:           "Empty QueueCreateInfos",
+			physicalDevice: physicalDevice,
 			createInfo:     &DeviceCreateInfo{},
-			expectErr:      false,
+			expectErr:      true,
+			errField:       "QueueCreateInfos",
 		},
 		{
 			name:           "Nil PhysicalDevice",
@@ -92,6 +103,9 @@ func TestValidateDeviceCreateInfo(t *testing.T) {
 			name:           "Invalid Layers",
 			physicalDevice: physicalDevice,
 			createInfo: &DeviceCreateInfo{
+				QueueCreateInfos: []DeviceQueueCreateInfo{
+					{QueuePriorities: []float32{1.0}},
+				},
 				EnabledLayerNames: []string{
 					"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 257 chars long string
 				},
@@ -103,6 +117,9 @@ func TestValidateDeviceCreateInfo(t *testing.T) {
 			name:           "Invalid Extensions",
 			physicalDevice: physicalDevice,
 			createInfo: &DeviceCreateInfo{
+				QueueCreateInfos: []DeviceQueueCreateInfo{
+					{QueuePriorities: []float32{1.0}},
+				},
 				EnabledExtensionNames: []string{
 					"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", // 257 chars long string
 				},

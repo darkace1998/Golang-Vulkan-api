@@ -7,6 +7,7 @@ package vulkan
 import "C"
 
 import (
+	"runtime"
 	"unsafe"
 )
 
@@ -48,6 +49,26 @@ type RenderingInfo struct {
 	StencilAttachment *RenderingAttachmentInfo
 }
 
+// makeCRenderingAttachmentInfo converts a Go RenderingAttachmentInfo to its C
+// counterpart, writing the clear value through the proper union member
+// (the Go ClearValue struct is larger than the 16-byte C union, so a direct
+// memory cast would produce wrong values for depth/stencil clears).
+func makeCRenderingAttachmentInfo(attachment *RenderingAttachmentInfo) C.VkRenderingAttachmentInfo {
+	cAttachment := C.VkRenderingAttachmentInfo{
+		sType:              C.VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		pNext:              nil,
+		imageView:          C.VkImageView(attachment.ImageView),
+		imageLayout:        C.VkImageLayout(attachment.ImageLayout),
+		resolveMode:        C.VkResolveModeFlagBits(attachment.ResolveMode),
+		resolveImageView:   C.VkImageView(attachment.ResolveImageView),
+		resolveImageLayout: C.VkImageLayout(attachment.ResolveImageLayout),
+		loadOp:             C.VkAttachmentLoadOp(attachment.LoadOp),
+		storeOp:            C.VkAttachmentStoreOp(attachment.StoreOp),
+	}
+	setCClearValue(&cAttachment.clearValue, &attachment.ClearValue)
+	return cAttachment
+}
+
 // CmdBeginRendering begins a render pass instance with dynamic rendering
 func CmdBeginRendering(commandBuffer CommandBuffer, renderingInfo *RenderingInfo) {
 	cRenderingInfo := C.VkRenderingInfo{
@@ -59,60 +80,35 @@ func CmdBeginRendering(commandBuffer CommandBuffer, renderingInfo *RenderingInfo
 		viewMask:   C.uint32_t(renderingInfo.ViewMask),
 	}
 
+	// Attachment structs must be pinned because their addresses are stored
+	// inside cRenderingInfo, which is Go memory passed to C (cgo rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	// Handle color attachments
 	if len(renderingInfo.ColorAttachments) > 0 {
 		cColorAttachments := make([]C.VkRenderingAttachmentInfo, len(renderingInfo.ColorAttachments))
-		for i, attachment := range renderingInfo.ColorAttachments {
-			cColorAttachments[i] = C.VkRenderingAttachmentInfo{
-				sType:              C.VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-				pNext:              nil,
-				imageView:          C.VkImageView(attachment.ImageView),
-				imageLayout:        C.VkImageLayout(attachment.ImageLayout),
-				resolveMode:        C.VkResolveModeFlagBits(attachment.ResolveMode),
-				resolveImageView:   C.VkImageView(attachment.ResolveImageView),
-				resolveImageLayout: C.VkImageLayout(attachment.ResolveImageLayout),
-				loadOp:             C.VkAttachmentLoadOp(attachment.LoadOp),
-				storeOp:            C.VkAttachmentStoreOp(attachment.StoreOp),
-				clearValue:         *(*C.VkClearValue)(unsafe.Pointer(&attachment.ClearValue)),
-			}
+		for i := range renderingInfo.ColorAttachments {
+			cColorAttachments[i] = makeCRenderingAttachmentInfo(&renderingInfo.ColorAttachments[i])
 		}
+		pinner.Pin(&cColorAttachments[0])
 		cRenderingInfo.colorAttachmentCount = C.uint32_t(len(cColorAttachments))
-		if len(cColorAttachments) > 0 {
-			cRenderingInfo.pColorAttachments = &cColorAttachments[0]
-		}
+		cRenderingInfo.pColorAttachments = &cColorAttachments[0]
 	}
 
 	// Handle depth attachment
+	var cDepthAttachment C.VkRenderingAttachmentInfo
 	if renderingInfo.DepthAttachment != nil {
-		cDepthAttachment := C.VkRenderingAttachmentInfo{
-			sType:              C.VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-			pNext:              nil,
-			imageView:          C.VkImageView(renderingInfo.DepthAttachment.ImageView),
-			imageLayout:        C.VkImageLayout(renderingInfo.DepthAttachment.ImageLayout),
-			resolveMode:        C.VkResolveModeFlagBits(renderingInfo.DepthAttachment.ResolveMode),
-			resolveImageView:   C.VkImageView(renderingInfo.DepthAttachment.ResolveImageView),
-			resolveImageLayout: C.VkImageLayout(renderingInfo.DepthAttachment.ResolveImageLayout),
-			loadOp:             C.VkAttachmentLoadOp(renderingInfo.DepthAttachment.LoadOp),
-			storeOp:            C.VkAttachmentStoreOp(renderingInfo.DepthAttachment.StoreOp),
-			clearValue:         *(*C.VkClearValue)(unsafe.Pointer(&renderingInfo.DepthAttachment.ClearValue)),
-		}
+		cDepthAttachment = makeCRenderingAttachmentInfo(renderingInfo.DepthAttachment)
+		pinner.Pin(&cDepthAttachment)
 		cRenderingInfo.pDepthAttachment = &cDepthAttachment
 	}
 
 	// Handle stencil attachment
+	var cStencilAttachment C.VkRenderingAttachmentInfo
 	if renderingInfo.StencilAttachment != nil {
-		cStencilAttachment := C.VkRenderingAttachmentInfo{
-			sType:              C.VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-			pNext:              nil,
-			imageView:          C.VkImageView(renderingInfo.StencilAttachment.ImageView),
-			imageLayout:        C.VkImageLayout(renderingInfo.StencilAttachment.ImageLayout),
-			resolveMode:        C.VkResolveModeFlagBits(renderingInfo.StencilAttachment.ResolveMode),
-			resolveImageView:   C.VkImageView(renderingInfo.StencilAttachment.ResolveImageView),
-			resolveImageLayout: C.VkImageLayout(renderingInfo.StencilAttachment.ResolveImageLayout),
-			loadOp:             C.VkAttachmentLoadOp(renderingInfo.StencilAttachment.LoadOp),
-			storeOp:            C.VkAttachmentStoreOp(renderingInfo.StencilAttachment.StoreOp),
-			clearValue:         *(*C.VkClearValue)(unsafe.Pointer(&renderingInfo.StencilAttachment.ClearValue)),
-		}
+		cStencilAttachment = makeCRenderingAttachmentInfo(renderingInfo.StencilAttachment)
+		pinner.Pin(&cStencilAttachment)
 		cRenderingInfo.pStencilAttachment = &cStencilAttachment
 	}
 
@@ -190,6 +186,11 @@ const (
 
 // QueueSubmit2 submits command buffers to a queue with enhanced synchronization
 func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
+	// Nested info arrays must be pinned because their addresses are stored
+	// inside cSubmitInfos, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cSubmitInfos []C.VkSubmitInfo2
 	if len(submitInfos) > 0 {
 		cSubmitInfos = make([]C.VkSubmitInfo2, len(submitInfos))
@@ -212,10 +213,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 						deviceIndex: C.uint32_t(waitInfo.DeviceIndex),
 					}
 				}
+				pinner.Pin(&cWaitSemaphoreInfos[0])
 				cSubmitInfos[i].waitSemaphoreInfoCount = C.uint32_t(len(cWaitSemaphoreInfos))
-				if len(cWaitSemaphoreInfos) > 0 {
-					cSubmitInfos[i].pWaitSemaphoreInfos = &cWaitSemaphoreInfos[0]
-				}
+				cSubmitInfos[i].pWaitSemaphoreInfos = &cWaitSemaphoreInfos[0]
 			}
 
 			// Handle command buffers
@@ -229,10 +229,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 						deviceMask:    C.uint32_t(cmdInfo.DeviceMask),
 					}
 				}
+				pinner.Pin(&cCommandBufferInfos[0])
 				cSubmitInfos[i].commandBufferInfoCount = C.uint32_t(len(cCommandBufferInfos))
-				if len(cCommandBufferInfos) > 0 {
-					cSubmitInfos[i].pCommandBufferInfos = &cCommandBufferInfos[0]
-				}
+				cSubmitInfos[i].pCommandBufferInfos = &cCommandBufferInfos[0]
 			}
 
 			// Handle signal semaphores
@@ -248,10 +247,9 @@ func QueueSubmit2(queue Queue, submitInfos []SubmitInfo2, fence Fence) error {
 						deviceIndex: C.uint32_t(signalInfo.DeviceIndex),
 					}
 				}
+				pinner.Pin(&cSignalSemaphoreInfos[0])
 				cSubmitInfos[i].signalSemaphoreInfoCount = C.uint32_t(len(cSignalSemaphoreInfos))
-				if len(cSignalSemaphoreInfos) > 0 {
-					cSubmitInfos[i].pSignalSemaphoreInfos = &cSignalSemaphoreInfos[0]
-				}
+				cSubmitInfos[i].pSignalSemaphoreInfos = &cSignalSemaphoreInfos[0]
 			}
 		}
 	}
@@ -331,9 +329,16 @@ func CmdSetScissorWithCount(commandBuffer CommandBuffer, scissors []Rect2D) {
 	)
 }
 
-// CmdBindVertexBuffers2 binds vertex buffers with extended parameters
+// CmdBindVertexBuffers2 binds vertex buffers with extended parameters.
+// offsets must have the same length as buffers (pOffsets is required by the
+// Vulkan spec); sizes and strides are optional and may be nil.
 func CmdBindVertexBuffers2(commandBuffer CommandBuffer, firstBinding uint32, buffers []Buffer, offsets []DeviceSize, sizes []DeviceSize, strides []DeviceSize) {
 	if len(buffers) == 0 {
+		return
+	}
+	// pOffsets is a required parameter: passing NULL would make the driver
+	// dereference a null pointer.
+	if len(offsets) != len(buffers) {
 		return
 	}
 
@@ -549,6 +554,12 @@ func GetDeviceBufferMemoryRequirements(device Device, bufferCreateInfo *BufferCr
 		pQueueFamilyIndices:   nil,
 	}
 
+	// cBufferCreateInfo must be pinned because its address is stored inside
+	// cDeviceBufferMemoryRequirements, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&cBufferCreateInfo)
+
 	cDeviceBufferMemoryRequirements := C.VkDeviceBufferMemoryRequirements{
 		sType:       C.VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS,
 		pNext:       nil,
@@ -595,6 +606,12 @@ func GetDeviceImageMemoryRequirements(device Device, imageCreateInfo *ImageCreat
 	cImageCreateInfo.extent.width = C.uint32_t(imageCreateInfo.Extent.Width)
 	cImageCreateInfo.extent.height = C.uint32_t(imageCreateInfo.Extent.Height)
 	cImageCreateInfo.extent.depth = C.uint32_t(imageCreateInfo.Extent.Depth)
+
+	// cImageCreateInfo must be pinned because its address is stored inside
+	// cDeviceImageMemoryRequirements, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&cImageCreateInfo)
 
 	cDeviceImageMemoryRequirements := C.VkDeviceImageMemoryRequirements{
 		sType:       C.VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS,

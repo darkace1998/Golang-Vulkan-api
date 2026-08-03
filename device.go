@@ -186,6 +186,9 @@ func validateDeviceCreateInfo(physicalDevice PhysicalDevice, createInfo *DeviceC
 
 // validateQueueCreateInfos validates queue create infos
 func validateQueueCreateInfos(queueCreateInfos []DeviceQueueCreateInfo) error {
+	if len(queueCreateInfos) == 0 {
+		return NewValidationError("QueueCreateInfos", "must contain at least one queue create info")
+	}
 	const maxQueues = 16
 	if len(queueCreateInfos) > maxQueues {
 		return NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")

@@ -207,7 +207,10 @@ static int call_vkCmdEncodeVideoKHR(
 */
 import "C"
 
-import "sync"
+import (
+	"runtime"
+	"sync"
+)
 
 // videoInstanceOnce and videoDeviceOnce ensure that video function pointers
 // are loaded exactly once, preventing data races if multiple goroutines
@@ -466,7 +469,11 @@ func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (Vide
 		return VideoSession(NullHandle), NewValidationError("createInfo.VideoProfile", "cannot be nil")
 	}
 
-	// Create C video profile structure
+	// Create C video profile structure. It must be pinned because its address
+	// is stored inside cCreateInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cVideoProfile C.VkVideoProfileInfoKHR
 	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
 	cVideoProfile.pNext = nil
@@ -474,6 +481,7 @@ func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (Vide
 	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(createInfo.VideoProfile.ChromaSubsampling)
 	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.LumaBitDepth)
 	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.ChromaBitDepth)
+	pinner.Pin(&cVideoProfile)
 
 	// Create C video session create info
 	var cCreateInfo C.VkVideoSessionCreateInfoKHR

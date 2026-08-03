@@ -75,6 +75,7 @@ func CreateQueryPool(device Device, createInfo *QueryPoolCreateInfo) (QueryPool,
 		return nil, NewVulkanError(result, "CreateQueryPool", "failed to create query pool")
 	}
 
+	trackResource("QueryPool", unsafe.Pointer(queryPool))
 	return QueryPool(queryPool), nil
 }
 
@@ -84,6 +85,7 @@ func DestroyQueryPool(device Device, queryPool QueryPool) {
 		return
 	}
 	C.vkDestroyQueryPool(C.VkDevice(device), C.VkQueryPool(queryPool), nil)
+	untrackResource("QueryPool", unsafe.Pointer(queryPool))
 }
 
 // GetQueryPoolResults retrieves results from a query pool as a byte slice, or an error if the operation fails

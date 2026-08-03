@@ -65,10 +65,10 @@ const (
 
 // AccelerationStructureCreateInfoKHR represents the VkAccelerationStructureCreateInfoKHR structure.
 type AccelerationStructureCreateInfoKHR struct {
-	Buffer       Buffer
-	Offset       DeviceSize
-	Size         DeviceSize
-	Type         AccelerationStructureTypeKHR
+	Buffer        Buffer
+	Offset        DeviceSize
+	Size          DeviceSize
+	Type          AccelerationStructureTypeKHR
 	DeviceAddress DeviceAddress
 }
 

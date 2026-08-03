@@ -229,93 +229,93 @@ const (
 
 type (
 	// Instance represents a Vulkan instance
-	Instance                 unsafe.Pointer
+	Instance unsafe.Pointer
 	// PhysicalDevice represents a Vulkan physical device
-	PhysicalDevice           unsafe.Pointer
+	PhysicalDevice unsafe.Pointer
 	// Device represents a Vulkan logical device
-	Device                   unsafe.Pointer
+	Device unsafe.Pointer
 	// Queue represents a Vulkan queue
-	Queue                    unsafe.Pointer
+	Queue unsafe.Pointer
 	// Semaphore represents a Vulkan semaphore
-	Semaphore                unsafe.Pointer
+	Semaphore unsafe.Pointer
 	// CommandBuffer represents a Vulkan command buffer
-	CommandBuffer            unsafe.Pointer
+	CommandBuffer unsafe.Pointer
 	// Fence represents a Vulkan fence
-	Fence                    unsafe.Pointer
+	Fence unsafe.Pointer
 	// DebugUtilsMessengerEXT represents a Vulkan debug utils messenger
-	DebugUtilsMessengerEXT   unsafe.Pointer
+	DebugUtilsMessengerEXT unsafe.Pointer
 	// DeviceMemory represents Vulkan device memory
-	DeviceMemory             unsafe.Pointer
+	DeviceMemory unsafe.Pointer
 	// Buffer represents a Vulkan buffer
-	Buffer                   unsafe.Pointer
+	Buffer unsafe.Pointer
 	// Image represents a Vulkan image
-	Image                    unsafe.Pointer
+	Image unsafe.Pointer
 	// Event represents a Vulkan event
-	Event                    unsafe.Pointer
+	Event unsafe.Pointer
 	// QueryPool represents a Vulkan query pool
-	QueryPool                unsafe.Pointer
+	QueryPool unsafe.Pointer
 	// BufferView represents a Vulkan buffer view
-	BufferView               unsafe.Pointer
+	BufferView unsafe.Pointer
 	// ImageView represents a Vulkan image view
-	ImageView                unsafe.Pointer
+	ImageView unsafe.Pointer
 	// ShaderModule represents a Vulkan shader module
-	ShaderModule             unsafe.Pointer
+	ShaderModule unsafe.Pointer
 	// PipelineCache represents a Vulkan pipeline cache
-	PipelineCache            unsafe.Pointer
+	PipelineCache unsafe.Pointer
 	// PipelineLayout represents a Vulkan pipeline layout
-	PipelineLayout           unsafe.Pointer
+	PipelineLayout unsafe.Pointer
 	// RenderPass represents a Vulkan render pass
-	RenderPass               unsafe.Pointer
+	RenderPass unsafe.Pointer
 	// Pipeline represents a Vulkan pipeline
-	Pipeline                 unsafe.Pointer
+	Pipeline unsafe.Pointer
 	// DescriptorSetLayout represents a Vulkan descriptor set layout
-	DescriptorSetLayout      unsafe.Pointer
+	DescriptorSetLayout unsafe.Pointer
 	// Sampler represents a Vulkan sampler
-	Sampler                  unsafe.Pointer
+	Sampler unsafe.Pointer
 	// DescriptorPool represents a Vulkan descriptor pool
-	DescriptorPool           unsafe.Pointer
+	DescriptorPool unsafe.Pointer
 	// DescriptorSet represents a Vulkan descriptor set
-	DescriptorSet            unsafe.Pointer
+	DescriptorSet unsafe.Pointer
 	// Framebuffer represents a Vulkan framebuffer
-	Framebuffer              unsafe.Pointer
+	Framebuffer unsafe.Pointer
 	// CommandPool represents a Vulkan command pool
-	CommandPool              unsafe.Pointer
+	CommandPool unsafe.Pointer
 	// Surface represents a Vulkan surface
-	Surface                  unsafe.Pointer
+	Surface unsafe.Pointer
 	// Swapchain represents a Vulkan swapchain
-	Swapchain                unsafe.Pointer
+	Swapchain unsafe.Pointer
 	// Display represents a Vulkan display
-	Display                  unsafe.Pointer
+	Display unsafe.Pointer
 	// DisplayMode represents a Vulkan display mode
-	DisplayMode              unsafe.Pointer
+	DisplayMode unsafe.Pointer
 	// DescriptorUpdateTemplate represents a Vulkan descriptor update template
 	DescriptorUpdateTemplate unsafe.Pointer
 	// SamplerYcbcrConversion represents a Vulkan sampler YCbCr conversion
-	SamplerYcbcrConversion   unsafe.Pointer
+	SamplerYcbcrConversion unsafe.Pointer
 	// ValidationCache represents a Vulkan validation cache
-	ValidationCache          unsafe.Pointer
+	ValidationCache unsafe.Pointer
 	// AccelerationStructure represents a Vulkan acceleration structure
-	AccelerationStructure    unsafe.Pointer
+	AccelerationStructure unsafe.Pointer
 	// PerformanceConfiguration represents a Vulkan performance configuration
 	PerformanceConfiguration unsafe.Pointer
 	// DeferredOperation represents a Vulkan deferred operation
-	DeferredOperation        unsafe.Pointer
+	DeferredOperation unsafe.Pointer
 	// PrivateDataSlot represents a Vulkan private data slot
-	PrivateDataSlot          unsafe.Pointer
+	PrivateDataSlot unsafe.Pointer
 	// VideoSession represents a Vulkan video session
-	VideoSession             unsafe.Pointer
+	VideoSession unsafe.Pointer
 	// VideoSessionParameters represents Vulkan video session parameters
-	VideoSessionParameters   unsafe.Pointer
+	VideoSessionParameters unsafe.Pointer
 	// CuModule represents a Vulkan CU module
-	CuModule                 unsafe.Pointer
+	CuModule unsafe.Pointer
 	// CuFunction represents a Vulkan CU function
-	CuFunction               unsafe.Pointer
+	CuFunction unsafe.Pointer
 	// OpticalFlowSession represents a Vulkan optical flow session
-	OpticalFlowSession       unsafe.Pointer
+	OpticalFlowSession unsafe.Pointer
 	// MicromapEXT represents a Vulkan micromap EXT
-	MicromapEXT              unsafe.Pointer
+	MicromapEXT unsafe.Pointer
 	// ShaderEXT represents a Vulkan shader EXT
-	ShaderEXT                unsafe.Pointer
+	ShaderEXT unsafe.Pointer
 )
 
 // Null handle constants

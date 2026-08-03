@@ -5,7 +5,10 @@ package vulkan
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // CommandPoolCreateInfo contains command pool creation information
 type CommandPoolCreateInfo struct {
@@ -231,7 +234,11 @@ func BeginCommandBuffer(commandBuffer CommandBuffer, beginInfo *CommandBufferBeg
 	cBeginInfo.pNext = nil
 	cBeginInfo.flags = C.VkCommandBufferUsageFlags(beginInfo.Flags)
 
-	// Handle inheritance info for secondary command buffers
+	// Handle inheritance info for secondary command buffers.
+	// cInheritanceInfo must be pinned because its address is stored inside
+	// cBeginInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	var cInheritanceInfo C.VkCommandBufferInheritanceInfo
 	if beginInfo.InheritanceInfo != nil {
 		cInheritanceInfo.sType = C.VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO
@@ -246,6 +253,7 @@ func BeginCommandBuffer(commandBuffer CommandBuffer, beginInfo *CommandBufferBeg
 		}
 		cInheritanceInfo.queryFlags = C.VkQueryControlFlags(beginInfo.InheritanceInfo.QueryFlags)
 		cInheritanceInfo.pipelineStatistics = C.VkQueryPipelineStatisticFlags(beginInfo.InheritanceInfo.PipelineStatistics)
+		pinner.Pin(&cInheritanceInfo)
 		cBeginInfo.pInheritanceInfo = &cInheritanceInfo
 	} else {
 		cBeginInfo.pInheritanceInfo = nil
@@ -287,13 +295,16 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 
 	cSubmitInfos := make([]C.VkSubmitInfo, len(submitInfos))
 
-	// We need to keep slices alive during the call
-	var allWaitSemaphores [][]C.VkSemaphore
-	var allWaitStages [][]C.VkPipelineStageFlags
-	var allCommandBuffers [][]C.VkCommandBuffer
-	var allSignalSemaphores [][]C.VkSemaphore
+	// Nested arrays referenced from cSubmitInfos must be pinned: cSubmitInfos
+	// is Go memory passed to C and may not contain unpinned Go pointers.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 
 	for i, si := range submitInfos {
+		if len(si.WaitSemaphores) > 0 && len(si.WaitDstStageMask) != len(si.WaitSemaphores) {
+			return NewValidationError("submitInfos.WaitDstStageMask", "must have the same length as WaitSemaphores")
+		}
+
 		cSubmitInfos[i].sType = C.VK_STRUCTURE_TYPE_SUBMIT_INFO
 		cSubmitInfos[i].pNext = nil
 
@@ -303,9 +314,9 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			for j, sem := range si.WaitSemaphores {
 				waitSems[j] = C.VkSemaphore(sem)
 			}
-			allWaitSemaphores = append(allWaitSemaphores, waitSems)
+			pinner.Pin(&waitSems[0])
 			cSubmitInfos[i].waitSemaphoreCount = C.uint32_t(len(waitSems))
-			cSubmitInfos[i].pWaitSemaphores = &allWaitSemaphores[len(allWaitSemaphores)-1][0]
+			cSubmitInfos[i].pWaitSemaphores = &waitSems[0]
 		}
 
 		// Wait stages
@@ -314,8 +325,8 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			for j, stage := range si.WaitDstStageMask {
 				waitStages[j] = C.VkPipelineStageFlags(stage)
 			}
-			allWaitStages = append(allWaitStages, waitStages)
-			cSubmitInfos[i].pWaitDstStageMask = &allWaitStages[len(allWaitStages)-1][0]
+			pinner.Pin(&waitStages[0])
+			cSubmitInfos[i].pWaitDstStageMask = &waitStages[0]
 		}
 
 		// Command buffers
@@ -324,9 +335,9 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			for j, cb := range si.CommandBuffers {
 				cmdBufs[j] = C.VkCommandBuffer(cb)
 			}
-			allCommandBuffers = append(allCommandBuffers, cmdBufs)
+			pinner.Pin(&cmdBufs[0])
 			cSubmitInfos[i].commandBufferCount = C.uint32_t(len(cmdBufs))
-			cSubmitInfos[i].pCommandBuffers = &allCommandBuffers[len(allCommandBuffers)-1][0]
+			cSubmitInfos[i].pCommandBuffers = &cmdBufs[0]
 		}
 
 		// Signal semaphores
@@ -335,9 +346,9 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 			for j, sem := range si.SignalSemaphores {
 				signalSems[j] = C.VkSemaphore(sem)
 			}
-			allSignalSemaphores = append(allSignalSemaphores, signalSems)
+			pinner.Pin(&signalSems[0])
 			cSubmitInfos[i].signalSemaphoreCount = C.uint32_t(len(signalSems))
-			cSubmitInfos[i].pSignalSemaphores = &allSignalSemaphores[len(allSignalSemaphores)-1][0]
+			cSubmitInfos[i].pSignalSemaphores = &signalSems[0]
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -12,26 +13,21 @@ import (
 type LeakTracker struct {
 	mu        sync.Mutex
 	resources map[string]string
-	enabled   bool
+	enabled   atomic.Bool
 }
 
 var globalTracker = &LeakTracker{
 	resources: make(map[string]string),
-	enabled:   false,
 }
 
 // EnableLeakTracker turns on tracking of Vulkan object allocations.
 func EnableLeakTracker() {
-	globalTracker.mu.Lock()
-	defer globalTracker.mu.Unlock()
-	globalTracker.enabled = true
+	globalTracker.enabled.Store(true)
 }
 
 // DisableLeakTracker turns off tracking of Vulkan object allocations.
 func DisableLeakTracker() {
-	globalTracker.mu.Lock()
-	defer globalTracker.mu.Unlock()
-	globalTracker.enabled = false
+	globalTracker.enabled.Store(false)
 }
 
 // ClearLeaks resets the current list of tracked allocations.
@@ -42,7 +38,7 @@ func ClearLeaks() {
 }
 
 func trackResource(resourceType string, handle unsafe.Pointer) {
-	if !globalTracker.enabled || handle == nil {
+	if !globalTracker.enabled.Load() || handle == nil {
 		return
 	}
 
@@ -58,7 +54,10 @@ func trackResource(resourceType string, handle unsafe.Pointer) {
 }
 
 func untrackResource(resourceType string, handle unsafe.Pointer) {
-	if !globalTracker.enabled || handle == nil {
+	// Untrack even when tracking is disabled: a resource tracked while the
+	// tracker was enabled must not be reported as leaked if it is destroyed
+	// while the tracker is disabled.
+	if handle == nil {
 		return
 	}
 

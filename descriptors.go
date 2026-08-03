@@ -4,7 +4,10 @@ package vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // ImageViewCreateInfo contains image view creation information
 type ImageViewCreateInfo struct {
@@ -126,6 +129,13 @@ type DescriptorPoolSize struct {
 
 // CreateImageView creates an image view
 func CreateImageView(device Device, createInfo *ImageViewCreateInfo) (ImageView, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+	if createInfo == nil {
+		return nil, NewValidationError("createInfo", "cannot be nil")
+	}
+
 	var cCreateInfo C.VkImageViewCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -221,6 +231,11 @@ func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCre
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// The bindings array must be pinned because its address is stored inside
+	// cCreateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkDescriptorSetLayoutCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -236,6 +251,7 @@ func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCre
 			cBindings[i].stageFlags = C.VkShaderStageFlags(binding.StageFlags)
 			cBindings[i].pImmutableSamplers = nil
 		}
+		pinner.Pin(&cBindings[0])
 		cCreateInfo.bindingCount = C.uint32_t(len(cBindings))
 		cCreateInfo.pBindings = &cBindings[0]
 	}
@@ -266,6 +282,11 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// The pool-size array must be pinned because its address is stored inside
+	// cCreateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkDescriptorPoolCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -279,6 +300,7 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 			cPoolSizes[i]._type = C.VkDescriptorType(poolSize.Type)
 			cPoolSizes[i].descriptorCount = C.uint32_t(poolSize.DescriptorCount)
 		}
+		pinner.Pin(&cPoolSizes[0])
 		cCreateInfo.poolSizeCount = C.uint32_t(len(cPoolSizes))
 		cCreateInfo.pPoolSizes = &cPoolSizes[0]
 	}
@@ -328,10 +350,16 @@ func AllocateDescriptorSets(device Device, allocateInfo *DescriptorSetAllocateIn
 	cAllocateInfo.descriptorPool = C.VkDescriptorPool(allocateInfo.DescriptorPool)
 	cAllocateInfo.descriptorSetCount = C.uint32_t(len(allocateInfo.SetLayouts))
 
+	// The layouts array must be pinned because its address is stored inside
+	// cAllocateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	cSetLayouts := make([]C.VkDescriptorSetLayout, len(allocateInfo.SetLayouts))
 	for i, layout := range allocateInfo.SetLayouts {
 		cSetLayouts[i] = C.VkDescriptorSetLayout(layout)
 	}
+	pinner.Pin(&cSetLayouts[0])
 	cAllocateInfo.pSetLayouts = &cSetLayouts[0]
 
 	cDescriptorSets := make([]C.VkDescriptorSet, len(allocateInfo.SetLayouts))
@@ -441,6 +469,11 @@ func UpdateDescriptorSets(device Device, writes []WriteDescriptorSet, copies []C
 		return // Device is required but vkUpdateDescriptorSets is void, so we silently return
 	}
 
+	// The nested info arrays must be pinned because their addresses are stored
+	// inside cWrites, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cWrites []C.VkWriteDescriptorSet
 	var allImageInfos [][]C.VkDescriptorImageInfo
 	var allBufferInfos [][]C.VkDescriptorBufferInfo
@@ -469,6 +502,7 @@ func UpdateDescriptorSets(device Device, writes []WriteDescriptorSet, copies []C
 					allImageInfos[i][j].imageView = C.VkImageView(imgInfo.ImageView)
 					allImageInfos[i][j].imageLayout = C.VkImageLayout(imgInfo.ImageLayout)
 				}
+				pinner.Pin(&allImageInfos[i][0])
 				cWrites[i].pImageInfo = &allImageInfos[i][0]
 			}
 
@@ -480,6 +514,7 @@ func UpdateDescriptorSets(device Device, writes []WriteDescriptorSet, copies []C
 					allBufferInfos[i][j].offset = C.VkDeviceSize(bufInfo.Offset)
 					allBufferInfos[i][j]._range = C.VkDeviceSize(bufInfo.Range)
 				}
+				pinner.Pin(&allBufferInfos[i][0])
 				cWrites[i].pBufferInfo = &allBufferInfos[i][0]
 			}
 
@@ -489,6 +524,7 @@ func UpdateDescriptorSets(device Device, writes []WriteDescriptorSet, copies []C
 				for j, view := range write.TexelBufferView {
 					allTexelBufferViews[i][j] = C.VkBufferView(view)
 				}
+				pinner.Pin(&allTexelBufferViews[i][0])
 				cWrites[i].pTexelBufferView = &allTexelBufferViews[i][0]
 			}
 		}

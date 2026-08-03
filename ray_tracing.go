@@ -31,7 +31,10 @@ static void call_vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStride
 }
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // LoadRayTracingPipelineFunctions loads the device-level ray tracing pipeline functions.
 // This must be called before using any ray tracing pipeline functions.
@@ -45,20 +48,20 @@ func LoadRayTracingPipelineFunctions(device Device) {
 type RayTracingShaderGroupTypeKHR int32
 
 const (
-	RayTracingShaderGroupTypeGeneralKHR              RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR
-	RayTracingShaderGroupTypeTrianglesHitGroupKHR    RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR
-	RayTracingShaderGroupTypeProceduralHitGroupKHR   RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR
+	RayTracingShaderGroupTypeGeneralKHR            RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR
+	RayTracingShaderGroupTypeTrianglesHitGroupKHR  RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR
+	RayTracingShaderGroupTypeProceduralHitGroupKHR RayTracingShaderGroupTypeKHR = C.VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_KHR
 )
 
 const ShaderUnusedKHR uint32 = C.VK_SHADER_UNUSED_KHR
 
 // RayTracingShaderGroupCreateInfoKHR represents the VkRayTracingShaderGroupCreateInfoKHR structure.
 type RayTracingShaderGroupCreateInfoKHR struct {
-	Type               RayTracingShaderGroupTypeKHR
-	GeneralShader      uint32
-	ClosestHitShader   uint32
-	AnyHitShader       uint32
-	IntersectionShader uint32
+	Type                RayTracingShaderGroupTypeKHR
+	GeneralShader       uint32
+	ClosestHitShader    uint32
+	AnyHitShader        uint32
+	IntersectionShader  uint32
 	AnyHitShaderDefault uint32
 }
 
@@ -66,9 +69,9 @@ type RayTracingShaderGroupCreateInfoKHR struct {
 type PipelineCreateFlags uint32
 
 const (
-    PipelineCreateDisableOptimizationBit PipelineCreateFlags = C.VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT
-    PipelineCreateAllowDerivativesBit    PipelineCreateFlags = C.VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT
-    PipelineCreateDerivativeBit          PipelineCreateFlags = C.VK_PIPELINE_CREATE_DERIVATIVE_BIT
+	PipelineCreateDisableOptimizationBit PipelineCreateFlags = C.VK_PIPELINE_CREATE_DISABLE_OPTIMIZATION_BIT
+	PipelineCreateAllowDerivativesBit    PipelineCreateFlags = C.VK_PIPELINE_CREATE_ALLOW_DERIVATIVES_BIT
+	PipelineCreateDerivativeBit          PipelineCreateFlags = C.VK_PIPELINE_CREATE_DERIVATIVE_BIT
 )
 
 // RayTracingPipelineCreateInfoKHR represents the VkRayTracingPipelineCreateInfoKHR structure.
@@ -109,10 +112,10 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 
 	cCreateInfos := make([]C.VkRayTracingPipelineCreateInfoKHR, len(createInfos))
 
-	// Keep slices alive to prevent GC during C calls
-	var keepAliveSlices [][]C.VkPipelineShaderStageCreateInfo
-	var keepAliveGroups [][]C.VkRayTracingShaderGroupCreateInfoKHR
-	var keepAliveStrings [][]byte
+	// Nested arrays and name strings must be pinned because their addresses
+	// are stored inside cCreateInfos, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 
 	for i, ci := range createInfos {
 		cCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR
@@ -132,10 +135,10 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 				cStages[j].module = C.VkShaderModule(stage.Module)
 
 				nameBytes := []byte(stage.Name + "\x00")
-				keepAliveStrings = append(keepAliveStrings, nameBytes)
+				pinner.Pin(&nameBytes[0])
 				cStages[j].pName = (*C.char)(unsafe.Pointer(&nameBytes[0]))
 			}
-			keepAliveSlices = append(keepAliveSlices, cStages)
+			pinner.Pin(&cStages[0])
 			cCreateInfos[i].pStages = &cStages[0]
 		}
 
@@ -151,7 +154,7 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 				cGroups[j].anyHitShader = C.uint32_t(group.AnyHitShader)
 				cGroups[j].intersectionShader = C.uint32_t(group.IntersectionShader)
 			}
-			keepAliveGroups = append(keepAliveGroups, cGroups)
+			pinner.Pin(&cGroups[0])
 			cCreateInfos[i].pGroups = &cGroups[0]
 		}
 	}
@@ -168,12 +171,15 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 		&cPipelines[0],
 	)
 
-	_ = keepAliveSlices
-	_ = keepAliveGroups
-	_ = keepAliveStrings
-
 	if Result(result) != Success {
-		return nil, &VulkanError{Result: Result(result)} // Removed Command to fix compile error
+		// A failed batch create may still have created some pipelines
+		// (failed entries are VK_NULL_HANDLE); destroy them to avoid leaks.
+		for _, p := range cPipelines {
+			if p != nil {
+				C.vkDestroyPipeline(C.VkDevice(device), p, nil)
+			}
+		}
+		return nil, &VulkanError{Result: Result(result)}
 	}
 
 	pipelines := make([]Pipeline, len(createInfos))

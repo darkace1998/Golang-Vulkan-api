@@ -46,9 +46,9 @@ func TestSetDebugUtilsObjectNameValidation(t *testing.T) {
 		ObjectHandle: 0,
 		ObjectName:   "TestBuffer",
 	})
-    // This will likely return an error because the extension is not present/loaded,
-    // but it should not crash.
-    _ = err
+	// This will likely return an error because the extension is not present/loaded,
+	// but it should not crash.
+	_ = err
 }
 
 func TestDebugUtilsLabelsValidation(t *testing.T) {
@@ -69,16 +69,16 @@ func TestDebugUtilsLabelsValidation(t *testing.T) {
 	QueueInsertDebugUtilsLabelEXT(nil, &DebugUtilsLabel{})
 	QueueInsertDebugUtilsLabelEXT(Queue(fakeHandle()), nil)
 
-    // And valid inputs (with fake handles) shouldn't crash
-    labelInfo := &DebugUtilsLabel{
+	// And valid inputs (with fake handles) shouldn't crash
+	labelInfo := &DebugUtilsLabel{
 		LabelName: "TestLabel",
 		Color:     [4]float32{1.0, 0.0, 0.0, 1.0},
 	}
-    CmdBeginDebugUtilsLabelEXT(CommandBuffer(fakeHandle()), labelInfo)
-    CmdEndDebugUtilsLabelEXT(CommandBuffer(fakeHandle()))
-    CmdInsertDebugUtilsLabelEXT(CommandBuffer(fakeHandle()), labelInfo)
+	CmdBeginDebugUtilsLabelEXT(CommandBuffer(fakeHandle()), labelInfo)
+	CmdEndDebugUtilsLabelEXT(CommandBuffer(fakeHandle()))
+	CmdInsertDebugUtilsLabelEXT(CommandBuffer(fakeHandle()), labelInfo)
 
-    QueueBeginDebugUtilsLabelEXT(Queue(fakeHandle()), labelInfo)
-    QueueEndDebugUtilsLabelEXT(Queue(fakeHandle()))
-    QueueInsertDebugUtilsLabelEXT(Queue(fakeHandle()), labelInfo)
+	QueueBeginDebugUtilsLabelEXT(Queue(fakeHandle()), labelInfo)
+	QueueEndDebugUtilsLabelEXT(Queue(fakeHandle()))
+	QueueInsertDebugUtilsLabelEXT(Queue(fakeHandle()), labelInfo)
 }

@@ -4,7 +4,10 @@ package vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // ============================================================================
 // Timeline Semaphore Support (Vulkan 1.2+)
@@ -30,11 +33,17 @@ func CreateTimelineSemaphore(device Device, initialValue uint64) (Semaphore, err
 		return nil, NewValidationError("device", "cannot be nil")
 	}
 
+	// cTypeCreateInfo must be pinned because its address is stored in the
+	// pNext chain of cCreateInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cTypeCreateInfo C.VkSemaphoreTypeCreateInfo
 	cTypeCreateInfo.sType = C.VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO
 	cTypeCreateInfo.pNext = nil
 	cTypeCreateInfo.semaphoreType = C.VK_SEMAPHORE_TYPE_TIMELINE
 	cTypeCreateInfo.initialValue = C.uint64_t(initialValue)
+	pinner.Pin(&cTypeCreateInfo)
 
 	var cCreateInfo C.VkSemaphoreCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
@@ -47,6 +56,7 @@ func CreateTimelineSemaphore(device Device, initialValue uint64) (Semaphore, err
 		return nil, NewVulkanError(result, "CreateTimelineSemaphore", "Vulkan timeline semaphore creation failed")
 	}
 
+	trackResource("Semaphore", unsafe.Pointer(semaphore))
 	return Semaphore(semaphore), nil
 }
 
@@ -88,6 +98,13 @@ func WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) 
 	for i, val := range waitInfo.Values {
 		cValues[i] = C.uint64_t(val)
 	}
+
+	// The arrays must be pinned because their addresses are stored inside
+	// cWaitInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+	pinner.Pin(&cSemaphores[0])
+	pinner.Pin(&cValues[0])
 
 	var cWaitInfo C.VkSemaphoreWaitInfo
 	cWaitInfo.sType = C.VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO
@@ -191,6 +208,7 @@ func CreateEvent(device Device, createInfo *EventCreateInfo) (Event, error) {
 		return nil, NewVulkanError(result, "CreateEvent", "Vulkan event creation failed")
 	}
 
+	trackResource("Event", unsafe.Pointer(event))
 	return Event(event), nil
 }
 
@@ -200,6 +218,7 @@ func DestroyEvent(device Device, event Event) {
 		return
 	}
 	C.vkDestroyEvent(C.VkDevice(device), C.VkEvent(event), nil)
+	untrackResource("Event", unsafe.Pointer(event))
 }
 
 // SetEvent sets an event to signaled state from the host

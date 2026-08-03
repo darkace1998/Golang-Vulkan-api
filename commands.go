@@ -40,7 +40,11 @@ static void call_vkCmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffe
 */
 import "C"
 
-import "unsafe"
+import (
+	"runtime"
+	"sync"
+	"unsafe"
+)
 
 // ClearColorValue represents a clear color value
 type ClearColorValue struct {
@@ -62,6 +66,32 @@ type ClearValue struct {
 	Color          ClearColorValue
 	DepthStencil   ClearDepthStencilValue
 	IsDepthStencil bool // Flag to indicate this is a depth/stencil clear value
+}
+
+// clearColorBits selects which member of the ClearColorValue union to use.
+// VkClearColorValue is a 16-byte union; whichever member is non-zero wins
+// (Float32 takes priority if several are set). An all-zero value has the
+// same bit pattern in every member, so the choice is then irrelevant.
+func clearColorBits(cv *ClearColorValue) [4]uint32 {
+	switch {
+	case cv.Float32 != [4]float32{}:
+		return *(*[4]uint32)(unsafe.Pointer(&cv.Float32))
+	case cv.Uint32 != [4]uint32{}:
+		return cv.Uint32
+	default:
+		return *(*[4]uint32)(unsafe.Pointer(&cv.Int32))
+	}
+}
+
+// setCClearValue writes a Go ClearValue into a C VkClearValue union.
+func setCClearValue(dst *C.VkClearValue, cv *ClearValue) {
+	if cv.IsDepthStencil {
+		cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(dst))
+		cDepthStencil.depth = C.float(cv.DepthStencil.Depth)
+		cDepthStencil.stencil = C.uint32_t(cv.DepthStencil.Stencil)
+	} else {
+		*(*[4]uint32)(unsafe.Pointer(dst)) = clearColorBits(&cv.Color)
+	}
 }
 
 // RenderPassBeginInfo contains render pass begin information
@@ -127,22 +157,17 @@ func CmdBeginRenderPass(commandBuffer CommandBuffer, beginInfo *RenderPassBeginI
 	cBeginInfo.renderArea.extent.width = C.uint32_t(beginInfo.RenderArea.Extent.Width)
 	cBeginInfo.renderArea.extent.height = C.uint32_t(beginInfo.RenderArea.Extent.Height)
 
-	// Handle clear values
+	// Handle clear values. The array is pinned because its address is stored
+	// inside cBeginInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	var cClearValues []C.VkClearValue
 	if len(beginInfo.ClearValues) > 0 {
 		cClearValues = make([]C.VkClearValue, len(beginInfo.ClearValues))
-		for i, cv := range beginInfo.ClearValues {
-			// VkClearValue is a union - use IsDepthStencil flag to determine which to use
-			if cv.IsDepthStencil {
-				// Use C struct for correct offset calculation to match VkClearDepthStencilValue layout
-				cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cClearValues[i]))
-				cDepthStencil.depth = C.float(cv.DepthStencil.Depth)
-				cDepthStencil.stencil = C.uint32_t(cv.DepthStencil.Stencil)
-			} else {
-				// Use color clear value - VkClearColorValue is a union, use float32 array
-				*(*[4]float32)(unsafe.Pointer(&cClearValues[i])) = cv.Color.Float32
-			}
+		for i := range beginInfo.ClearValues {
+			setCClearValue(&cClearValues[i], &beginInfo.ClearValues[i])
 		}
+		pinner.Pin(&cClearValues[0])
 		cBeginInfo.clearValueCount = C.uint32_t(len(cClearValues))
 		cBeginInfo.pClearValues = &cClearValues[0]
 	} else {
@@ -232,12 +257,6 @@ func CmdBindVertexBuffers(commandBuffer CommandBuffer, firstBinding uint32, buff
 	}
 	if len(buffers) != len(offsets) {
 		return // Mismatched array lengths
-	}
-
-	// Bounds checking
-	const maxVertexBuffers = 16 // Vulkan spec minimum requirement
-	if len(buffers) > maxVertexBuffers {
-		return // Too many buffers
 	}
 
 	// Check for valid buffer handles
@@ -351,12 +370,6 @@ func CmdCopyBuffer(commandBuffer CommandBuffer, srcBuffer, dstBuffer Buffer, reg
 		return // No regions to copy
 	}
 
-	// Bounds checking
-	const maxCopyRegions = 1024 // Reasonable limit for copy operations
-	if len(regions) > maxCopyRegions {
-		return // Too many copy regions
-	}
-
 	// Validate copy regions
 	for _, region := range regions {
 		if region.Size == 0 {
@@ -464,13 +477,6 @@ func CmdPushConstants(commandBuffer CommandBuffer, layout PipelineLayout, stageF
 		return // Size must be a multiple of 4
 	}
 
-	// Maximum push constant size is typically 128 bytes (minimum guaranteed by Vulkan spec)
-	// Some implementations support more, but we validate against the common limit
-	const maxPushConstantSize = 256 // Conservative limit
-	if len(data) > maxPushConstantSize {
-		return // Data too large
-	}
-
 	C.vkCmdPushConstants(
 		C.VkCommandBuffer(commandBuffer),
 		C.VkPipelineLayout(layout),
@@ -493,10 +499,16 @@ func CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLa
 	CmdPushConstants(commandBuffer, layout, stageFlags, offset, data)
 }
 
+var meshShaderLoadMu sync.Mutex
+
 // LoadMeshShaderFunctions loads the device-level mesh shader functions.
 // This must be called before using any CmdDrawMeshTasks* functions.
+// Note: the function pointers are process-global and device-level; they are
+// resolved from the first device passed here and reused for all devices.
 func LoadMeshShaderFunctions(device Device) {
 	if device != nil {
+		meshShaderLoadMu.Lock()
+		defer meshShaderLoadMu.Unlock()
 		C.loadMeshShaderFunctions(C.VkDevice(device))
 	}
 }

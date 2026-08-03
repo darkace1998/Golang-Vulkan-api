@@ -55,6 +55,7 @@ static VkResult call_vkGetPhysicalDeviceVideoFormatPropertiesKHR(
 import "C"
 
 import (
+	"runtime"
 	"sync"
 	"unsafe"
 )
@@ -139,9 +140,9 @@ type VideoEncodeRateControlMode uint32
 
 const (
 	VideoEncodeRateControlModeDefault  VideoEncodeRateControlMode = 0
-	VideoEncodeRateControlModeDisabled VideoEncodeRateControlMode = 1
-	VideoEncodeRateControlModeCBR      VideoEncodeRateControlMode = 2
-	VideoEncodeRateControlModeVBR      VideoEncodeRateControlMode = 3
+	VideoEncodeRateControlModeDisabled VideoEncodeRateControlMode = 1 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR
+	VideoEncodeRateControlModeCBR      VideoEncodeRateControlMode = 2 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR
+	VideoEncodeRateControlModeVBR      VideoEncodeRateControlMode = 4 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR
 )
 
 // VideoEncodeRateControlInfo contains rate control configuration
@@ -659,11 +660,31 @@ func CreateDPBManager(maxSlots uint32) *DPBManager {
 	}
 }
 
-// AddSlot adds a picture to the DPB
+// AddSlot adds a picture to the DPB. When the DPB is full, the oldest
+// short-term reference is evicted and its slot index is reused so slot
+// indices always stay below maxSlots and the DPB does not grow unboundedly.
 func (dpb *DPBManager) AddSlot(imageView ImageView, imageLayout ImageLayout, poc int32) (*DPBSlot, error) {
 	if uint32(len(dpb.slots)) >= dpb.maxSlots {
 		// Need to remove oldest reference
 		dpb.RemoveOldestReference()
+
+		// Reuse the first non-reference slot in place, keeping its index.
+		for i := range dpb.slots {
+			if !dpb.slots[i].IsReference {
+				dpb.slots[i] = DPBSlot{
+					SlotIndex:         dpb.slots[i].SlotIndex,
+					ImageView:         imageView,
+					ImageLayout:       imageLayout,
+					IsReference:       true,
+					PictureOrderCount: poc,
+					FrameNum:          dpb.frameNum,
+					IsLongTerm:        false,
+				}
+				dpb.frameNum++
+				return &dpb.slots[i], nil
+			}
+		}
+		return nil, NewValidationError("DPBManager", "DPB is full and no slot can be evicted")
 	}
 
 	slot := DPBSlot{
@@ -839,6 +860,11 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 		return nil, NewValidationError("videoProfile", "cannot be nil")
 	}
 
+	// The profile and profile list must be pinned because their addresses are
+	// stored inside structs that are Go memory passed to C (cgo rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	// Create profile info
 	var cVideoProfile C.VkVideoProfileInfoKHR
 	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
@@ -847,6 +873,7 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(videoProfile.ChromaSubsampling)
 	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.LumaBitDepth)
 	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.ChromaBitDepth)
+	pinner.Pin(&cVideoProfile)
 
 	// Create profile list
 	var cProfileList C.VkVideoProfileListInfoKHR
@@ -854,6 +881,7 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 	cProfileList.pNext = nil
 	cProfileList.profileCount = 1
 	cProfileList.pProfiles = &cVideoProfile
+	pinner.Pin(&cProfileList)
 
 	// Create format info
 	var cFormatInfo C.VkPhysicalDeviceVideoFormatInfoKHR
