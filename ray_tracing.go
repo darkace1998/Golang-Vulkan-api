@@ -4,44 +4,125 @@ package vulkan
 #include <stdlib.h>
 #include <vulkan/vulkan.h>
 
-static PFN_vkCreateRayTracingPipelinesKHR pfn_vkCreateRayTracingPipelinesKHR = NULL;
-static PFN_vkCmdTraceRaysKHR pfn_vkCmdTraceRaysKHR = NULL;
-
-static void loadRayTracingPipelineFunctions(VkDevice device) {
-    if (device == NULL) return;
-    if (pfn_vkCreateRayTracingPipelinesKHR == NULL) {
-        pfn_vkCreateRayTracingPipelinesKHR = (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR");
-    }
-    if (pfn_vkCmdTraceRaysKHR == NULL) {
-        pfn_vkCmdTraceRaysKHR = (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR");
-    }
+static PFN_vkCreateRayTracingPipelinesKHR load_vkCreateRayTracingPipelinesKHR(VkDevice device) {
+    return (PFN_vkCreateRayTracingPipelinesKHR)vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR");
 }
 
-static VkResult call_vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) {
-    if (pfn_vkCreateRayTracingPipelinesKHR != NULL) {
-        return pfn_vkCreateRayTracingPipelinesKHR(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
+static PFN_vkCmdTraceRaysKHR load_vkCmdTraceRaysKHR(VkDevice device) {
+    return (PFN_vkCmdTraceRaysKHR)vkGetDeviceProcAddr(device, "vkCmdTraceRaysKHR");
+}
+
+static VkResult call_vkCreateRayTracingPipelinesKHR(PFN_vkCreateRayTracingPipelinesKHR pfn, VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) {
+    if (pfn != NULL) {
+        return pfn(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
     }
     return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-static void call_vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) {
-    if (pfn_vkCmdTraceRaysKHR != NULL) {
-        pfn_vkCmdTraceRaysKHR(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
-    }
+static void call_vkCmdTraceRaysKHR(PFN_vkCmdTraceRaysKHR pfn, VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) {
+    pfn(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
 }
 */
 import "C"
 import (
 	"runtime"
+	"sync"
 	"unsafe"
 )
 
-// LoadRayTracingPipelineFunctions loads the device-level ray tracing pipeline functions.
-// This must be called before using any ray tracing pipeline functions.
-func LoadRayTracingPipelineFunctions(device Device) {
-	if device != nil {
-		C.loadRayTracingPipelineFunctions(C.VkDevice(device))
+// RayTracingFunctions holds the device-level VK_KHR_ray_tracing_pipeline
+// function pointers for one specific VkDevice. Device-level function pointers
+// are only valid for the device they were queried from, so applications using
+// multiple devices must use one RayTracingFunctions per device.
+type RayTracingFunctions struct {
+	device          Device
+	createPipelines C.PFN_vkCreateRayTracingPipelinesKHR
+	traceRays       C.PFN_vkCmdTraceRaysKHR
+}
+
+var (
+	rayTracingFuncsMu      sync.RWMutex
+	rayTracingFuncsByDev   = make(map[Device]*RayTracingFunctions)
+	rayTracingFuncsDefault *RayTracingFunctions
+)
+
+// LoadRayTracingPipelineFunctions resolves the device-level ray tracing
+// pipeline functions for the given device and returns them. The result is
+// cached per device; loading is idempotent and thread-safe.
+//
+// The first successfully loaded device also becomes the dispatch target for
+// the package-level CmdTraceRaysKHR convenience function. Applications with
+// more than one device must call methods on the returned RayTracingFunctions
+// instead of the package-level functions.
+//
+// Returns an error if the device is nil or the extension is unavailable.
+func LoadRayTracingPipelineFunctions(device Device) (*RayTracingFunctions, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
 	}
+
+	rayTracingFuncsMu.RLock()
+	f := rayTracingFuncsByDev[device]
+	rayTracingFuncsMu.RUnlock()
+	if f != nil {
+		return f, nil
+	}
+
+	f = &RayTracingFunctions{
+		device:          device,
+		createPipelines: C.load_vkCreateRayTracingPipelinesKHR(C.VkDevice(device)),
+		traceRays:       C.load_vkCmdTraceRaysKHR(C.VkDevice(device)),
+	}
+	if f.createPipelines == nil {
+		return nil, NewVulkanError(ErrorExtensionNotPresent, "LoadRayTracingPipelineFunctions", "vkCreateRayTracingPipelinesKHR not available (is VK_KHR_ray_tracing_pipeline enabled?)")
+	}
+
+	rayTracingFuncsMu.Lock()
+	if existing := rayTracingFuncsByDev[device]; existing != nil {
+		f = existing
+	} else {
+		rayTracingFuncsByDev[device] = f
+		if rayTracingFuncsDefault == nil {
+			rayTracingFuncsDefault = f
+		}
+	}
+	rayTracingFuncsMu.Unlock()
+	return f, nil
+}
+
+// unloadRayTracingFunctions drops cached function pointers for a destroyed
+// device.
+func unloadRayTracingFunctions(device Device) {
+	rayTracingFuncsMu.Lock()
+	defer rayTracingFuncsMu.Unlock()
+	delete(rayTracingFuncsByDev, device)
+	if rayTracingFuncsDefault != nil && rayTracingFuncsDefault.device == device {
+		rayTracingFuncsDefault = nil
+		for _, f := range rayTracingFuncsByDev {
+			rayTracingFuncsDefault = f
+			break
+		}
+	}
+}
+
+// rayTracingFunctionsForDevice returns the cached functions for a device,
+// loading them on first use.
+func rayTracingFunctionsForDevice(device Device) (*RayTracingFunctions, error) {
+	rayTracingFuncsMu.RLock()
+	f := rayTracingFuncsByDev[device]
+	rayTracingFuncsMu.RUnlock()
+	if f != nil {
+		return f, nil
+	}
+	return LoadRayTracingPipelineFunctions(device)
+}
+
+// defaultRayTracingFunctions returns the functions for the first loaded
+// device, used by the package-level convenience wrappers.
+func defaultRayTracingFunctions() *RayTracingFunctions {
+	rayTracingFuncsMu.RLock()
+	defer rayTracingFuncsMu.RUnlock()
+	return rayTracingFuncsDefault
 }
 
 // RayTracingShaderGroupTypeKHR represents the type of a ray tracing shader group.
@@ -101,13 +182,19 @@ type StridedDeviceAddressRegionKHR struct {
 	Size          DeviceSize
 }
 
-// CreateRayTracingPipelinesKHR creates ray tracing pipelines.
+// CreateRayTracingPipelinesKHR creates ray tracing pipelines. The functions
+// for the device are loaded on first use (per device).
 func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error) {
 	if device == nil {
 		return nil, &ValidationError{Field: "Device", Reason: "cannot be nil"}
 	}
 	if len(createInfos) == 0 {
 		return nil, &ValidationError{Field: "createInfos", Reason: "cannot be empty"}
+	}
+
+	funcs, err := rayTracingFunctionsForDevice(device)
+	if err != nil {
+		return nil, err
 	}
 
 	cCreateInfos := make([]C.VkRayTracingPipelineCreateInfoKHR, len(createInfos))
@@ -162,6 +249,7 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 	cPipelines := make([]C.VkPipeline, len(createInfos))
 
 	result := C.call_vkCreateRayTracingPipelinesKHR(
+		funcs.createPipelines,
 		C.VkDevice(device),
 		C.VkDeferredOperationKHR(nil), // deferred operation not supported yet
 		C.VkPipelineCache(pipelineCache),
@@ -190,9 +278,10 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 	return pipelines, nil
 }
 
-// CmdTraceRaysKHR executes the operation
-func CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32) {
-	if commandBuffer == nil {
+// CmdTraceRaysKHR records a trace-rays command using this device's function
+// pointers.
+func (f *RayTracingFunctions) CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32) {
+	if f == nil || f.traceRays == nil || commandBuffer == nil {
 		return
 	}
 
@@ -220,6 +309,7 @@ func CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *S
 	}
 
 	C.call_vkCmdTraceRaysKHR(
+		f.traceRays,
 		C.VkCommandBuffer(commandBuffer),
 		&cRaygen,
 		&cMiss,
@@ -229,4 +319,12 @@ func CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *S
 		C.uint32_t(height),
 		C.uint32_t(depth),
 	)
+}
+
+// CmdTraceRaysKHR records a trace-rays command using the functions of the
+// first device passed to LoadRayTracingPipelineFunctions. Single-device
+// convenience; multi-device applications must use RayTracingFunctions
+// methods.
+func CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32) {
+	defaultRayTracingFunctions().CmdTraceRaysKHR(commandBuffer, raygen, miss, hit, callable, width, height, depth)
 }

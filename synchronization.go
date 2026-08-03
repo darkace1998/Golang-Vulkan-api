@@ -74,19 +74,25 @@ type SemaphoreWaitInfo struct {
 	Values     []uint64
 }
 
-// WaitSemaphores waits for timeline semaphores (Vulkan 1.2+)
-func WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) error {
+// WaitSemaphores waits for timeline semaphores (Vulkan 1.2+).
+//
+// The returned Result is Success when the wait condition was satisfied, or
+// Timeout when the timeout elapsed first — both with a nil error, since
+// VK_TIMEOUT is a Vulkan success code (polling with timeout=0 is the
+// standard non-blocking idiom). The error is non-nil only for real failures
+// such as device loss.
+func WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) (Result, error) {
 	if device == nil {
-		return NewValidationError("device", "cannot be nil")
+		return 0, NewValidationError("device", "cannot be nil")
 	}
 	if waitInfo == nil {
-		return NewValidationError("waitInfo", "cannot be nil")
+		return 0, NewValidationError("waitInfo", "cannot be nil")
 	}
 	if len(waitInfo.Semaphores) == 0 {
-		return NewValidationError("Semaphores", "cannot be empty")
+		return 0, NewValidationError("Semaphores", "cannot be empty")
 	}
 	if len(waitInfo.Values) != len(waitInfo.Semaphores) {
-		return NewValidationError("Values", "must have same length as Semaphores")
+		return 0, NewValidationError("Values", "must have same length as Semaphores")
 	}
 
 	cSemaphores := make([]C.VkSemaphore, len(waitInfo.Semaphores))
@@ -115,11 +121,11 @@ func WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) 
 	cWaitInfo.pValues = &cValues[0]
 
 	result := Result(C.vkWaitSemaphores(C.VkDevice(device), &cWaitInfo, C.uint64_t(timeout)))
-	if result != Success {
-		return NewVulkanError(result, "WaitSemaphores", "Vulkan semaphore wait failed")
+	if result != Success && result != Timeout {
+		return result, NewVulkanError(result, "WaitSemaphores", "Vulkan semaphore wait failed")
 	}
 
-	return nil
+	return result, nil
 }
 
 // SemaphoreSignalInfo contains information for signaling a semaphore

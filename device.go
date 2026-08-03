@@ -373,6 +373,11 @@ func DestroyDevice(device Device) {
 	}
 	C.vkDestroyDevice(C.VkDevice(device), nil)
 	untrackResource("Device", unsafe.Pointer(device))
+
+	// Drop any cached device-level extension function pointers.
+	unloadMeshShaderFunctions(device)
+	unloadRayTracingFunctions(device)
+	unloadVideoDeviceFunctions(device)
 }
 
 // GetDeviceQueue gets a device queue

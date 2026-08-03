@@ -5,18 +5,15 @@ package vulkan
 #include <stdlib.h>
 #include <string.h>
 
-// Function pointer for UpdateVideoSessionParameters
-static PFN_vkUpdateVideoSessionParametersKHR pfn_vkUpdateVideoSessionParametersKHR = NULL;
 static PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR pfn_vkGetPhysicalDeviceVideoFormatPropertiesKHR = NULL;
 
-// Load additional video device functions
-static int loadAdditionalVideoDeviceFunctions(VkDevice device) {
+// Resolve the per-device UpdateVideoSessionParameters function pointer
+static PFN_vkUpdateVideoSessionParametersKHR load_vkUpdateVideoSessionParametersKHR(VkDevice device) {
     if (device == VK_NULL_HANDLE) {
-        return 0;
+        return NULL;
     }
-    pfn_vkUpdateVideoSessionParametersKHR = (PFN_vkUpdateVideoSessionParametersKHR)
+    return (PFN_vkUpdateVideoSessionParametersKHR)
         vkGetDeviceProcAddr(device, "vkUpdateVideoSessionParametersKHR");
-    return pfn_vkUpdateVideoSessionParametersKHR != NULL;
 }
 
 // Load video format query functions
@@ -29,15 +26,17 @@ static int loadVideoFormatFunctions(VkInstance instance) {
     return pfn_vkGetPhysicalDeviceVideoFormatPropertiesKHR != NULL;
 }
 
-// Wrapper for UpdateVideoSessionParameters
+// Wrapper for UpdateVideoSessionParameters, dispatching through a
+// caller-supplied per-device function pointer
 static VkResult call_vkUpdateVideoSessionParametersKHR(
+    PFN_vkUpdateVideoSessionParametersKHR pfn,
     VkDevice device,
     VkVideoSessionParametersKHR videoSessionParameters,
     const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo) {
-    if (pfn_vkUpdateVideoSessionParametersKHR == NULL) {
+    if (pfn == NULL) {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
-    return pfn_vkUpdateVideoSessionParametersKHR(device, videoSessionParameters, pUpdateInfo);
+    return pfn(device, videoSessionParameters, pUpdateInfo);
 }
 
 // Wrapper for GetPhysicalDeviceVideoFormatProperties
@@ -60,13 +59,12 @@ import (
 	"unsafe"
 )
 
-// VideoDeviceFunctions defines the VideoDeviceFunctions type
-// VideoDeviceFunctions holds per-device video function pointers
-// This provides thread-safe access to video extension functions
+// VideoDeviceFunctions holds per-device video function pointers. Device-level
+// function pointers are only valid for the device they were queried from, so
+// each device gets its own instance.
 type VideoDeviceFunctions struct {
-	device    Device
-	loaded    bool
-	loadMutex sync.RWMutex
+	device                  Device
+	updateSessionParameters C.PFN_vkUpdateVideoSessionParametersKHR
 }
 
 // videoDeviceFunctionsMap provides per-device function pointer storage
@@ -87,8 +85,9 @@ func GetVideoDeviceFunctions(device Device) *VideoDeviceFunctions {
 	return funcs
 }
 
-// CreateVideoDeviceFunctions creates and loads video functions for a device
-// This provides per-device function pointer storage with thread-safe loading
+// CreateVideoDeviceFunctions creates and loads video functions for a device.
+// The function pointers are resolved from and stored for this specific
+// device; loading is idempotent and thread-safe.
 func CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
@@ -102,27 +101,26 @@ func CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error) {
 		return funcs, nil
 	}
 
-	// Create new entry
 	funcs := &VideoDeviceFunctions{
-		device: device,
-		loaded: false,
-	}
-
-	// Load functions - this also uses the global loading for now
-	// but tracks per-device state
-	if C.loadAdditionalVideoDeviceFunctions(C.VkDevice(device)) != 0 {
-		funcs.loaded = true
+		device:                  device,
+		updateSessionParameters: C.load_vkUpdateVideoSessionParametersKHR(C.VkDevice(device)),
 	}
 
 	videoDeviceFunctionsMap[device] = funcs
 	return funcs, nil
 }
 
+// unloadVideoDeviceFunctions drops cached function pointers for a destroyed
+// device.
+func unloadVideoDeviceFunctions(device Device) {
+	videoDeviceFunctionsMapLock.Lock()
+	defer videoDeviceFunctionsMapLock.Unlock()
+	delete(videoDeviceFunctionsMap, device)
+}
+
 // IsLoaded returns whether the video functions are loaded
 func (vdf *VideoDeviceFunctions) IsLoaded() bool {
-	vdf.loadMutex.RLock()
-	defer vdf.loadMutex.RUnlock()
-	return vdf.loaded
+	return vdf != nil && vdf.updateSessionParameters != nil
 }
 
 // LoadVideoFormatFunctions loads video format query functions
@@ -948,7 +946,9 @@ type VideoSessionParametersUpdateInfo struct {
 	UpdateSequenceCount uint32
 }
 
-// UpdateVideoSessionParameters updates video session parameters
+// UpdateVideoSessionParameters updates video session parameters, dispatching
+// through the function pointer resolved for this specific device (loaded on
+// first use via CreateVideoDeviceFunctions).
 func UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters, updateInfo *VideoSessionParametersUpdateInfo) error {
 	if device == nil {
 		return NewValidationError("device", "cannot be nil")
@@ -960,12 +960,22 @@ func UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSes
 		return NewValidationError("updateInfo", "cannot be nil")
 	}
 
+	funcs := GetVideoDeviceFunctions(device)
+	if funcs == nil {
+		var err error
+		funcs, err = CreateVideoDeviceFunctions(device)
+		if err != nil {
+			return err
+		}
+	}
+
 	var cUpdateInfo C.VkVideoSessionParametersUpdateInfoKHR
 	cUpdateInfo.sType = C.VK_STRUCTURE_TYPE_VIDEO_SESSION_PARAMETERS_UPDATE_INFO_KHR
 	cUpdateInfo.pNext = nil
 	cUpdateInfo.updateSequenceCount = C.uint32_t(updateInfo.UpdateSequenceCount)
 
 	result := Result(C.call_vkUpdateVideoSessionParametersKHR(
+		funcs.updateSessionParameters,
 		C.VkDevice(device),
 		C.VkVideoSessionParametersKHR(videoSessionParameters),
 		&cUpdateInfo,

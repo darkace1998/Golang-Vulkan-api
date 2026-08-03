@@ -300,7 +300,7 @@ func main() {
 	}
 
 	// Wait for completion
-	err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0))
+	_, err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0))
 	if err != nil {
 		log.Fatal("Failed to wait for fence:", err)
 	}

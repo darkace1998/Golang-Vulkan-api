@@ -3,39 +3,28 @@ package vulkan
 /*
 #include <vulkan/vulkan.h>
 
-static PFN_vkCmdDrawMeshTasksEXT pfn_vkCmdDrawMeshTasksEXT = NULL;
-static PFN_vkCmdDrawMeshTasksIndirectEXT pfn_vkCmdDrawMeshTasksIndirectEXT = NULL;
-static PFN_vkCmdDrawMeshTasksIndirectCountEXT pfn_vkCmdDrawMeshTasksIndirectCountEXT = NULL;
-
-static void loadMeshShaderFunctions(VkDevice device) {
-    if (device == NULL) return;
-    if (pfn_vkCmdDrawMeshTasksEXT == NULL) {
-        pfn_vkCmdDrawMeshTasksEXT = (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksEXT");
-    }
-    if (pfn_vkCmdDrawMeshTasksIndirectEXT == NULL) {
-        pfn_vkCmdDrawMeshTasksIndirectEXT = (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectEXT");
-    }
-    if (pfn_vkCmdDrawMeshTasksIndirectCountEXT == NULL) {
-        pfn_vkCmdDrawMeshTasksIndirectCountEXT = (PFN_vkCmdDrawMeshTasksIndirectCountEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectCountEXT");
-    }
+static PFN_vkCmdDrawMeshTasksEXT load_vkCmdDrawMeshTasksEXT(VkDevice device) {
+    return (PFN_vkCmdDrawMeshTasksEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksEXT");
 }
 
-static void call_vkCmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
-    if (pfn_vkCmdDrawMeshTasksEXT != NULL) {
-        pfn_vkCmdDrawMeshTasksEXT(commandBuffer, groupCountX, groupCountY, groupCountZ);
-    }
+static PFN_vkCmdDrawMeshTasksIndirectEXT load_vkCmdDrawMeshTasksIndirectEXT(VkDevice device) {
+    return (PFN_vkCmdDrawMeshTasksIndirectEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectEXT");
 }
 
-static void call_vkCmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) {
-    if (pfn_vkCmdDrawMeshTasksIndirectEXT != NULL) {
-        pfn_vkCmdDrawMeshTasksIndirectEXT(commandBuffer, buffer, offset, drawCount, stride);
-    }
+static PFN_vkCmdDrawMeshTasksIndirectCountEXT load_vkCmdDrawMeshTasksIndirectCountEXT(VkDevice device) {
+    return (PFN_vkCmdDrawMeshTasksIndirectCountEXT)vkGetDeviceProcAddr(device, "vkCmdDrawMeshTasksIndirectCountEXT");
 }
 
-static void call_vkCmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) {
-    if (pfn_vkCmdDrawMeshTasksIndirectCountEXT != NULL) {
-        pfn_vkCmdDrawMeshTasksIndirectCountEXT(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
-    }
+static void call_vkCmdDrawMeshTasksEXT(PFN_vkCmdDrawMeshTasksEXT pfn, VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    pfn(commandBuffer, groupCountX, groupCountY, groupCountZ);
+}
+
+static void call_vkCmdDrawMeshTasksIndirectEXT(PFN_vkCmdDrawMeshTasksIndirectEXT pfn, VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) {
+    pfn(commandBuffer, buffer, offset, drawCount, stride);
+}
+
+static void call_vkCmdDrawMeshTasksIndirectCountEXT(PFN_vkCmdDrawMeshTasksIndirectCountEXT pfn, VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) {
+    pfn(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
 }
 */
 import "C"
@@ -499,43 +488,134 @@ func CmdPushConstantsTyped[T any](commandBuffer CommandBuffer, layout PipelineLa
 	CmdPushConstants(commandBuffer, layout, stageFlags, offset, data)
 }
 
-var meshShaderLoadMu sync.Mutex
+// MeshShaderFunctions holds the device-level VK_EXT_mesh_shader function
+// pointers for one specific VkDevice. Device-level function pointers are only
+// valid for the device they were queried from, so applications using multiple
+// devices must use one MeshShaderFunctions per device.
+type MeshShaderFunctions struct {
+	device                     Device
+	drawMeshTasks              C.PFN_vkCmdDrawMeshTasksEXT
+	drawMeshTasksIndirect      C.PFN_vkCmdDrawMeshTasksIndirectEXT
+	drawMeshTasksIndirectCount C.PFN_vkCmdDrawMeshTasksIndirectCountEXT
+}
 
-// LoadMeshShaderFunctions loads the device-level mesh shader functions.
-// This must be called before using any CmdDrawMeshTasks* functions.
-// Note: the function pointers are process-global and device-level; they are
-// resolved from the first device passed here and reused for all devices.
-func LoadMeshShaderFunctions(device Device) {
-	if device != nil {
-		meshShaderLoadMu.Lock()
-		defer meshShaderLoadMu.Unlock()
-		C.loadMeshShaderFunctions(C.VkDevice(device))
+var (
+	meshShaderFuncsMu      sync.RWMutex
+	meshShaderFuncsByDev   = make(map[Device]*MeshShaderFunctions)
+	meshShaderFuncsDefault *MeshShaderFunctions
+)
+
+// LoadMeshShaderFunctions resolves the device-level mesh shader functions for
+// the given device and returns them. The result is cached per device; loading
+// is idempotent and thread-safe.
+//
+// The first successfully loaded device also becomes the dispatch target for
+// the package-level CmdDrawMeshTasks* convenience functions. Applications
+// with more than one device must call methods on the returned
+// MeshShaderFunctions instead of the package-level functions.
+//
+// Returns an error if the device is nil or the extension is unavailable.
+func LoadMeshShaderFunctions(device Device) (*MeshShaderFunctions, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
+
+	meshShaderFuncsMu.RLock()
+	f := meshShaderFuncsByDev[device]
+	meshShaderFuncsMu.RUnlock()
+	if f != nil {
+		return f, nil
+	}
+
+	f = &MeshShaderFunctions{
+		device:                     device,
+		drawMeshTasks:              C.load_vkCmdDrawMeshTasksEXT(C.VkDevice(device)),
+		drawMeshTasksIndirect:      C.load_vkCmdDrawMeshTasksIndirectEXT(C.VkDevice(device)),
+		drawMeshTasksIndirectCount: C.load_vkCmdDrawMeshTasksIndirectCountEXT(C.VkDevice(device)),
+	}
+	if f.drawMeshTasks == nil {
+		return nil, NewVulkanError(ErrorExtensionNotPresent, "LoadMeshShaderFunctions", "vkCmdDrawMeshTasksEXT not available (is VK_EXT_mesh_shader enabled?)")
+	}
+
+	meshShaderFuncsMu.Lock()
+	if existing := meshShaderFuncsByDev[device]; existing != nil {
+		f = existing
+	} else {
+		meshShaderFuncsByDev[device] = f
+		if meshShaderFuncsDefault == nil {
+			meshShaderFuncsDefault = f
+		}
+	}
+	meshShaderFuncsMu.Unlock()
+	return f, nil
+}
+
+// unloadMeshShaderFunctions drops cached function pointers for a destroyed
+// device.
+func unloadMeshShaderFunctions(device Device) {
+	meshShaderFuncsMu.Lock()
+	defer meshShaderFuncsMu.Unlock()
+	delete(meshShaderFuncsByDev, device)
+	if meshShaderFuncsDefault != nil && meshShaderFuncsDefault.device == device {
+		meshShaderFuncsDefault = nil
+		for _, f := range meshShaderFuncsByDev {
+			meshShaderFuncsDefault = f
+			break
+		}
 	}
 }
 
-// CmdDrawMeshTasksEXT executes the operation
 // CmdDrawMeshTasksEXT draws mesh tasks.
-func CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32) {
-	if commandBuffer == nil {
+func (f *MeshShaderFunctions) CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32) {
+	if f == nil || f.drawMeshTasks == nil || commandBuffer == nil {
 		return
 	}
-	C.call_vkCmdDrawMeshTasksEXT(C.VkCommandBuffer(commandBuffer), C.uint32_t(groupCountX), C.uint32_t(groupCountY), C.uint32_t(groupCountZ))
+	C.call_vkCmdDrawMeshTasksEXT(f.drawMeshTasks, C.VkCommandBuffer(commandBuffer), C.uint32_t(groupCountX), C.uint32_t(groupCountY), C.uint32_t(groupCountZ))
 }
 
-// CmdDrawMeshTasksIndirectEXT executes the operation
 // CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters.
-func CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
-	if commandBuffer == nil || buffer == nil {
+func (f *MeshShaderFunctions) CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
+	if f == nil || f.drawMeshTasksIndirect == nil || commandBuffer == nil || buffer == nil {
 		return
 	}
-	C.call_vkCmdDrawMeshTasksIndirectEXT(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
+	C.call_vkCmdDrawMeshTasksIndirectEXT(f.drawMeshTasksIndirect, C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.uint32_t(drawCount), C.uint32_t(stride))
 }
 
-// CmdDrawMeshTasksIndirectCountEXT executes the operation
 // CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters and indirect count.
-func CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
-	if commandBuffer == nil || buffer == nil || countBuffer == nil {
+func (f *MeshShaderFunctions) CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
+	if f == nil || f.drawMeshTasksIndirectCount == nil || commandBuffer == nil || buffer == nil || countBuffer == nil {
 		return
 	}
-	C.call_vkCmdDrawMeshTasksIndirectCountEXT(C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
+	C.call_vkCmdDrawMeshTasksIndirectCountEXT(f.drawMeshTasksIndirectCount, C.VkCommandBuffer(commandBuffer), C.VkBuffer(buffer), C.VkDeviceSize(offset), C.VkBuffer(countBuffer), C.VkDeviceSize(countBufferOffset), C.uint32_t(maxDrawCount), C.uint32_t(stride))
+}
+
+// defaultMeshShaderFunctions returns the functions for the first loaded
+// device, used by the package-level convenience wrappers.
+func defaultMeshShaderFunctions() *MeshShaderFunctions {
+	meshShaderFuncsMu.RLock()
+	defer meshShaderFuncsMu.RUnlock()
+	return meshShaderFuncsDefault
+}
+
+// CmdDrawMeshTasksEXT draws mesh tasks using the functions of the first
+// device passed to LoadMeshShaderFunctions. Single-device convenience;
+// multi-device applications must use MeshShaderFunctions methods.
+func CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32) {
+	defaultMeshShaderFunctions().CmdDrawMeshTasksEXT(commandBuffer, groupCountX, groupCountY, groupCountZ)
+}
+
+// CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters using
+// the functions of the first device passed to LoadMeshShaderFunctions.
+// Single-device convenience; multi-device applications must use
+// MeshShaderFunctions methods.
+func CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32) {
+	defaultMeshShaderFunctions().CmdDrawMeshTasksIndirectEXT(commandBuffer, buffer, offset, drawCount, stride)
+}
+
+// CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters
+// and indirect count using the functions of the first device passed to
+// LoadMeshShaderFunctions. Single-device convenience; multi-device
+// applications must use MeshShaderFunctions methods.
+func CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32) {
+	defaultMeshShaderFunctions().CmdDrawMeshTasksIndirectCountEXT(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride)
 }

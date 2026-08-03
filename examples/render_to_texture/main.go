@@ -626,7 +626,7 @@ func main() {
 		log.Fatalf("Failed to submit: %v", err)
 	}
 
-	if err := vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0)); err != nil {
+	if _, err := vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0)); err != nil {
 		log.Fatalf("Failed to wait for fence: %v", err)
 	}
 	fmt.Println("   ✓ GPU execution complete")

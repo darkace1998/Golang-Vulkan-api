@@ -422,13 +422,19 @@ func DestroyFence(device Device, fence Fence) {
 	untrackResource("Fence", unsafe.Pointer(fence))
 }
 
-// WaitForFences waits for fences to be signaled
-func WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) error {
+// WaitForFences waits for fences to be signaled.
+//
+// The returned Result is Success when the fences were signaled, or Timeout
+// when the timeout elapsed first — both with a nil error, since VK_TIMEOUT
+// is a Vulkan success code (polling with timeout=0 is the standard
+// non-blocking idiom). The error is non-nil only for real failures such as
+// device loss.
+func WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) (Result, error) {
 	if device == nil {
-		return NewValidationError("device", "cannot be nil")
+		return 0, NewValidationError("device", "cannot be nil")
 	}
 	if len(fences) == 0 {
-		return nil
+		return Success, nil
 	}
 
 	cFences := make([]C.VkFence, len(fences))
@@ -444,10 +450,10 @@ func WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) 
 	}
 
 	result := Result(C.vkWaitForFences(C.VkDevice(device), C.uint32_t(len(cFences)), &cFences[0], cWaitAll, C.uint64_t(timeout)))
-	if result != Success {
-		return NewVulkanError(result, "WaitForFences", "Vulkan wait for fences failed")
+	if result != Success && result != Timeout {
+		return result, NewVulkanError(result, "WaitForFences", "Vulkan wait for fences failed")
 	}
-	return nil
+	return result, nil
 }
 
 // ResetFences resets fences

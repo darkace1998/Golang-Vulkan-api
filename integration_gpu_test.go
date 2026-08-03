@@ -188,8 +188,12 @@ func (env *integrationDevice) recordAndSubmit(t *testing.T, record func(cb Comma
 	if err != nil {
 		t.Fatalf("QueueSubmit failed: %v", err)
 	}
-	if err := WaitForFences(env.device, []Fence{fence}, true, 5_000_000_000); err != nil {
+	result, err := WaitForFences(env.device, []Fence{fence}, true, 5_000_000_000)
+	if err != nil {
 		t.Fatalf("WaitForFences failed: %v", err)
+	}
+	if result != Success {
+		t.Fatalf("WaitForFences returned %v, want Success", result)
 	}
 }
 
@@ -606,6 +610,74 @@ func TestIntegrationClearColorImageUint(t *testing.T) {
 	UnmapMemory(env.device, readbackMemory)
 }
 
+// TestIntegrationWaitPolling verifies the non-blocking polling idiom: waiting
+// on an unsignaled fence or an unreached timeline value with timeout=0 must
+// return Timeout with a nil error (VK_TIMEOUT is a success code), and must
+// return Success once the condition is met.
+func TestIntegrationWaitPolling(t *testing.T) {
+	env := setupIntegrationDevice(t)
+
+	// Unsignaled fence: poll must report Timeout without an error.
+	fence, err := CreateFence(env.device, &FenceCreateInfo{})
+	if err != nil {
+		t.Fatalf("CreateFence failed: %v", err)
+	}
+	defer DestroyFence(env.device, fence)
+
+	result, err := WaitForFences(env.device, []Fence{fence}, true, 0)
+	if err != nil {
+		t.Fatalf("Polling an unsignaled fence returned an error: %v", err)
+	}
+	if result != Timeout {
+		t.Fatalf("Polling an unsignaled fence returned %v, want Timeout", result)
+	}
+
+	// Pre-signaled fence: poll must report Success.
+	signaled, err := CreateFence(env.device, &FenceCreateInfo{Flags: FenceCreateSignaledBit})
+	if err != nil {
+		t.Fatalf("CreateFence(signaled) failed: %v", err)
+	}
+	defer DestroyFence(env.device, signaled)
+
+	result, err = WaitForFences(env.device, []Fence{signaled}, true, 0)
+	if err != nil {
+		t.Fatalf("Polling a signaled fence returned an error: %v", err)
+	}
+	if result != Success {
+		t.Fatalf("Polling a signaled fence returned %v, want Success", result)
+	}
+
+	// Timeline semaphore at value 5: waiting for 10 with timeout=0 must
+	// report Timeout without an error; waiting for 5 must report Success.
+	timeline, err := CreateTimelineSemaphore(env.device, 5)
+	if err != nil {
+		t.Fatalf("CreateTimelineSemaphore failed: %v", err)
+	}
+	defer DestroySemaphore(env.device, timeline)
+
+	result, err = WaitSemaphores(env.device, &SemaphoreWaitInfo{
+		Semaphores: []Semaphore{timeline},
+		Values:     []uint64{10},
+	}, 0)
+	if err != nil {
+		t.Fatalf("Polling an unreached timeline value returned an error: %v", err)
+	}
+	if result != Timeout {
+		t.Fatalf("Polling an unreached timeline value returned %v, want Timeout", result)
+	}
+
+	result, err = WaitSemaphores(env.device, &SemaphoreWaitInfo{
+		Semaphores: []Semaphore{timeline},
+		Values:     []uint64{5},
+	}, 0)
+	if err != nil {
+		t.Fatalf("Polling a reached timeline value returned an error: %v", err)
+	}
+	if result != Success {
+		t.Fatalf("Polling a reached timeline value returned %v, want Success", result)
+	}
+}
+
 // TestIntegrationTimestampQueries writes two timestamps around GPU work and
 // reads them back, covering query pool creation, CmdResetQueryPool,
 // CmdWriteTimestamp, and GetQueryPoolResultsUint64.
@@ -633,9 +705,12 @@ func TestIntegrationTimestampQueries(t *testing.T) {
 		CmdWriteTimestamp(cb, PipelineStageBottomOfPipeBit, queryPool, 1)
 	})
 
-	results, err := GetQueryPoolResultsUint64(env.device, queryPool, 0, 2, QueryResultWait)
+	results, queryResult, err := GetQueryPoolResultsUint64(env.device, queryPool, 0, 2, QueryResultWait)
 	if err != nil {
 		t.Fatalf("GetQueryPoolResultsUint64 failed: %v", err)
+	}
+	if queryResult != Success {
+		t.Fatalf("GetQueryPoolResultsUint64 returned %v, want Success", queryResult)
 	}
 	if len(results) != 2 {
 		t.Fatalf("Expected 2 results, got %d", len(results))

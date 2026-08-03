@@ -179,12 +179,15 @@ func TestIntegrationCgoPointerRules(t *testing.T) {
 	}
 	defer DestroySemaphore(device, timeline)
 
-	err = WaitSemaphores(device, &SemaphoreWaitInfo{
+	waitResult, err := WaitSemaphores(device, &SemaphoreWaitInfo{
 		Semaphores: []Semaphore{timeline},
 		Values:     []uint64{5},
 	}, 1_000_000_000)
 	if err != nil {
 		t.Fatalf("WaitSemaphores failed: %v", err)
+	}
+	if waitResult != Success {
+		t.Fatalf("WaitSemaphores returned %v, want Success", waitResult)
 	}
 
 	// QueueSubmit with a non-empty command buffer array (nested Go arrays in
@@ -234,7 +237,7 @@ func TestIntegrationCgoPointerRules(t *testing.T) {
 		t.Fatalf("QueueSubmit failed: %v", err)
 	}
 
-	if err := WaitForFences(device, []Fence{fence}, true, 1_000_000_000); err != nil {
+	if _, err := WaitForFences(device, []Fence{fence}, true, 1_000_000_000); err != nil {
 		t.Fatalf("WaitForFences failed: %v", err)
 	}
 	if err := DeviceWaitIdle(device); err != nil {

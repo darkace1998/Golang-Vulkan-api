@@ -5,14 +5,14 @@ import (
 )
 
 func TestWaitSemaphoresValidation(t *testing.T) {
-	err := WaitSemaphores(nil, &SemaphoreWaitInfo{}, 0)
+	_, err := WaitSemaphores(nil, &SemaphoreWaitInfo{}, 0)
 	if err == nil {
 		t.Errorf("Expected error when device is nil")
 	} else if err.Error() != testNilDeviceError {
 		t.Errorf("Unexpected error message: %v", err)
 	}
 
-	err = WaitSemaphores(fakeDevice(), nil, 0)
+	_, err = WaitSemaphores(fakeDevice(), nil, 0)
 	if err == nil {
 		t.Errorf("Expected error when waitInfo is nil")
 	} else if err.Error() != "vulkan validation error: waitInfo cannot be nil" {

@@ -290,7 +290,7 @@ func main() {
 
 	// Wait for completion
 	fmt.Println("\n19. Waiting for command completion...")
-	err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0)) // Wait indefinitely
+	_, err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0)) // Wait indefinitely
 	if err != nil {
 		log.Fatalf("Failed to wait for fence: %v", err)
 	}

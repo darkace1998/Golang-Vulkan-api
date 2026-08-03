@@ -198,7 +198,7 @@ func TestCreateFenceValidation(t *testing.T) {
 
 // TestWaitForFencesValidation tests nil parameter validation
 func TestWaitForFencesValidation(t *testing.T) {
-	err := WaitForFences(nil, []Fence{fakeFence()}, true, 1000)
+	_, err := WaitForFences(nil, []Fence{fakeFence()}, true, 1000)
 	if err == nil {
 		t.Fatal("Expected error for nil device")
 	}
@@ -210,9 +210,12 @@ func TestWaitForFencesValidation(t *testing.T) {
 
 // TestWaitForFencesEmptySlice tests that empty fences is a no-op
 func TestWaitForFencesEmptySlice(t *testing.T) {
-	err := WaitForFences(fakeDevice(), []Fence{}, true, 1000)
+	result, err := WaitForFences(fakeDevice(), []Fence{}, true, 1000)
 	if err != nil {
 		t.Fatalf("Expected nil for empty fences, got: %v", err)
+	}
+	if result != Success {
+		t.Fatalf("Expected Success for empty fences, got: %v", result)
 	}
 }
 
