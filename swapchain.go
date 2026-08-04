@@ -169,7 +169,6 @@ func DestroySwapchain(device Device, swapchain Swapchain) {
 	}
 	C.vkDestroySwapchainKHR(C.VkDevice(device), C.VkSwapchainKHR(swapchain), nil)
 	untrackResource("Swapchain", unsafe.Pointer(swapchain))
-	untrackResource("SwapchainKHR", unsafe.Pointer(swapchain))
 }
 
 // GetSwapchainImages gets the swapchain images

@@ -211,6 +211,7 @@ func CreateSampler(device Device, createInfo *SamplerCreateInfo) (Sampler, error
 		return nil, NewVulkanError(result, "CreateSampler", "Vulkan sampler creation failed")
 	}
 
+	trackResource("Sampler", unsafe.Pointer(sampler))
 	return Sampler(sampler), nil
 }
 
@@ -220,6 +221,7 @@ func DestroySampler(device Device, sampler Sampler) {
 		return
 	}
 	C.vkDestroySampler(C.VkDevice(device), C.VkSampler(sampler), nil)
+	untrackResource("Sampler", unsafe.Pointer(sampler))
 }
 
 // CreateDescriptorSetLayout creates a descriptor set layout
@@ -262,6 +264,7 @@ func CreateDescriptorSetLayout(device Device, createInfo *DescriptorSetLayoutCre
 		return nil, NewVulkanError(result, "CreateDescriptorSetLayout", "Vulkan descriptor set layout creation failed")
 	}
 
+	trackResource("DescriptorSetLayout", unsafe.Pointer(layout))
 	return DescriptorSetLayout(layout), nil
 }
 
@@ -271,6 +274,7 @@ func DestroyDescriptorSetLayout(device Device, layout DescriptorSetLayout) {
 		return
 	}
 	C.vkDestroyDescriptorSetLayout(C.VkDevice(device), C.VkDescriptorSetLayout(layout), nil)
+	untrackResource("DescriptorSetLayout", unsafe.Pointer(layout))
 }
 
 // CreateDescriptorPool creates a descriptor pool
@@ -311,6 +315,7 @@ func CreateDescriptorPool(device Device, createInfo *DescriptorPoolCreateInfo) (
 		return nil, NewVulkanError(result, "CreateDescriptorPool", "Vulkan descriptor pool creation failed")
 	}
 
+	trackResource("DescriptorPool", unsafe.Pointer(pool))
 	return DescriptorPool(pool), nil
 }
 
@@ -320,6 +325,7 @@ func DestroyDescriptorPool(device Device, pool DescriptorPool) {
 		return
 	}
 	C.vkDestroyDescriptorPool(C.VkDevice(device), C.VkDescriptorPool(pool), nil)
+	untrackResource("DescriptorPool", unsafe.Pointer(pool))
 }
 
 // DescriptorSetAllocateInfo contains descriptor set allocation information

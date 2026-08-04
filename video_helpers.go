@@ -863,14 +863,11 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 	var pinner runtime.Pinner
 	defer pinner.Unpin()
 
-	// Create profile info
+	// Create profile info with the mandatory codec-specific chain
 	var cVideoProfile C.VkVideoProfileInfoKHR
-	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
-	cVideoProfile.pNext = nil
-	cVideoProfile.videoCodecOperation = C.VkVideoCodecOperationFlagBitsKHR(videoProfile.VideoCodecOperation)
-	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(videoProfile.ChromaSubsampling)
-	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.LumaBitDepth)
-	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.ChromaBitDepth)
+	if err := buildCVideoProfile(videoProfile, &pinner, &cVideoProfile); err != nil {
+		return nil, err
+	}
 	pinner.Pin(&cVideoProfile)
 
 	// Create profile list

@@ -4,6 +4,18 @@ This document explains the platform-specific build guidance for the Golang-Vulka
 
 ## Architecture
 
+### Supported CPU architectures: 64-bit only
+
+The library models Vulkan non-dispatchable handles (buffers, images, semaphores, ...)
+as pointers, which matches `VK_DEFINE_NON_DISPATCHABLE_HANDLE` only on 64-bit
+targets. On 32-bit architectures Vulkan defines those handles as `uint64_t`, so
+the package does not compile there. Supported `GOARCH` values are `amd64`,
+`arm64`, `riscv64`, `loong64`, `ppc64le`, and `s390x`; building for a 32-bit
+architecture (e.g. `386`, `arm`) fails with an explicit error pointing at this
+document (see `arch_unsupported.go`).
+
+### Platform build tags
+
 The library uses Go build tags to provide platform-specific CGO directives:
 
 - `cgo_linux.go`: Linux-specific build configuration using pkg-config and the system Vulkan development package

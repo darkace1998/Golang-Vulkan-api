@@ -503,6 +503,7 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 	pipelines := make([]Pipeline, len(cPipelines))
 	for i, pipeline := range cPipelines {
 		pipelines[i] = Pipeline(pipeline)
+		trackResource("Pipeline", unsafe.Pointer(pipeline))
 	}
 
 	return pipelines, nil
@@ -1166,6 +1167,7 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	pipelines := make([]Pipeline, len(cPipelines))
 	for i, pipeline := range cPipelines {
 		pipelines[i] = Pipeline(pipeline)
+		trackResource("Pipeline", unsafe.Pointer(pipeline))
 	}
 
 	return pipelines, nil

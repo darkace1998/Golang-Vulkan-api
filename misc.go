@@ -177,6 +177,7 @@ func CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (Pi
 		return nil, NewVulkanError(result, "CreatePipelineCache", "Vulkan pipeline cache creation failed")
 	}
 
+	trackResource("PipelineCache", unsafe.Pointer(pipelineCache))
 	return PipelineCache(pipelineCache), nil
 }
 
@@ -184,6 +185,7 @@ func CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (Pi
 func DestroyPipelineCache(device Device, pipelineCache PipelineCache) {
 	if device != nil && pipelineCache != nil {
 		C.vkDestroyPipelineCache(C.VkDevice(device), C.VkPipelineCache(pipelineCache), nil)
+		untrackResource("PipelineCache", unsafe.Pointer(pipelineCache))
 	}
 }
 
@@ -289,6 +291,7 @@ func CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferVi
 		return nil, NewVulkanError(result, "CreateBufferView", "Vulkan buffer view creation failed")
 	}
 
+	trackResource("BufferView", unsafe.Pointer(bufferView))
 	return BufferView(bufferView), nil
 }
 
@@ -296,6 +299,7 @@ func CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferVi
 func DestroyBufferView(device Device, bufferView BufferView) {
 	if device != nil && bufferView != nil {
 		C.vkDestroyBufferView(C.VkDevice(device), C.VkBufferView(bufferView), nil)
+		untrackResource("BufferView", unsafe.Pointer(bufferView))
 	}
 }
 

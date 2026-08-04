@@ -273,6 +273,7 @@ func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, cr
 	pipelines := make([]Pipeline, len(createInfos))
 	for i, p := range cPipelines {
 		pipelines[i] = Pipeline(p)
+		trackResource("Pipeline", unsafe.Pointer(p))
 	}
 
 	return pipelines, nil
