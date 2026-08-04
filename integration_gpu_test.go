@@ -216,14 +216,15 @@ func TestIntegrationComputeDispatch(t *testing.T) {
 		t.Fatalf("MapMemory(in) failed: %v", err)
 	}
 	inData := unsafe.Slice((*uint32)(ptr), elemCount)
-	for i := range inData {
-		inData[i] = uint32(i)
+	for i := uint32(0); i < elemCount; i++ {
+		inData[i] = i
 	}
 	UnmapMemory(env.device, inMemory)
 
 	// Shader module from the embedded SPIR-V.
+	const spirvWordBytes = 4
 	shaderModule, err := CreateShaderModule(env.device, &ShaderModuleCreateInfo{
-		CodeSize: uint32(len(doubleCompSpirv) * 4),
+		CodeSize: uint32(len(doubleCompSpirv)) * spirvWordBytes, //nolint:gosec // embedded shader is ~1 KiB
 		Code:     doubleCompSpirv,
 	})
 	if err != nil {
@@ -328,8 +329,8 @@ func TestIntegrationComputeDispatch(t *testing.T) {
 		t.Fatalf("MapMemory(out) failed: %v", err)
 	}
 	outData := unsafe.Slice((*uint32)(ptr), elemCount)
-	for i := range outData {
-		want := uint32(i)*2 + 1
+	for i := uint32(0); i < elemCount; i++ {
+		want := i*2 + 1
 		if outData[i] != want {
 			t.Errorf("outData[%d] = %d, want %d", i, outData[i], want)
 		}

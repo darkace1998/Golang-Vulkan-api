@@ -164,6 +164,31 @@ func validateQueryPoolResultsParams(device Device, queryPool QueryPool, queryCou
 	return nil
 }
 
+// getQueryPoolResultsTyped is the shared implementation for the typed
+// query-result helpers. The stride is one element (doubled when availability
+// values are interleaved), so it is only correct for query types that write
+// a single counter per query.
+func getQueryPoolResultsTyped[T uint32 | uint64](device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags, op string) ([]T, Result, error) {
+	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
+		return nil, 0, err
+	}
+	elemSize := unsafe.Sizeof(T(0))
+	resultCount := queryCount
+	stride := C.VkDeviceSize(elemSize)
+	if flags&QueryResultWithAvailability != 0 {
+		resultCount = queryCount * 2
+		stride *= 2
+	}
+	results := make([]T, resultCount)
+	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
+		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(uintptr(len(results))*elemSize),
+		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
+	if result != Success && result != NotReady {
+		return nil, result, NewVulkanError(result, op, "failed to get query pool results")
+	}
+	return results, result, nil
+}
+
 // GetQueryPoolResultsUint32 retrieves 32-bit query results. It is a
 // convenience for query types that write a single counter per query
 // (occlusion, timestamp); use GetQueryPoolResults with an explicit stride
@@ -173,24 +198,8 @@ func validateQueryPoolResultsParams(device Device, queryPool QueryPool, queryCou
 // QueryResultWait, NotReady means some queries had no results available and
 // the corresponding slice entries were left as zero.
 func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, Result, error) {
-	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
-		return nil, 0, err
-	}
 	flags = flags &^ QueryResult64Bit // Mask off 64-bit flag
-	resultCount := queryCount
-	stride := C.VkDeviceSize(4)
-	if flags&QueryResultWithAvailability != 0 {
-		resultCount = queryCount * 2
-		stride = 8
-	}
-	results := make([]uint32, resultCount)
-	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*4),
-		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
-	if result != Success && result != NotReady {
-		return nil, result, NewVulkanError(result, "GetQueryPoolResultsUint32", "failed to get query pool results")
-	}
-	return results, result, nil
+	return getQueryPoolResultsTyped[uint32](device, queryPool, firstQuery, queryCount, flags, "GetQueryPoolResultsUint32")
 }
 
 // GetQueryPoolResultsUint64 retrieves 64-bit query results. It is a
@@ -202,24 +211,8 @@ func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, q
 // QueryResultWait, NotReady means some queries had no results available and
 // the corresponding slice entries were left as zero.
 func GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, Result, error) {
-	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
-		return nil, 0, err
-	}
 	flags = flags | QueryResult64Bit // Ensure 64-bit flag is set
-	resultCount := queryCount
-	stride := C.VkDeviceSize(8)
-	if flags&QueryResultWithAvailability != 0 {
-		resultCount = queryCount * 2
-		stride = 16
-	}
-	results := make([]uint64, resultCount)
-	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*8),
-		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
-	if result != Success && result != NotReady {
-		return nil, result, NewVulkanError(result, "GetQueryPoolResultsUint64", "failed to get query pool results")
-	}
-	return results, result, nil
+	return getQueryPoolResultsTyped[uint64](device, queryPool, firstQuery, queryCount, flags, "GetQueryPoolResultsUint64")
 }
 
 // ============================================================================
