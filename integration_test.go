@@ -143,6 +143,7 @@ func TestIntegrationCgoPointerRules(t *testing.T) {
 		QueueCreateInfos: []DeviceQueueCreateInfo{
 			{QueueFamilyIndex: 0, QueuePriorities: []float32{1.0}},
 		},
+		EnableTimelineSemaphores: true,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create logical device: %v", err)

@@ -115,19 +115,21 @@ func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCo
 		return nil, 0, NewValidationError("dataSize", "must be greater than 0")
 	}
 
-	if stride == 0 {
-		if flags&QueryResult64Bit != 0 {
-			stride = 8
-		} else {
-			stride = 4
-		}
-		// Add availability if requested
-		if flags&QueryResultWithAvailability != 0 {
-			stride *= 2
-		}
+	// One value is 4 or 8 bytes, doubled when availability is interleaved.
+	elemSize := uint64(4)
+	if flags&QueryResult64Bit != 0 {
+		elemSize = 8
 	}
-	if uint64(stride)*uint64(queryCount) > dataSize {
-		return nil, 0, NewValidationError("dataSize", "too small for stride * queryCount")
+	if flags&QueryResultWithAvailability != 0 {
+		elemSize *= 2
+	}
+	if stride == 0 {
+		stride = DeviceSize(elemSize)
+	}
+	// The spec only requires the last query's data to fit:
+	// dataSize >= (queryCount-1)*stride + <one query's data size>.
+	if uint64(queryCount-1)*uint64(stride)+elemSize > dataSize {
+		return nil, 0, NewValidationError("dataSize", "too small for the requested queries at this stride")
 	}
 
 	data := make([]byte, dataSize)

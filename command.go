@@ -301,8 +301,11 @@ func QueueSubmit(queue Queue, submitInfos []SubmitInfo, fence Fence) error {
 	defer pinner.Unpin()
 
 	for i, si := range submitInfos {
-		if len(si.WaitSemaphores) > 0 && len(si.WaitDstStageMask) != len(si.WaitSemaphores) {
-			return NewValidationError("submitInfos.WaitDstStageMask", "must have the same length as WaitSemaphores")
+		// pWaitDstStageMask must provide one entry per wait semaphore; fewer
+		// entries would make the driver read out of bounds. Extra entries are
+		// harmless (only the first waitSemaphoreCount are passed).
+		if len(si.WaitSemaphores) > 0 && len(si.WaitDstStageMask) < len(si.WaitSemaphores) {
+			return NewValidationError("submitInfos.WaitDstStageMask", "must have at least one entry per WaitSemaphores entry")
 		}
 
 		cSubmitInfos[i].sType = C.VK_STRUCTURE_TYPE_SUBMIT_INFO

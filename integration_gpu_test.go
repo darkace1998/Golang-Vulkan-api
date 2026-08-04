@@ -101,6 +101,7 @@ func setupIntegrationDevice(t *testing.T) *integrationDevice {
 		QueueCreateInfos: []DeviceQueueCreateInfo{
 			{QueueFamilyIndex: 0, QueuePriorities: []float32{1.0}},
 		},
+		EnableTimelineSemaphores: true,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create logical device: %v", err)
@@ -456,6 +457,25 @@ func TestIntegrationRenderPassClear(t *testing.T) {
 			},
 		}, SubpassContentsInline)
 		CmdEndRenderPass(cb)
+
+		// Make the attachment write visible to the transfer read; the implicit
+		// end-of-render-pass dependency alone does not cover the copy below.
+		CmdPipelineBarrierFull(cb, PipelineStageColorAttachmentOutputBit, PipelineStageTransferBit, 0,
+			nil, nil,
+			[]ImageMemoryBarrier{{
+				SrcAccessMask:       AccessColorAttachmentWriteBit,
+				DstAccessMask:       AccessTransferReadBit,
+				OldLayout:           ImageLayoutTransferSrcOptimal,
+				NewLayout:           ImageLayoutTransferSrcOptimal,
+				SrcQueueFamilyIndex: QueueFamilyIgnored,
+				DstQueueFamilyIndex: QueueFamilyIgnored,
+				Image:               image,
+				SubresourceRange: ImageSubresourceRange{
+					AspectMask: ImageAspectColorBit,
+					LevelCount: 1,
+					LayerCount: 1,
+				},
+			}})
 
 		CmdCopyImageToBuffer(cb, image, ImageLayoutTransferSrcOptimal, readbackBuffer,
 			[]BufferImageCopy{
