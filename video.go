@@ -5,6 +5,27 @@ package vulkan
 #include <stdlib.h>
 #include <string.h>
 
+// Std header version descriptors required by VkVideoSessionCreateInfoKHR.
+static VkExtensionProperties make_std_header(const char* name, uint32_t version) {
+    VkExtensionProperties p;
+    memset(&p, 0, sizeof(p));
+    strncpy(p.extensionName, name, VK_MAX_EXTENSION_NAME_SIZE - 1);
+    p.specVersion = version;
+    return p;
+}
+static VkExtensionProperties stdHeaderH264Decode(void) {
+    return make_std_header(VK_STD_VULKAN_VIDEO_CODEC_H264_DECODE_EXTENSION_NAME, VK_STD_VULKAN_VIDEO_CODEC_H264_DECODE_SPEC_VERSION);
+}
+static VkExtensionProperties stdHeaderH265Decode(void) {
+    return make_std_header(VK_STD_VULKAN_VIDEO_CODEC_H265_DECODE_EXTENSION_NAME, VK_STD_VULKAN_VIDEO_CODEC_H265_DECODE_SPEC_VERSION);
+}
+static VkExtensionProperties stdHeaderH264Encode(void) {
+    return make_std_header(VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_EXTENSION_NAME, VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_SPEC_VERSION);
+}
+static VkExtensionProperties stdHeaderH265Encode(void) {
+    return make_std_header(VK_STD_VULKAN_VIDEO_CODEC_H265_ENCODE_EXTENSION_NAME, VK_STD_VULKAN_VIDEO_CODEC_H265_ENCODE_SPEC_VERSION);
+}
+
 // Function pointers for video KHR extension functions
 // These need to be loaded dynamically at runtime.
 //
@@ -207,7 +228,11 @@ static int call_vkCmdEncodeVideoKHR(
 */
 import "C"
 
-import "sync"
+import (
+	"runtime"
+	"sync"
+	"unsafe"
+)
 
 // videoInstanceOnce and videoDeviceOnce ensure that video function pointers
 // are loaded exactly once, preventing data races if multiple goroutines
@@ -274,15 +299,178 @@ const (
 	VideoComponentBitDepth12      VideoComponentBitDepth = 0x00000010
 )
 
-// VideoProfileInfo describes a video profile
+// VideoDecodeH264PictureLayoutFlags represents H.264 decode picture layouts
+type VideoDecodeH264PictureLayoutFlags uint32
+
+const (
+	VideoDecodeH264PictureLayoutProgressive                VideoDecodeH264PictureLayoutFlags = 0
+	VideoDecodeH264PictureLayoutInterlacedInterleavedLines VideoDecodeH264PictureLayoutFlags = 0x00000001
+	VideoDecodeH264PictureLayoutInterlacedSeparatePlanes   VideoDecodeH264PictureLayoutFlags = 0x00000002
+)
+
+// VideoDecodeH264ProfileInfo is the codec-specific profile for H.264 decode
+// (VkVideoDecodeH264ProfileInfoKHR).
+type VideoDecodeH264ProfileInfo struct {
+	StdProfileIdc H264Profile
+	PictureLayout VideoDecodeH264PictureLayoutFlags
+}
+
+// VideoDecodeH265ProfileInfo is the codec-specific profile for H.265 decode
+// (VkVideoDecodeH265ProfileInfoKHR).
+type VideoDecodeH265ProfileInfo struct {
+	StdProfileIdc H265Profile
+}
+
+// VideoEncodeH264ProfileInfo is the codec-specific profile for H.264 encode
+// (VkVideoEncodeH264ProfileInfoKHR).
+type VideoEncodeH264ProfileInfo struct {
+	StdProfileIdc H264Profile
+}
+
+// VideoEncodeH265ProfileInfo is the codec-specific profile for H.265 encode
+// (VkVideoEncodeH265ProfileInfoKHR).
+type VideoEncodeH265ProfileInfo struct {
+	StdProfileIdc H265Profile
+}
+
+// VideoProfileInfo describes a video profile.
+//
+// The Vulkan spec requires every VkVideoProfileInfoKHR to chain a
+// codec-specific profile struct matching VideoCodecOperation. Set the
+// matching codec field (e.g. DecodeH264 for VideoCodecOperationDecodeH264Bit)
+// to control it; when left nil a documented default is chained instead
+// (H.264: High profile, progressive layout; H.265: Main profile).
 type VideoProfileInfo struct {
 	VideoCodecOperation VideoCodecOperationFlags
 	ChromaSubsampling   VideoChromaSubsampling
 	LumaBitDepth        VideoComponentBitDepth
 	ChromaBitDepth      VideoComponentBitDepth
+
+	// Codec-specific profile information; only the field matching
+	// VideoCodecOperation is used.
+	DecodeH264 *VideoDecodeH264ProfileInfo
+	DecodeH265 *VideoDecodeH265ProfileInfo
+	EncodeH264 *VideoEncodeH264ProfileInfo
+	EncodeH265 *VideoEncodeH265ProfileInfo
 }
 
-// VideoCapabilities represents video codec capabilities
+// buildCVideoProfile fills cProfile from profile and chains the mandatory
+// codec-specific profile struct (allocated on the Go heap and pinned into
+// pinner, which must outlive the C call). Returns an error for codec
+// operations this build cannot express.
+func buildCVideoProfile(profile *VideoProfileInfo, pinner *runtime.Pinner, cProfile *C.VkVideoProfileInfoKHR) error {
+	cProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
+	cProfile.pNext = nil
+	cProfile.videoCodecOperation = C.VkVideoCodecOperationFlagBitsKHR(profile.VideoCodecOperation)
+	cProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(profile.ChromaSubsampling)
+	cProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(profile.LumaBitDepth)
+	cProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(profile.ChromaBitDepth)
+
+	switch profile.VideoCodecOperation {
+	case VideoCodecOperationDecodeH264Bit:
+		info := profile.DecodeH264
+		if info == nil {
+			info = &VideoDecodeH264ProfileInfo{StdProfileIdc: H264ProfileHigh, PictureLayout: VideoDecodeH264PictureLayoutProgressive}
+		}
+		cCodec := new(C.VkVideoDecodeH264ProfileInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR
+		cCodec.pNext = nil
+		cCodec.stdProfileIdc = C.StdVideoH264ProfileIdc(info.StdProfileIdc)
+		cCodec.pictureLayout = C.VkVideoDecodeH264PictureLayoutFlagBitsKHR(info.PictureLayout)
+		pinner.Pin(cCodec)
+		cProfile.pNext = unsafe.Pointer(cCodec)
+
+	case VideoCodecOperationDecodeH265Bit:
+		info := profile.DecodeH265
+		if info == nil {
+			info = &VideoDecodeH265ProfileInfo{StdProfileIdc: H265ProfileMain}
+		}
+		cCodec := new(C.VkVideoDecodeH265ProfileInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR
+		cCodec.pNext = nil
+		cCodec.stdProfileIdc = C.StdVideoH265ProfileIdc(info.StdProfileIdc)
+		pinner.Pin(cCodec)
+		cProfile.pNext = unsafe.Pointer(cCodec)
+
+	case VideoCodecOperationEncodeH264Bit:
+		info := profile.EncodeH264
+		if info == nil {
+			info = &VideoEncodeH264ProfileInfo{StdProfileIdc: H264ProfileHigh}
+		}
+		cCodec := new(C.VkVideoEncodeH264ProfileInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR
+		cCodec.pNext = nil
+		cCodec.stdProfileIdc = C.StdVideoH264ProfileIdc(info.StdProfileIdc)
+		pinner.Pin(cCodec)
+		cProfile.pNext = unsafe.Pointer(cCodec)
+
+	case VideoCodecOperationEncodeH265Bit:
+		info := profile.EncodeH265
+		if info == nil {
+			info = &VideoEncodeH265ProfileInfo{StdProfileIdc: H265ProfileMain}
+		}
+		cCodec := new(C.VkVideoEncodeH265ProfileInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR
+		cCodec.pNext = nil
+		cCodec.stdProfileIdc = C.StdVideoH265ProfileIdc(info.StdProfileIdc)
+		pinner.Pin(cCodec)
+		cProfile.pNext = unsafe.Pointer(cCodec)
+
+	case VideoCodecOperationDecodeAV1Bit, VideoCodecOperationEncodeAV1Bit:
+		return NewValidationError("VideoCodecOperation", "AV1 requires Vulkan headers >= 1.3.277, which this build does not have")
+	}
+
+	return nil
+}
+
+// stdHeaderVersionFor returns the codec Std header version descriptor that
+// VkVideoSessionCreateInfoKHR.pStdHeaderVersion requires.
+func stdHeaderVersionFor(op VideoCodecOperationFlags) (*C.VkExtensionProperties, error) {
+	props := new(C.VkExtensionProperties)
+	switch op {
+	case VideoCodecOperationDecodeH264Bit:
+		*props = C.stdHeaderH264Decode()
+	case VideoCodecOperationDecodeH265Bit:
+		*props = C.stdHeaderH265Decode()
+	case VideoCodecOperationEncodeH264Bit:
+		*props = C.stdHeaderH264Encode()
+	case VideoCodecOperationEncodeH265Bit:
+		*props = C.stdHeaderH265Encode()
+	default:
+		return nil, NewValidationError("VideoCodecOperation", "unsupported codec operation for video session creation")
+	}
+	return props, nil
+}
+
+// VideoDecodeCapabilityFlags represents video decode capability flags
+type VideoDecodeCapabilityFlags uint32
+
+const (
+	VideoDecodeCapabilityDpbAndOutputCoincideBit VideoDecodeCapabilityFlags = 0x00000001
+	VideoDecodeCapabilityDpbAndOutputDistinctBit VideoDecodeCapabilityFlags = 0x00000002
+)
+
+// VideoDecodeCapabilities holds the decode-specific capabilities
+// (VkVideoDecodeCapabilitiesKHR).
+type VideoDecodeCapabilities struct {
+	Flags VideoDecodeCapabilityFlags
+}
+
+// VideoDecodeH264Capabilities holds H.264 decode capabilities
+// (VkVideoDecodeH264CapabilitiesKHR).
+type VideoDecodeH264Capabilities struct {
+	MaxLevelIdc            int32
+	FieldOffsetGranularity Offset2D
+}
+
+// VideoDecodeH265Capabilities holds H.265 decode capabilities
+// (VkVideoDecodeH265CapabilitiesKHR).
+type VideoDecodeH265Capabilities struct {
+	MaxLevelIdc int32
+}
+
+// VideoCapabilities represents video codec capabilities. The codec-specific
+// sub-capabilities are populated according to the profile's codec operation.
 type VideoCapabilities struct {
 	Flags                         uint32
 	MinBitstreamBufferOffsetAlign DeviceSize
@@ -292,6 +480,11 @@ type VideoCapabilities struct {
 	MaxCodedExtent                Extent2D
 	MaxDpbSlots                   uint32
 	MaxActiveReferencePictures    uint32
+
+	// Populated for decode profiles.
+	Decode     *VideoDecodeCapabilities
+	DecodeH264 *VideoDecodeH264Capabilities
+	DecodeH265 *VideoDecodeH265Capabilities
 }
 
 // VideoSessionCreateInfo contains parameters for video session creation
@@ -305,10 +498,52 @@ type VideoSessionCreateInfo struct {
 	MaxActiveReferences    uint32
 }
 
-// VideoSessionParametersCreateInfo contains parameters for video session parameters
+// VideoDecodeH264SessionParametersCreateInfo sizes the H.264 decode parameter
+// object (VkVideoDecodeH264SessionParametersCreateInfoKHR). Supplying actual
+// SPS/PPS entries is not yet exposed; entries can be reserved here and the
+// object updated later.
+type VideoDecodeH264SessionParametersCreateInfo struct {
+	MaxStdSPSCount uint32
+	MaxStdPPSCount uint32
+}
+
+// VideoDecodeH265SessionParametersCreateInfo sizes the H.265 decode parameter
+// object (VkVideoDecodeH265SessionParametersCreateInfoKHR).
+type VideoDecodeH265SessionParametersCreateInfo struct {
+	MaxStdVPSCount uint32
+	MaxStdSPSCount uint32
+	MaxStdPPSCount uint32
+}
+
+// VideoEncodeH264SessionParametersCreateInfo sizes the H.264 encode parameter
+// object (VkVideoEncodeH264SessionParametersCreateInfoKHR).
+type VideoEncodeH264SessionParametersCreateInfo struct {
+	MaxStdSPSCount uint32
+	MaxStdPPSCount uint32
+}
+
+// VideoEncodeH265SessionParametersCreateInfo sizes the H.265 encode parameter
+// object (VkVideoEncodeH265SessionParametersCreateInfoKHR).
+type VideoEncodeH265SessionParametersCreateInfo struct {
+	MaxStdVPSCount uint32
+	MaxStdSPSCount uint32
+	MaxStdPPSCount uint32
+}
+
+// VideoSessionParametersCreateInfo contains parameters for video session
+// parameters. The Vulkan spec requires the codec-specific create struct
+// matching the session's codec operation to be chained; set exactly one of
+// the codec fields.
 type VideoSessionParametersCreateInfo struct {
 	VideoSession           VideoSession
 	VideoSessionParameters VideoSessionParameters
+
+	// Codec-specific parameter capacities; set the field matching the video
+	// session's codec operation.
+	DecodeH264 *VideoDecodeH264SessionParametersCreateInfo
+	DecodeH265 *VideoDecodeH265SessionParametersCreateInfo
+	EncodeH264 *VideoEncodeH264SessionParametersCreateInfo
+	EncodeH265 *VideoEncodeH265SessionParametersCreateInfo
 }
 
 // VideoPictureResource contains video picture resource information
@@ -408,18 +643,46 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 		return nil, NewValidationError("videoProfile", "cannot be nil")
 	}
 
-	// Create C structures for video profile
+	// Create C structures for video profile with the mandatory codec chain.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cVideoProfile C.VkVideoProfileInfoKHR
-	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
-	cVideoProfile.pNext = nil
-	cVideoProfile.videoCodecOperation = C.VkVideoCodecOperationFlagBitsKHR(videoProfile.VideoCodecOperation)
-	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(videoProfile.ChromaSubsampling)
-	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.LumaBitDepth)
-	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.ChromaBitDepth)
+	if err := buildCVideoProfile(videoProfile, &pinner, &cVideoProfile); err != nil {
+		return nil, err
+	}
 
 	var cCaps C.VkVideoCapabilitiesKHR
 	cCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR
 	cCaps.pNext = nil
+
+	// Decode profiles must chain VkVideoDecodeCapabilitiesKHR plus the codec
+	// capabilities struct; both live on the Go heap and are pinned.
+	var cDecodeCaps *C.VkVideoDecodeCapabilitiesKHR
+	var cDecodeH264Caps *C.VkVideoDecodeH264CapabilitiesKHR
+	var cDecodeH265Caps *C.VkVideoDecodeH265CapabilitiesKHR
+	switch videoProfile.VideoCodecOperation {
+	case VideoCodecOperationDecodeH264Bit:
+		cDecodeH264Caps = new(C.VkVideoDecodeH264CapabilitiesKHR)
+		cDecodeH264Caps.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_CAPABILITIES_KHR
+		pinner.Pin(cDecodeH264Caps)
+
+		cDecodeCaps = new(C.VkVideoDecodeCapabilitiesKHR)
+		cDecodeCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_CAPABILITIES_KHR
+		cDecodeCaps.pNext = unsafe.Pointer(cDecodeH264Caps)
+		pinner.Pin(cDecodeCaps)
+		cCaps.pNext = unsafe.Pointer(cDecodeCaps)
+	case VideoCodecOperationDecodeH265Bit:
+		cDecodeH265Caps = new(C.VkVideoDecodeH265CapabilitiesKHR)
+		cDecodeH265Caps.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_CAPABILITIES_KHR
+		pinner.Pin(cDecodeH265Caps)
+
+		cDecodeCaps = new(C.VkVideoDecodeCapabilitiesKHR)
+		cDecodeCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_CAPABILITIES_KHR
+		cDecodeCaps.pNext = unsafe.Pointer(cDecodeH265Caps)
+		pinner.Pin(cDecodeCaps)
+		cCaps.pNext = unsafe.Pointer(cDecodeCaps)
+	}
 
 	result := Result(C.call_vkGetPhysicalDeviceVideoCapabilitiesKHR(
 		C.VkPhysicalDevice(physicalDevice),
@@ -451,6 +714,22 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 		MaxActiveReferencePictures: uint32(cCaps.maxActiveReferencePictures),
 	}
 
+	if cDecodeCaps != nil {
+		caps.Decode = &VideoDecodeCapabilities{Flags: VideoDecodeCapabilityFlags(cDecodeCaps.flags)}
+	}
+	if cDecodeH264Caps != nil {
+		caps.DecodeH264 = &VideoDecodeH264Capabilities{
+			MaxLevelIdc: int32(cDecodeH264Caps.maxLevelIdc),
+			FieldOffsetGranularity: Offset2D{
+				X: int32(cDecodeH264Caps.fieldOffsetGranularity.x),
+				Y: int32(cDecodeH264Caps.fieldOffsetGranularity.y),
+			},
+		}
+	}
+	if cDecodeH265Caps != nil {
+		caps.DecodeH265 = &VideoDecodeH265Capabilities{MaxLevelIdc: int32(cDecodeH265Caps.maxLevelIdc)}
+	}
+
 	return caps, nil
 }
 
@@ -466,14 +745,25 @@ func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (Vide
 		return VideoSession(NullHandle), NewValidationError("createInfo.VideoProfile", "cannot be nil")
 	}
 
-	// Create C video profile structure
+	// Create C video profile structure with the mandatory codec chain. It must
+	// be pinned because its address is stored inside cCreateInfo, which is Go
+	// memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cVideoProfile C.VkVideoProfileInfoKHR
-	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
-	cVideoProfile.pNext = nil
-	cVideoProfile.videoCodecOperation = C.VkVideoCodecOperationFlagBitsKHR(createInfo.VideoProfile.VideoCodecOperation)
-	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(createInfo.VideoProfile.ChromaSubsampling)
-	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.LumaBitDepth)
-	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(createInfo.VideoProfile.ChromaBitDepth)
+	if err := buildCVideoProfile(createInfo.VideoProfile, &pinner, &cVideoProfile); err != nil {
+		return VideoSession(NullHandle), err
+	}
+	pinner.Pin(&cVideoProfile)
+
+	// The spec requires pStdHeaderVersion to name the codec Std header the
+	// application was built against.
+	cStdHeader, err := stdHeaderVersionFor(createInfo.VideoProfile.VideoCodecOperation)
+	if err != nil {
+		return VideoSession(NullHandle), err
+	}
+	pinner.Pin(cStdHeader)
 
 	// Create C video session create info
 	var cCreateInfo C.VkVideoSessionCreateInfoKHR
@@ -488,6 +778,7 @@ func CreateVideoSession(device Device, createInfo *VideoSessionCreateInfo) (Vide
 	cCreateInfo.referencePictureFormat = C.VkFormat(createInfo.ReferencePictureFormat)
 	cCreateInfo.maxDpbSlots = C.uint32_t(createInfo.MaxDpbSlots)
 	cCreateInfo.maxActiveReferencePictures = C.uint32_t(createInfo.MaxActiveReferences)
+	cCreateInfo.pStdHeaderVersion = cStdHeader
 
 	var videoSession C.VkVideoSessionKHR
 	result := Result(C.call_vkCreateVideoSessionKHR(
@@ -619,12 +910,50 @@ func CreateVideoSessionParameters(device Device, createInfo *VideoSessionParamet
 		return VideoSessionParameters(NullHandle), NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// Chain the codec-specific parameter create struct; it lives on the Go
+	// heap and must be pinned for the duration of the call.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkVideoSessionParametersCreateInfoKHR
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_VIDEO_SESSION_PARAMETERS_CREATE_INFO_KHR
 	cCreateInfo.pNext = nil
 	cCreateInfo.flags = 0
 	cCreateInfo.videoSessionParametersTemplate = C.VkVideoSessionParametersKHR(createInfo.VideoSessionParameters)
 	cCreateInfo.videoSession = C.VkVideoSessionKHR(createInfo.VideoSession)
+
+	switch {
+	case createInfo.DecodeH264 != nil:
+		cCodec := new(C.VkVideoDecodeH264SessionParametersCreateInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR
+		cCodec.maxStdSPSCount = C.uint32_t(createInfo.DecodeH264.MaxStdSPSCount)
+		cCodec.maxStdPPSCount = C.uint32_t(createInfo.DecodeH264.MaxStdPPSCount)
+		pinner.Pin(cCodec)
+		cCreateInfo.pNext = unsafe.Pointer(cCodec)
+	case createInfo.DecodeH265 != nil:
+		cCodec := new(C.VkVideoDecodeH265SessionParametersCreateInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR
+		cCodec.maxStdVPSCount = C.uint32_t(createInfo.DecodeH265.MaxStdVPSCount)
+		cCodec.maxStdSPSCount = C.uint32_t(createInfo.DecodeH265.MaxStdSPSCount)
+		cCodec.maxStdPPSCount = C.uint32_t(createInfo.DecodeH265.MaxStdPPSCount)
+		pinner.Pin(cCodec)
+		cCreateInfo.pNext = unsafe.Pointer(cCodec)
+	case createInfo.EncodeH264 != nil:
+		cCodec := new(C.VkVideoEncodeH264SessionParametersCreateInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR
+		cCodec.maxStdSPSCount = C.uint32_t(createInfo.EncodeH264.MaxStdSPSCount)
+		cCodec.maxStdPPSCount = C.uint32_t(createInfo.EncodeH264.MaxStdPPSCount)
+		pinner.Pin(cCodec)
+		cCreateInfo.pNext = unsafe.Pointer(cCodec)
+	case createInfo.EncodeH265 != nil:
+		cCodec := new(C.VkVideoEncodeH265SessionParametersCreateInfoKHR)
+		cCodec.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR
+		cCodec.maxStdVPSCount = C.uint32_t(createInfo.EncodeH265.MaxStdVPSCount)
+		cCodec.maxStdSPSCount = C.uint32_t(createInfo.EncodeH265.MaxStdSPSCount)
+		cCodec.maxStdPPSCount = C.uint32_t(createInfo.EncodeH265.MaxStdPPSCount)
+		pinner.Pin(cCodec)
+		cCreateInfo.pNext = unsafe.Pointer(cCodec)
+	}
 
 	var videoSessionParams C.VkVideoSessionParametersKHR
 	result := Result(C.call_vkCreateVideoSessionParametersKHR(

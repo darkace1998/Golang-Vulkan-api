@@ -4,7 +4,10 @@ package vulkan
 #include <vulkan/vulkan.h>
 */
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // ColorSpace represents color space values
 type ColorSpace uint32
@@ -116,10 +119,18 @@ func CreateSwapchain(device Device, createInfo *SwapchainCreateInfo) (Swapchain,
 	cCreateInfo.imageUsage = C.VkImageUsageFlags(createInfo.ImageUsage)
 	cCreateInfo.imageSharingMode = C.VkSharingMode(createInfo.ImageSharingMode)
 
-	// Queue family indices
+	// Queue family indices. The array is copied and pinned because its address
+	// is stored inside cCreateInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	if len(createInfo.QueueFamilyIndices) > 0 {
-		cCreateInfo.queueFamilyIndexCount = C.uint32_t(len(createInfo.QueueFamilyIndices))
-		cCreateInfo.pQueueFamilyIndices = (*C.uint32_t)(&createInfo.QueueFamilyIndices[0])
+		cQueueFamilyIndices := make([]C.uint32_t, len(createInfo.QueueFamilyIndices))
+		for i, idx := range createInfo.QueueFamilyIndices {
+			cQueueFamilyIndices[i] = C.uint32_t(idx)
+		}
+		pinner.Pin(&cQueueFamilyIndices[0])
+		cCreateInfo.queueFamilyIndexCount = C.uint32_t(len(cQueueFamilyIndices))
+		cCreateInfo.pQueueFamilyIndices = &cQueueFamilyIndices[0]
 	} else {
 		cCreateInfo.queueFamilyIndexCount = 0
 		cCreateInfo.pQueueFamilyIndices = nil
@@ -158,7 +169,6 @@ func DestroySwapchain(device Device, swapchain Swapchain) {
 	}
 	C.vkDestroySwapchainKHR(C.VkDevice(device), C.VkSwapchainKHR(swapchain), nil)
 	untrackResource("Swapchain", unsafe.Pointer(swapchain))
-	untrackResource("SwapchainKHR", unsafe.Pointer(swapchain))
 }
 
 // GetSwapchainImages gets the swapchain images
@@ -261,6 +271,11 @@ func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {
 	cPresentInfo.sType = C.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
 	cPresentInfo.pNext = nil
 
+	// The arrays below must be pinned because their addresses are stored
+	// inside cPresentInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	// Wait semaphores
 	var cWaitSemaphores []C.VkSemaphore
 	if len(presentInfo.WaitSemaphores) > 0 {
@@ -268,6 +283,7 @@ func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {
 		for i, sem := range presentInfo.WaitSemaphores {
 			cWaitSemaphores[i] = C.VkSemaphore(sem)
 		}
+		pinner.Pin(&cWaitSemaphores[0])
 		cPresentInfo.waitSemaphoreCount = C.uint32_t(len(cWaitSemaphores))
 		cPresentInfo.pWaitSemaphores = &cWaitSemaphores[0]
 	} else {
@@ -280,6 +296,7 @@ func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {
 	for i, sc := range presentInfo.Swapchains {
 		cSwapchains[i] = C.VkSwapchainKHR(sc)
 	}
+	pinner.Pin(&cSwapchains[0])
 	cPresentInfo.swapchainCount = C.uint32_t(len(cSwapchains))
 	cPresentInfo.pSwapchains = &cSwapchains[0]
 
@@ -288,6 +305,7 @@ func QueuePresent(queue Queue, presentInfo *PresentInfo) (bool, error) {
 	for i, idx := range presentInfo.ImageIndices {
 		cImageIndices[i] = C.uint32_t(idx)
 	}
+	pinner.Pin(&cImageIndices[0])
 	cPresentInfo.pImageIndices = &cImageIndices[0]
 
 	// We don't support pResults for now

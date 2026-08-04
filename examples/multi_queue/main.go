@@ -253,7 +253,7 @@ func main() {
 
 	// 8. Wait for completion
 	fmt.Println("Waiting for graphics operations to finish...")
-	err = vulkan.WaitForFences(device, []vulkan.Fence{graphicsFence}, true, ^uint64(0))
+	_, err = vulkan.WaitForFences(device, []vulkan.Fence{graphicsFence}, true, ^uint64(0))
 	if err != nil {
 		log.Fatalf("Failed to wait for fence: %v", err)
 	}

@@ -23,6 +23,12 @@ type DeviceCreateInfo struct {
 	EnabledLayerNames     []string
 	EnabledExtensionNames []string
 	EnabledFeatures       *PhysicalDeviceFeatures
+
+	// EnableTimelineSemaphores chains VkPhysicalDeviceTimelineSemaphoreFeatures
+	// with timelineSemaphore enabled (Vulkan 1.2+). Required before using
+	// CreateTimelineSemaphore, WaitSemaphores, or SignalSemaphore on the
+	// created device.
+	EnableTimelineSemaphores bool
 }
 
 // PhysicalDeviceFeatures contains physical device features
@@ -186,6 +192,9 @@ func validateDeviceCreateInfo(physicalDevice PhysicalDevice, createInfo *DeviceC
 
 // validateQueueCreateInfos validates queue create infos
 func validateQueueCreateInfos(queueCreateInfos []DeviceQueueCreateInfo) error {
+	if len(queueCreateInfos) == 0 {
+		return NewValidationError("QueueCreateInfos", "must contain at least one queue create info")
+	}
 	const maxQueues = 16
 	if len(queueCreateInfos) > maxQueues {
 		return NewValidationError("QueueCreateInfos", "exceeds maximum of 16 queue families")
@@ -249,6 +258,20 @@ func CreateDevice(physicalDevice PhysicalDevice, createInfo *DeviceCreateInfo) (
 	cCreateInfoPtr.sType = C.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO
 	cCreateInfoPtr.pNext = nil
 	cCreateInfoPtr.flags = 0
+
+	// Optional feature structs chained via pNext, allocated in C memory like
+	// the rest of the create info.
+	if createInfo.EnableTimelineSemaphores {
+		cTimelineFeatures := (*C.VkPhysicalDeviceTimelineSemaphoreFeatures)(C.malloc(C.sizeof_VkPhysicalDeviceTimelineSemaphoreFeatures))
+		if cTimelineFeatures == nil {
+			return nil, NewVulkanError(ErrorOutOfHostMemory, "CreateDevice", "failed to allocate memory for timeline semaphore features")
+		}
+		defer C.free(unsafe.Pointer(cTimelineFeatures))
+		C.memset(unsafe.Pointer(cTimelineFeatures), 0, C.sizeof_VkPhysicalDeviceTimelineSemaphoreFeatures)
+		cTimelineFeatures.sType = C.VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES
+		cTimelineFeatures.timelineSemaphore = C.VK_TRUE
+		cCreateInfoPtr.pNext = unsafe.Pointer(cTimelineFeatures)
+	}
 
 	// Queue create infos - allocate in C memory
 	var cQueueCreateInfosPtr *C.VkDeviceQueueCreateInfo
@@ -370,6 +393,11 @@ func DestroyDevice(device Device) {
 	}
 	C.vkDestroyDevice(C.VkDevice(device), nil)
 	untrackResource("Device", unsafe.Pointer(device))
+
+	// Drop any cached device-level extension function pointers.
+	unloadMeshShaderFunctions(device)
+	unloadRayTracingFunctions(device)
+	unloadVideoDeviceFunctions(device)
 }
 
 // GetDeviceQueue gets a device queue

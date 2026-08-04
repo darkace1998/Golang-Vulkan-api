@@ -11,8 +11,9 @@ func TestLeakTracker(t *testing.T) {
 	defer DisableLeakTracker()
 	ClearLeaks()
 
-	handle1 := unsafe.Pointer(uintptr(0x1234))
-	handle2 := unsafe.Pointer(uintptr(0x5678))
+	var dummy1, dummy2 int
+	handle1 := unsafe.Pointer(&dummy1)
+	handle2 := unsafe.Pointer(&dummy2)
 
 	trackResource("TestResource", handle1)
 	trackResource("TestResource", handle2)

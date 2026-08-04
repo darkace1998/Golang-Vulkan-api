@@ -247,7 +247,7 @@ func main() {
 	fmt.Println("   ✓ QueueSubmit2 available and working")
 
 	// Wait for completion
-	err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0))
+	_, err = vulkan.WaitForFences(device, []vulkan.Fence{fence}, true, ^uint64(0))
 	if err != nil {
 		log.Fatalf("Failed to wait for fence: %v", err)
 	}

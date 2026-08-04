@@ -5,7 +5,10 @@ package vulkan
 */
 import "C"
 
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 // ============================================================================
 // Image Layout Transition Helpers
@@ -550,6 +553,11 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 	// Convert bind infos
 	cBindInfos := make([]C.VkBindSparseInfo, len(bindInfos))
 
+	// All nested arrays referenced from cBindInfos must be pinned: cBindInfos
+	// is Go memory passed to C and may not contain unpinned Go pointers.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	// We need to keep these slices alive for the duration of the call
 	type bindInfoArrays struct {
 		waitSemaphores               []C.VkSemaphore
@@ -573,6 +581,7 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 			for j, sem := range info.WaitSemaphores {
 				arrays[i].waitSemaphores[j] = C.VkSemaphore(sem)
 			}
+			pinner.Pin(&arrays[i].waitSemaphores[0])
 			cBindInfos[i].waitSemaphoreCount = C.uint32_t(len(arrays[i].waitSemaphores))
 			cBindInfos[i].pWaitSemaphores = &arrays[i].waitSemaphores[0]
 		}
@@ -585,10 +594,12 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 				arrays[i].bufferBindInfos[j].buffer = C.VkBuffer(bufBind.Buffer)
 				if len(bufBind.Binds) > 0 {
 					arrays[i].sparseMemoryBinds[j] = buildSparseMemoryBinds(bufBind.Binds)
+					pinner.Pin(&arrays[i].sparseMemoryBinds[j][0])
 					arrays[i].bufferBindInfos[j].bindCount = C.uint32_t(len(arrays[i].sparseMemoryBinds[j]))
 					arrays[i].bufferBindInfos[j].pBinds = &arrays[i].sparseMemoryBinds[j][0]
 				}
 			}
+			pinner.Pin(&arrays[i].bufferBindInfos[0])
 			cBindInfos[i].bufferBindCount = C.uint32_t(len(arrays[i].bufferBindInfos))
 			cBindInfos[i].pBufferBinds = &arrays[i].bufferBindInfos[0]
 		}
@@ -602,10 +613,12 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 				arrays[i].imageOpaqueBindInfos[j].image = C.VkImage(imgBind.Image)
 				if bindLen := len(imgBind.Binds); bindLen > 0 {
 					arrays[i].sparseImageOpaqueMemoryBinds[j] = buildSparseMemoryBinds(imgBind.Binds)
+					pinner.Pin(&arrays[i].sparseImageOpaqueMemoryBinds[j][0])
 					arrays[i].imageOpaqueBindInfos[j].bindCount = C.uint32_t(bindLen)
 					arrays[i].imageOpaqueBindInfos[j].pBinds = &arrays[i].sparseImageOpaqueMemoryBinds[j][0]
 				}
 			}
+			pinner.Pin(&arrays[i].imageOpaqueBindInfos[0])
 			cBindInfos[i].imageOpaqueBindCount = C.uint32_t(imgOpaqueBindCount)
 			cBindInfos[i].pImageOpaqueBinds = &arrays[i].imageOpaqueBindInfos[0]
 		}
@@ -632,10 +645,12 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 						arrays[i].sparseImageMemoryBinds[j][k].memoryOffset = C.VkDeviceSize(bind.MemoryOffset)
 						arrays[i].sparseImageMemoryBinds[j][k].flags = C.VkSparseMemoryBindFlags(bind.Flags)
 					}
+					pinner.Pin(&arrays[i].sparseImageMemoryBinds[j][0])
 					arrays[i].imageBindInfos[j].bindCount = C.uint32_t(len(arrays[i].sparseImageMemoryBinds[j]))
 					arrays[i].imageBindInfos[j].pBinds = &arrays[i].sparseImageMemoryBinds[j][0]
 				}
 			}
+			pinner.Pin(&arrays[i].imageBindInfos[0])
 			cBindInfos[i].imageBindCount = C.uint32_t(len(arrays[i].imageBindInfos))
 			cBindInfos[i].pImageBinds = &arrays[i].imageBindInfos[0]
 		}
@@ -646,6 +661,7 @@ func QueueBindSparse(queue Queue, bindInfos []BindSparseInfo, fence Fence) error
 			for j, sem := range info.SignalSemaphores {
 				arrays[i].signalSemaphores[j] = C.VkSemaphore(sem)
 			}
+			pinner.Pin(&arrays[i].signalSemaphores[0])
 			cBindInfos[i].signalSemaphoreCount = C.uint32_t(len(arrays[i].signalSemaphores))
 			cBindInfos[i].pSignalSemaphores = &arrays[i].signalSemaphores[0]
 		}

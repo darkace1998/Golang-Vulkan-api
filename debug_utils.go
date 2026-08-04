@@ -112,6 +112,7 @@ static void call_vkQueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUti
 import "C"
 import (
 	"runtime/cgo"
+	"sync"
 	"unsafe"
 )
 
@@ -202,20 +203,42 @@ func CreateDebugUtilsMessengerEXT(instance Instance, createInfo *DebugUtilsMesse
 		return nil, NewVulkanError(Result(res), "vkCreateDebugUtilsMessengerEXT", "failed to create debug messenger")
 	}
 
+	messengerUserDataMu.Lock()
+	messengerUserData[DebugUtilsMessengerEXT(messenger)] = messengerCallbackData{handle: handle, pUserData: pUserData}
+	messengerUserDataMu.Unlock()
+
 	return DebugUtilsMessengerEXT(messenger), nil
 }
+
+// messengerCallbackData tracks the cgo.Handle and C allocation backing a
+// messenger's pUserData so both can be released on destroy.
+type messengerCallbackData struct {
+	handle    cgo.Handle
+	pUserData unsafe.Pointer
+}
+
+var (
+	messengerUserDataMu sync.Mutex
+	messengerUserData   = make(map[DebugUtilsMessengerEXT]messengerCallbackData)
+)
 
 // DestroyDebugUtilsMessengerEXT destroys a debug messenger
 func DestroyDebugUtilsMessengerEXT(instance Instance, messenger DebugUtilsMessengerEXT) {
 	if instance == nil || messenger == nil {
 		return
 	}
-	// Note: While this frees the Vulkan messenger handle, we have a leak of the pUserData memory and the cgo.Handle
-	// To fix this fully, we would need a map from messenger to the pUserData/Handle, or store it elsewhere.
-	// However, it is typical to leave debug messengers alive until shutdown.
 	C.call_vkDestroyDebugUtilsMessengerEXT(C.VkInstance(instance), C.VkDebugUtilsMessengerEXT(messenger), nil)
-}
 
+	// Release the cgo.Handle and the C memory that held it.
+	messengerUserDataMu.Lock()
+	data, ok := messengerUserData[messenger]
+	delete(messengerUserData, messenger)
+	messengerUserDataMu.Unlock()
+	if ok {
+		data.handle.Delete()
+		C.free(data.pUserData)
+	}
+}
 
 // DebugUtilsObjectNameInfo defines parameters for naming an object
 type DebugUtilsObjectNameInfo struct {

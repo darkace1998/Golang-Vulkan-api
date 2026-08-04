@@ -168,7 +168,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `CreateTimelineSemaphore(device Device, initialValue uint64) (Semaphore, error)` - CreateTimelineSemaphore creates a timeline semaphore (Vulkan 1.2+)
 - `GetSemaphoreCounterValue(device Device, semaphore Semaphore) (uint64, error)` - GetSemaphoreCounterValue gets the current counter value of a timeline semaphore (Vulkan 1.2+)
 - `SignalSemaphore(device Device, signalInfo *SemaphoreSignalInfo) error` - SignalSemaphore signals a timeline semaphore (Vulkan 1.2+)
-- `WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) error` - WaitSemaphores waits for timeline semaphores (Vulkan 1.2+)
+- `WaitSemaphores(device Device, waitInfo *SemaphoreWaitInfo, timeout uint64) (Result, error)` - WaitSemaphores waits for timeline semaphores (Vulkan 1.2+). Returns Success or Timeout with a nil error; the error is non-nil only for real failures
 
 ### Event Operations
 - `CmdResetEvent(commandBuffer CommandBuffer, event Event, stageMask PipelineStageFlags)` - CmdResetEvent resets an event object to unsignaled state from the device
@@ -181,7 +181,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ### Fence Operations
 - `CreateFence(device Device, createInfo *FenceCreateInfo) (Fence, error)` - Create fence
 - `DestroyFence(device Device, fence Fence)` - Destroy fence
-- `WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) error` - Wait for fences
+- `WaitForFences(device Device, fences []Fence, waitAll bool, timeout uint64) (Result, error)` - Wait for fences. Returns Success or Timeout with a nil error; the error is non-nil only for real failures
 - `ResetFences(device Device, fences []Fence) error` - Reset fences
 - `GetFenceStatus(device Device, fence Fence) (Result, error)` - Get fence status
 
@@ -222,9 +222,9 @@ This document provides a reference for the exported functions in the Vulkan Go b
 ## Query Management
 - `CreateQueryPool(device Device, createInfo *QueryPoolCreateInfo) (QueryPool, error)` - Create a query pool
 - `DestroyQueryPool(device Device, queryPool QueryPool)` - Destroy a query pool
-- `GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, flags QueryResultFlags) ([]byte, error)` - Retrieve query results
-- `GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, error)` - Retrieve 32-bit query results
-- `GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, error)` - Retrieve 64-bit query results
+- `GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, stride DeviceSize, flags QueryResultFlags) ([]byte, Result, error)` - Retrieve query results; stride 0 derives the stride from flags (single-counter query types only), pipeline statistics pools must pass an explicit stride. Result is Success or NotReady
+- `GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, Result, error)` - Retrieve 32-bit query results (single-counter query types); Result is Success or NotReady
+- `GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, Result, error)` - Retrieve 64-bit query results (single-counter query types); Result is Success or NotReady
 
 - `ResetQueryPool(device Device, queryPool QueryPool, firstQuery, queryCount uint32)` - ResetQueryPool resets a range of queries in a query pool on the host (Vulkan 1.2+)
 ## Swapchain Management
@@ -286,7 +286,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 - `(m *DescriptorPoolManager) Destroy()` - Destroy all managed descriptor pools
 
 ## Command Recording
-- `LoadMeshShaderFunctions(device Device)` - LoadMeshShaderFunctions loads the device-level mesh shader functions.
+- `LoadMeshShaderFunctions(device Device) (*MeshShaderFunctions, error)` - Resolves and caches the device-level mesh shader functions for this device. Multi-device applications must use the returned MeshShaderFunctions methods; the package-level CmdDrawMeshTasks* functions dispatch via the first loaded device.
 - `CmdDrawMeshTasksEXT(commandBuffer CommandBuffer, groupCountX, groupCountY, groupCountZ uint32)` - CmdDrawMeshTasksEXT draws mesh tasks.
 - `CmdDrawMeshTasksIndirectEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, drawCount, stride uint32)` - CmdDrawMeshTasksIndirectEXT draws mesh tasks with indirect parameters.
 - `CmdDrawMeshTasksIndirectCountEXT(commandBuffer CommandBuffer, buffer Buffer, offset DeviceSize, countBuffer Buffer, countBufferOffset DeviceSize, maxDrawCount, stride uint32)` - CmdDrawMeshTasksIndirectCountEXT draws mesh tasks with indirect parameters and indirect count.
@@ -354,7 +354,7 @@ This document provides a reference for the exported functions in the Vulkan Go b
 
 ## Ray Tracing and Acceleration Structures
 
-- `LoadRayTracingPipelineFunctions(device Device)` - Load the device-level ray tracing pipeline functions.
+- `LoadRayTracingPipelineFunctions(device Device) (*RayTracingFunctions, error)` - Resolves and caches the device-level ray tracing functions for this device. Multi-device applications must use the returned RayTracingFunctions methods; the package-level CmdTraceRaysKHR dispatches via the first loaded device.
 - `CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error)` - Create ray tracing pipelines.
 - `CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32)` - Dispatch a ray tracing grid.
 - `LoadAccelerationStructureFunctions(device Device)` - Load the device-level acceleration structure functions.
@@ -723,6 +723,6 @@ if vulkan.IsExtensionSupported(vulkan.ExtensionNameVideoDecodeH264, extensions) 
 - `CmdBuildAccelerationStructuresKHR(commandBuffer CommandBuffer, infos []AccelerationStructureBuildGeometryInfoKHR)` - Build acceleration structures
 
 ### Ray Tracing Pipelines
-- `LoadRayTracingPipelineFunctions(device Device)` - Load device-level ray tracing pipeline functions
+- `LoadRayTracingPipelineFunctions(device Device) (*RayTracingFunctions, error)` - Load and cache device-level ray tracing pipeline functions for this device
 - `CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error)` - Create ray tracing pipelines
 - `CmdTraceRaysKHR(commandBuffer CommandBuffer, raygen, miss, hit, callable *StridedDeviceAddressRegionKHR, width, height, depth uint32)` - Execute a ray tracing operation

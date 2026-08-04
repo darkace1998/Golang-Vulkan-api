@@ -7,6 +7,7 @@ package vulkan
 import "C"
 
 import (
+	"runtime"
 	"unsafe"
 )
 
@@ -155,13 +156,19 @@ func CreateShaderModule(device Device, createInfo *ShaderModuleCreateInfo) (Shad
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// The code array must be pinned because its address is stored inside
+	// cCreateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkShaderModuleCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO
 	cCreateInfo.pNext = nil
 	cCreateInfo.flags = 0
 	cCreateInfo.codeSize = C.size_t(createInfo.CodeSize)
 	if len(createInfo.Code) > 0 {
-		cCreateInfo.pCode = (*C.uint32_t)(&createInfo.Code[0])
+		pinner.Pin(&createInfo.Code[0])
+		cCreateInfo.pCode = (*C.uint32_t)(unsafe.Pointer(&createInfo.Code[0]))
 	}
 
 	var shaderModule C.VkShaderModule
@@ -192,6 +199,11 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// Nested arrays must be pinned because their addresses are stored inside
+	// cCreateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkPipelineLayoutCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -204,6 +216,7 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 		for i, layout := range createInfo.SetLayouts {
 			cSetLayouts[i] = C.VkDescriptorSetLayout(layout)
 		}
+		pinner.Pin(&cSetLayouts[0])
 		cCreateInfo.setLayoutCount = C.uint32_t(len(cSetLayouts))
 		cCreateInfo.pSetLayouts = &cSetLayouts[0]
 	}
@@ -217,6 +230,7 @@ func CreatePipelineLayout(device Device, createInfo *PipelineLayoutCreateInfo) (
 			cPushConstants[i].offset = C.uint32_t(pc.Offset)
 			cPushConstants[i].size = C.uint32_t(pc.Size)
 		}
+		pinner.Pin(&cPushConstants[0])
 		cCreateInfo.pushConstantRangeCount = C.uint32_t(len(cPushConstants))
 		cCreateInfo.pPushConstantRanges = &cPushConstants[0]
 	}
@@ -250,6 +264,11 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 		return nil, NewValidationError("createInfo", "cannot be nil")
 	}
 
+	// All nested arrays must be pinned because their addresses are stored in
+	// cCreateInfo/cSubpasses, which are Go memory passed to C (cgo rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
 	var cCreateInfo C.VkRenderPassCreateInfo
 	cCreateInfo.sType = C.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO
 	cCreateInfo.pNext = nil
@@ -270,6 +289,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 			cAttachments[i].initialLayout = C.VkImageLayout(att.InitialLayout)
 			cAttachments[i].finalLayout = C.VkImageLayout(att.FinalLayout)
 		}
+		pinner.Pin(&cAttachments[0])
 		cCreateInfo.attachmentCount = C.uint32_t(len(cAttachments))
 		cCreateInfo.pAttachments = &cAttachments[0]
 	}
@@ -301,6 +321,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 					allInputAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
 					allInputAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
 				}
+				pinner.Pin(&allInputAttachments[i][0])
 				cSubpasses[i].inputAttachmentCount = C.uint32_t(len(allInputAttachments[i]))
 				cSubpasses[i].pInputAttachments = &allInputAttachments[i][0]
 			}
@@ -312,6 +333,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 					allColorAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
 					allColorAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
 				}
+				pinner.Pin(&allColorAttachments[i][0])
 				cSubpasses[i].colorAttachmentCount = C.uint32_t(len(allColorAttachments[i]))
 				cSubpasses[i].pColorAttachments = &allColorAttachments[i][0]
 			}
@@ -327,6 +349,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 					allResolveAttachments[i][j].attachment = C.uint32_t(ref.Attachment)
 					allResolveAttachments[i][j].layout = C.VkImageLayout(ref.Layout)
 				}
+				pinner.Pin(&allResolveAttachments[i][0])
 				cSubpasses[i].pResolveAttachments = &allResolveAttachments[i][0]
 			}
 
@@ -334,6 +357,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 			if subpass.DepthStencilAttachment != nil {
 				allDepthStencilAttachments[i].attachment = C.uint32_t(subpass.DepthStencilAttachment.Attachment)
 				allDepthStencilAttachments[i].layout = C.VkImageLayout(subpass.DepthStencilAttachment.Layout)
+				pinner.Pin(&allDepthStencilAttachments[i])
 				cSubpasses[i].pDepthStencilAttachment = &allDepthStencilAttachments[i]
 			}
 
@@ -343,10 +367,12 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 				for j, att := range subpass.PreserveAttachments {
 					allPreserveAttachments[i][j] = C.uint32_t(att)
 				}
+				pinner.Pin(&allPreserveAttachments[i][0])
 				cSubpasses[i].preserveAttachmentCount = C.uint32_t(len(allPreserveAttachments[i]))
 				cSubpasses[i].pPreserveAttachments = &allPreserveAttachments[i][0]
 			}
 		}
+		pinner.Pin(&cSubpasses[0])
 		cCreateInfo.subpassCount = C.uint32_t(len(cSubpasses))
 		cCreateInfo.pSubpasses = &cSubpasses[0]
 	}
@@ -364,6 +390,7 @@ func CreateRenderPass(device Device, createInfo *RenderPassCreateInfo) (RenderPa
 			cDependencies[i].dstAccessMask = C.VkAccessFlags(dep.DstAccessMask)
 			cDependencies[i].dependencyFlags = C.VkDependencyFlags(dep.DependencyFlags)
 		}
+		pinner.Pin(&cDependencies[0])
 		cCreateInfo.dependencyCount = C.uint32_t(len(cDependencies))
 		cCreateInfo.pDependencies = &cDependencies[0]
 	}
@@ -463,12 +490,20 @@ func CreateComputePipelines(device Device, pipelineCache PipelineCache, createIn
 	))
 
 	if result != Success {
+		// A failed batch create may still have created some pipelines
+		// (failed entries are VK_NULL_HANDLE); destroy them to avoid leaks.
+		for _, pipeline := range cPipelines {
+			if pipeline != nil {
+				C.vkDestroyPipeline(C.VkDevice(device), pipeline, nil)
+			}
+		}
 		return nil, NewVulkanError(result, "CreateComputePipelines", "Vulkan compute pipeline creation failed")
 	}
 
 	pipelines := make([]Pipeline, len(cPipelines))
 	for i, pipeline := range cPipelines {
 		pipelines[i] = Pipeline(pipeline)
+		trackResource("Pipeline", unsafe.Pointer(pipeline))
 	}
 
 	return pipelines, nil
@@ -733,8 +768,11 @@ type GraphicsPipelineCreateInfo struct {
 	BasePipelineIndex  int32
 }
 
-// graphicsPipelineBuilder holds state needed for building graphics pipelines
+// graphicsPipelineBuilder holds state needed for building graphics pipelines.
+// All nested arrays whose addresses end up inside structs passed to C are
+// pinned via the pinner (cgo pointer rules).
 type graphicsPipelineBuilder struct {
+	pinner                 runtime.Pinner
 	cNames                 []*C.char
 	cStageArrays           [][]C.VkPipelineShaderStageCreateInfo
 	cBindingArrays         [][]C.VkVertexInputBindingDescription
@@ -759,16 +797,13 @@ func (b *graphicsPipelineBuilder) setupShaderStages(cInfo *C.VkGraphicsPipelineC
 		cStages[j].stage = C.VkShaderStageFlagBits(stage.Stage)
 		cStages[j].module = C.VkShaderModule(stage.Module)
 
-		if b.cNames == nil {
-			b.cNames = make([]*C.char, len(stages))
-		}
-
 		cName := C.CString(stage.Name)
-		b.cNames[j] = cName
+		b.cNames = append(b.cNames, cName)
 		cStages[j].pName = cName
 		cStages[j].pSpecializationInfo = nil
 	}
 	b.cStageArrays = append(b.cStageArrays, cStages)
+	b.pinner.Pin(&cStages[0])
 	cInfo.stageCount = C.uint32_t(len(cStages))
 	cInfo.pStages = &b.cStageArrays[len(b.cStageArrays)-1][0]
 }
@@ -789,6 +824,7 @@ func (b *graphicsPipelineBuilder) setupVertexInputState(cState *C.VkPipelineVert
 			cBindings[j].inputRate = C.VkVertexInputRate(binding.InputRate)
 		}
 		b.cBindingArrays = append(b.cBindingArrays, cBindings)
+		b.pinner.Pin(&cBindings[0])
 		cState.vertexBindingDescriptionCount = C.uint32_t(len(cBindings))
 		cState.pVertexBindingDescriptions = &b.cBindingArrays[len(b.cBindingArrays)-1][0]
 	}
@@ -801,6 +837,7 @@ func (b *graphicsPipelineBuilder) setupVertexInputState(cState *C.VkPipelineVert
 			cAttributes[j].offset = C.uint32_t(attr.Offset)
 		}
 		b.cAttributeArrays = append(b.cAttributeArrays, cAttributes)
+		b.pinner.Pin(&cAttributes[0])
 		cState.vertexAttributeDescriptionCount = C.uint32_t(len(cAttributes))
 		cState.pVertexAttributeDescriptions = &b.cAttributeArrays[len(b.cAttributeArrays)-1][0]
 	}
@@ -829,6 +866,7 @@ func (b *graphicsPipelineBuilder) setupViewportState(cState *C.VkPipelineViewpor
 			cViewports[j].maxDepth = C.float(vp.MaxDepth)
 		}
 		b.cViewportArrays = append(b.cViewportArrays, cViewports)
+		b.pinner.Pin(&cViewports[0])
 		cState.viewportCount = C.uint32_t(len(cViewports))
 		cState.pViewports = &b.cViewportArrays[len(b.cViewportArrays)-1][0]
 	} else {
@@ -844,6 +882,7 @@ func (b *graphicsPipelineBuilder) setupViewportState(cState *C.VkPipelineViewpor
 			cScissors[j].extent.height = C.uint32_t(sc.Extent.Height)
 		}
 		b.cScissorArrays = append(b.cScissorArrays, cScissors)
+		b.pinner.Pin(&cScissors[0])
 		cState.scissorCount = C.uint32_t(len(cScissors))
 		cState.pScissors = &b.cScissorArrays[len(b.cScissorArrays)-1][0]
 	} else {
@@ -894,6 +933,7 @@ func (b *graphicsPipelineBuilder) setupMultisampleState(cState *C.VkPipelineMult
 				cSampleMask[j] = C.VkSampleMask(mask)
 			}
 			b.cSampleMaskArrays = append(b.cSampleMaskArrays, cSampleMask)
+			b.pinner.Pin(&cSampleMask[0])
 			cState.pSampleMask = &b.cSampleMaskArrays[len(b.cSampleMaskArrays)-1][0]
 		}
 		cState.alphaToCoverageEnable = boolToVkBool32(info.AlphaToCoverageEnable)
@@ -961,6 +1001,7 @@ func (b *graphicsPipelineBuilder) setupColorBlendState(cState *C.VkPipelineColor
 				cBlendAttachments[j].colorWriteMask = C.VkColorComponentFlags(att.ColorWriteMask)
 			}
 			b.cBlendAttachmentArrays = append(b.cBlendAttachmentArrays, cBlendAttachments)
+			b.pinner.Pin(&cBlendAttachments[0])
 			cState.attachmentCount = C.uint32_t(len(cBlendAttachments))
 			cState.pAttachments = &b.cBlendAttachmentArrays[len(b.cBlendAttachmentArrays)-1][0]
 		}
@@ -974,6 +1015,7 @@ func (b *graphicsPipelineBuilder) setupColorBlendState(cState *C.VkPipelineColor
 		defaultAttachment[0].blendEnable = C.VK_FALSE
 		defaultAttachment[0].colorWriteMask = C.VkColorComponentFlags(ColorComponentAll)
 		b.cBlendAttachmentArrays = append(b.cBlendAttachmentArrays, defaultAttachment)
+		b.pinner.Pin(&defaultAttachment[0])
 		cState.attachmentCount = 1
 		cState.pAttachments = &b.cBlendAttachmentArrays[len(b.cBlendAttachmentArrays)-1][0]
 	}
@@ -992,6 +1034,7 @@ func (b *graphicsPipelineBuilder) setupDynamicState(cState *C.VkPipelineDynamicS
 		cDynStates[j] = C.VkDynamicState(ds)
 	}
 	b.cDynamicStateArrays = append(b.cDynamicStateArrays, cDynStates)
+	b.pinner.Pin(&cDynStates[0])
 	cState.dynamicStateCount = C.uint32_t(len(cDynStates))
 	cState.pDynamicStates = &b.cDynamicStateArrays[len(b.cDynamicStateArrays)-1][0]
 	return true
@@ -1008,17 +1051,23 @@ func (b *graphicsPipelineBuilder) freeNames() {
 
 // CreateGraphicsPipelines creates graphics pipelines
 func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createInfos []GraphicsPipelineCreateInfo) ([]Pipeline, error) {
+	if device == nil {
+		return nil, NewValidationError("device", "cannot be nil")
+	}
 	if len(createInfos) == 0 {
 		return nil, nil
 	}
 
 	builder := &graphicsPipelineBuilder{}
 	defer builder.freeNames()
+	defer builder.pinner.Unpin()
 
 	cCreateInfos := make([]C.VkGraphicsPipelineCreateInfo, len(createInfos))
 	cPipelines := make([]C.VkPipeline, len(createInfos))
 
-	// Storage for state structs
+	// Storage for state structs. These arrays must be pinned because their
+	// element addresses are stored inside cCreateInfos, which is Go memory
+	// passed to C (cgo pointer rules).
 	cVertexInputStates := make([]C.VkPipelineVertexInputStateCreateInfo, len(createInfos))
 	cInputAssemblyStates := make([]C.VkPipelineInputAssemblyStateCreateInfo, len(createInfos))
 	cTessellationStates := make([]C.VkPipelineTessellationStateCreateInfo, len(createInfos))
@@ -1028,6 +1077,16 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	cDepthStencilStates := make([]C.VkPipelineDepthStencilStateCreateInfo, len(createInfos))
 	cColorBlendStates := make([]C.VkPipelineColorBlendStateCreateInfo, len(createInfos))
 	cDynamicStates := make([]C.VkPipelineDynamicStateCreateInfo, len(createInfos))
+
+	builder.pinner.Pin(&cVertexInputStates[0])
+	builder.pinner.Pin(&cInputAssemblyStates[0])
+	builder.pinner.Pin(&cTessellationStates[0])
+	builder.pinner.Pin(&cViewportStates[0])
+	builder.pinner.Pin(&cRasterizationStates[0])
+	builder.pinner.Pin(&cMultisampleStates[0])
+	builder.pinner.Pin(&cDepthStencilStates[0])
+	builder.pinner.Pin(&cColorBlendStates[0])
+	builder.pinner.Pin(&cDynamicStates[0])
 
 	for i, info := range createInfos {
 		cCreateInfos[i].sType = C.VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO
@@ -1095,12 +1154,20 @@ func CreateGraphicsPipelines(device Device, pipelineCache PipelineCache, createI
 	))
 
 	if result != Success {
+		// A failed batch create may still have created some pipelines
+		// (failed entries are VK_NULL_HANDLE); destroy them to avoid leaks.
+		for _, pipeline := range cPipelines {
+			if pipeline != nil {
+				C.vkDestroyPipeline(C.VkDevice(device), pipeline, nil)
+			}
+		}
 		return nil, NewVulkanError(result, "CreateGraphicsPipelines", "Vulkan graphics pipeline creation failed")
 	}
 
 	pipelines := make([]Pipeline, len(cPipelines))
 	for i, pipeline := range cPipelines {
 		pipelines[i] = Pipeline(pipeline)
+		trackResource("Pipeline", unsafe.Pointer(pipeline))
 	}
 
 	return pipelines, nil
@@ -1178,13 +1245,17 @@ func CreateFramebuffer(device Device, createInfo *FramebufferCreateInfo) (Frameb
 	cCreateInfo.height = C.uint32_t(createInfo.Height)
 	cCreateInfo.layers = C.uint32_t(createInfo.Layers)
 
-	// Handle attachments
+	// Handle attachments. The array must be pinned because its address is
+	// stored inside cCreateInfo, which is Go memory passed to C.
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	var cAttachments []C.VkImageView
 	if len(createInfo.Attachments) > 0 {
 		cAttachments = make([]C.VkImageView, len(createInfo.Attachments))
 		for i, attachment := range createInfo.Attachments {
 			cAttachments[i] = C.VkImageView(attachment)
 		}
+		pinner.Pin(&cAttachments[0])
 		cCreateInfo.attachmentCount = C.uint32_t(len(cAttachments))
 		cCreateInfo.pAttachments = &cAttachments[0]
 	} else {

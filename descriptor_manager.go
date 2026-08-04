@@ -98,6 +98,10 @@ func (m *DescriptorPoolManager) AllocateDescriptorSets(layouts []DescriptorSetLa
 
 		if isPoolError {
 			m.usedPools = append(m.usedPools, m.currentPool)
+			// Clear currentPool immediately so a grabPool failure cannot leave
+			// the same pool referenced both here and in usedPools (which would
+			// lead to a double vkDestroyDescriptorPool in Destroy).
+			m.currentPool = nil
 
 			pool, grabErr := m.grabPool()
 			if grabErr != nil {

@@ -5,18 +5,15 @@ package vulkan
 #include <stdlib.h>
 #include <string.h>
 
-// Function pointer for UpdateVideoSessionParameters
-static PFN_vkUpdateVideoSessionParametersKHR pfn_vkUpdateVideoSessionParametersKHR = NULL;
 static PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR pfn_vkGetPhysicalDeviceVideoFormatPropertiesKHR = NULL;
 
-// Load additional video device functions
-static int loadAdditionalVideoDeviceFunctions(VkDevice device) {
+// Resolve the per-device UpdateVideoSessionParameters function pointer
+static PFN_vkUpdateVideoSessionParametersKHR load_vkUpdateVideoSessionParametersKHR(VkDevice device) {
     if (device == VK_NULL_HANDLE) {
-        return 0;
+        return NULL;
     }
-    pfn_vkUpdateVideoSessionParametersKHR = (PFN_vkUpdateVideoSessionParametersKHR)
+    return (PFN_vkUpdateVideoSessionParametersKHR)
         vkGetDeviceProcAddr(device, "vkUpdateVideoSessionParametersKHR");
-    return pfn_vkUpdateVideoSessionParametersKHR != NULL;
 }
 
 // Load video format query functions
@@ -29,15 +26,17 @@ static int loadVideoFormatFunctions(VkInstance instance) {
     return pfn_vkGetPhysicalDeviceVideoFormatPropertiesKHR != NULL;
 }
 
-// Wrapper for UpdateVideoSessionParameters
+// Wrapper for UpdateVideoSessionParameters, dispatching through a
+// caller-supplied per-device function pointer
 static VkResult call_vkUpdateVideoSessionParametersKHR(
+    PFN_vkUpdateVideoSessionParametersKHR pfn,
     VkDevice device,
     VkVideoSessionParametersKHR videoSessionParameters,
     const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo) {
-    if (pfn_vkUpdateVideoSessionParametersKHR == NULL) {
+    if (pfn == NULL) {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
-    return pfn_vkUpdateVideoSessionParametersKHR(device, videoSessionParameters, pUpdateInfo);
+    return pfn(device, videoSessionParameters, pUpdateInfo);
 }
 
 // Wrapper for GetPhysicalDeviceVideoFormatProperties
@@ -55,17 +54,17 @@ static VkResult call_vkGetPhysicalDeviceVideoFormatPropertiesKHR(
 import "C"
 
 import (
+	"runtime"
 	"sync"
 	"unsafe"
 )
 
-// VideoDeviceFunctions defines the VideoDeviceFunctions type
-// VideoDeviceFunctions holds per-device video function pointers
-// This provides thread-safe access to video extension functions
+// VideoDeviceFunctions holds per-device video function pointers. Device-level
+// function pointers are only valid for the device they were queried from, so
+// each device gets its own instance.
 type VideoDeviceFunctions struct {
-	device    Device
-	loaded    bool
-	loadMutex sync.RWMutex
+	device                  Device
+	updateSessionParameters C.PFN_vkUpdateVideoSessionParametersKHR
 }
 
 // videoDeviceFunctionsMap provides per-device function pointer storage
@@ -86,8 +85,9 @@ func GetVideoDeviceFunctions(device Device) *VideoDeviceFunctions {
 	return funcs
 }
 
-// CreateVideoDeviceFunctions creates and loads video functions for a device
-// This provides per-device function pointer storage with thread-safe loading
+// CreateVideoDeviceFunctions creates and loads video functions for a device.
+// The function pointers are resolved from and stored for this specific
+// device; loading is idempotent and thread-safe.
 func CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
@@ -101,27 +101,26 @@ func CreateVideoDeviceFunctions(device Device) (*VideoDeviceFunctions, error) {
 		return funcs, nil
 	}
 
-	// Create new entry
 	funcs := &VideoDeviceFunctions{
-		device: device,
-		loaded: false,
-	}
-
-	// Load functions - this also uses the global loading for now
-	// but tracks per-device state
-	if C.loadAdditionalVideoDeviceFunctions(C.VkDevice(device)) != 0 {
-		funcs.loaded = true
+		device:                  device,
+		updateSessionParameters: C.load_vkUpdateVideoSessionParametersKHR(C.VkDevice(device)),
 	}
 
 	videoDeviceFunctionsMap[device] = funcs
 	return funcs, nil
 }
 
+// unloadVideoDeviceFunctions drops cached function pointers for a destroyed
+// device.
+func unloadVideoDeviceFunctions(device Device) {
+	videoDeviceFunctionsMapLock.Lock()
+	defer videoDeviceFunctionsMapLock.Unlock()
+	delete(videoDeviceFunctionsMap, device)
+}
+
 // IsLoaded returns whether the video functions are loaded
 func (vdf *VideoDeviceFunctions) IsLoaded() bool {
-	vdf.loadMutex.RLock()
-	defer vdf.loadMutex.RUnlock()
-	return vdf.loaded
+	return vdf != nil && vdf.updateSessionParameters != nil
 }
 
 // LoadVideoFormatFunctions loads video format query functions
@@ -139,9 +138,9 @@ type VideoEncodeRateControlMode uint32
 
 const (
 	VideoEncodeRateControlModeDefault  VideoEncodeRateControlMode = 0
-	VideoEncodeRateControlModeDisabled VideoEncodeRateControlMode = 1
-	VideoEncodeRateControlModeCBR      VideoEncodeRateControlMode = 2
-	VideoEncodeRateControlModeVBR      VideoEncodeRateControlMode = 3
+	VideoEncodeRateControlModeDisabled VideoEncodeRateControlMode = 1 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR
+	VideoEncodeRateControlModeCBR      VideoEncodeRateControlMode = 2 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_CBR_BIT_KHR
+	VideoEncodeRateControlModeVBR      VideoEncodeRateControlMode = 4 // VK_VIDEO_ENCODE_RATE_CONTROL_MODE_VBR_BIT_KHR
 )
 
 // VideoEncodeRateControlInfo contains rate control configuration
@@ -659,11 +658,31 @@ func CreateDPBManager(maxSlots uint32) *DPBManager {
 	}
 }
 
-// AddSlot adds a picture to the DPB
+// AddSlot adds a picture to the DPB. When the DPB is full, the oldest
+// short-term reference is evicted and its slot index is reused so slot
+// indices always stay below maxSlots and the DPB does not grow unboundedly.
 func (dpb *DPBManager) AddSlot(imageView ImageView, imageLayout ImageLayout, poc int32) (*DPBSlot, error) {
 	if uint32(len(dpb.slots)) >= dpb.maxSlots {
 		// Need to remove oldest reference
 		dpb.RemoveOldestReference()
+
+		// Reuse the first non-reference slot in place, keeping its index.
+		for i := range dpb.slots {
+			if !dpb.slots[i].IsReference {
+				dpb.slots[i] = DPBSlot{
+					SlotIndex:         dpb.slots[i].SlotIndex,
+					ImageView:         imageView,
+					ImageLayout:       imageLayout,
+					IsReference:       true,
+					PictureOrderCount: poc,
+					FrameNum:          dpb.frameNum,
+					IsLongTerm:        false,
+				}
+				dpb.frameNum++
+				return &dpb.slots[i], nil
+			}
+		}
+		return nil, NewValidationError("DPBManager", "DPB is full and no slot can be evicted")
 	}
 
 	slot := DPBSlot{
@@ -839,14 +858,17 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 		return nil, NewValidationError("videoProfile", "cannot be nil")
 	}
 
-	// Create profile info
+	// The profile and profile list must be pinned because their addresses are
+	// stored inside structs that are Go memory passed to C (cgo rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
+
+	// Create profile info with the mandatory codec-specific chain
 	var cVideoProfile C.VkVideoProfileInfoKHR
-	cVideoProfile.sType = C.VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR
-	cVideoProfile.pNext = nil
-	cVideoProfile.videoCodecOperation = C.VkVideoCodecOperationFlagBitsKHR(videoProfile.VideoCodecOperation)
-	cVideoProfile.chromaSubsampling = C.VkVideoChromaSubsamplingFlagsKHR(videoProfile.ChromaSubsampling)
-	cVideoProfile.lumaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.LumaBitDepth)
-	cVideoProfile.chromaBitDepth = C.VkVideoComponentBitDepthFlagsKHR(videoProfile.ChromaBitDepth)
+	if err := buildCVideoProfile(videoProfile, &pinner, &cVideoProfile); err != nil {
+		return nil, err
+	}
+	pinner.Pin(&cVideoProfile)
 
 	// Create profile list
 	var cProfileList C.VkVideoProfileListInfoKHR
@@ -854,6 +876,7 @@ func GetVideoFormatProperties(physicalDevice PhysicalDevice, videoProfile *Video
 	cProfileList.pNext = nil
 	cProfileList.profileCount = 1
 	cProfileList.pProfiles = &cVideoProfile
+	pinner.Pin(&cProfileList)
 
 	// Create format info
 	var cFormatInfo C.VkPhysicalDeviceVideoFormatInfoKHR
@@ -920,7 +943,9 @@ type VideoSessionParametersUpdateInfo struct {
 	UpdateSequenceCount uint32
 }
 
-// UpdateVideoSessionParameters updates video session parameters
+// UpdateVideoSessionParameters updates video session parameters, dispatching
+// through the function pointer resolved for this specific device (loaded on
+// first use via CreateVideoDeviceFunctions).
 func UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSessionParameters, updateInfo *VideoSessionParametersUpdateInfo) error {
 	if device == nil {
 		return NewValidationError("device", "cannot be nil")
@@ -932,12 +957,22 @@ func UpdateVideoSessionParameters(device Device, videoSessionParameters VideoSes
 		return NewValidationError("updateInfo", "cannot be nil")
 	}
 
+	funcs := GetVideoDeviceFunctions(device)
+	if funcs == nil {
+		var err error
+		funcs, err = CreateVideoDeviceFunctions(device)
+		if err != nil {
+			return err
+		}
+	}
+
 	var cUpdateInfo C.VkVideoSessionParametersUpdateInfoKHR
 	cUpdateInfo.sType = C.VK_STRUCTURE_TYPE_VIDEO_SESSION_PARAMETERS_UPDATE_INFO_KHR
 	cUpdateInfo.pNext = nil
 	cUpdateInfo.updateSequenceCount = C.uint32_t(updateInfo.UpdateSequenceCount)
 
 	result := Result(C.call_vkUpdateVideoSessionParametersKHR(
+		funcs.updateSessionParameters,
 		C.VkDevice(device),
 		C.VkVideoSessionParametersKHR(videoSessionParameters),
 		&cUpdateInfo,

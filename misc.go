@@ -7,6 +7,7 @@ package vulkan
 import "C"
 
 import (
+	"runtime"
 	"unsafe"
 )
 
@@ -41,15 +42,7 @@ func CmdClearAttachments(commandBuffer CommandBuffer, attachments []ClearAttachm
 	for i, att := range attachments {
 		cAttachments[i].aspectMask = C.VkImageAspectFlags(att.AspectMask)
 		cAttachments[i].colorAttachment = C.uint32_t(att.ColorAttachment)
-		// Set clear value based on aspect
-		if att.ClearValue.IsDepthStencil {
-			// Use C struct field sizes for correct offset calculation to match VkClearDepthStencilValue layout
-			cDepthStencil := (*C.VkClearDepthStencilValue)(unsafe.Pointer(&cAttachments[i].clearValue))
-			cDepthStencil.depth = C.float(att.ClearValue.DepthStencil.Depth)
-			cDepthStencil.stencil = C.uint32_t(att.ClearValue.DepthStencil.Stencil)
-		} else {
-			*(*[4]float32)(unsafe.Pointer(&cAttachments[i].clearValue)) = att.ClearValue.Color.Float32
-		}
+		setCClearValue(&cAttachments[i].clearValue, &attachments[i].ClearValue)
 	}
 
 	cRects := make([]C.VkClearRect, len(rects))
@@ -81,7 +74,7 @@ func CmdClearColorImage(commandBuffer CommandBuffer, image Image, imageLayout Im
 	}
 
 	var cColor C.VkClearColorValue
-	*(*[4]float32)(unsafe.Pointer(&cColor)) = color.Float32
+	*(*[4]uint32)(unsafe.Pointer(&cColor)) = clearColorBits(color)
 
 	cRanges := make([]C.VkImageSubresourceRange, len(ranges))
 	for i, r := range ranges {
@@ -165,7 +158,12 @@ func CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (Pi
 	cCreateInfo.pNext = nil
 	cCreateInfo.flags = C.VkPipelineCacheCreateFlags(createInfo.Flags)
 
+	// The initial-data slice must be pinned because its address is stored
+	// inside cCreateInfo, which is Go memory passed to C (cgo pointer rules).
+	var pinner runtime.Pinner
+	defer pinner.Unpin()
 	if len(createInfo.InitialData) > 0 {
+		pinner.Pin(&createInfo.InitialData[0])
 		cCreateInfo.initialDataSize = C.size_t(len(createInfo.InitialData))
 		cCreateInfo.pInitialData = unsafe.Pointer(&createInfo.InitialData[0])
 	} else {
@@ -179,6 +177,7 @@ func CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (Pi
 		return nil, NewVulkanError(result, "CreatePipelineCache", "Vulkan pipeline cache creation failed")
 	}
 
+	trackResource("PipelineCache", unsafe.Pointer(pipelineCache))
 	return PipelineCache(pipelineCache), nil
 }
 
@@ -186,6 +185,7 @@ func CreatePipelineCache(device Device, createInfo *PipelineCacheCreateInfo) (Pi
 func DestroyPipelineCache(device Device, pipelineCache PipelineCache) {
 	if device != nil && pipelineCache != nil {
 		C.vkDestroyPipelineCache(C.VkDevice(device), C.VkPipelineCache(pipelineCache), nil)
+		untrackResource("PipelineCache", unsafe.Pointer(pipelineCache))
 	}
 }
 
@@ -291,6 +291,7 @@ func CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferVi
 		return nil, NewVulkanError(result, "CreateBufferView", "Vulkan buffer view creation failed")
 	}
 
+	trackResource("BufferView", unsafe.Pointer(bufferView))
 	return BufferView(bufferView), nil
 }
 
@@ -298,6 +299,7 @@ func CreateBufferView(device Device, createInfo *BufferViewCreateInfo) (BufferVi
 func DestroyBufferView(device Device, bufferView BufferView) {
 	if device != nil && bufferView != nil {
 		C.vkDestroyBufferView(C.VkDevice(device), C.VkBufferView(bufferView), nil)
+		untrackResource("BufferView", unsafe.Pointer(bufferView))
 	}
 }
 

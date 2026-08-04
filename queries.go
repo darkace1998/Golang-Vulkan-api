@@ -75,6 +75,7 @@ func CreateQueryPool(device Device, createInfo *QueryPoolCreateInfo) (QueryPool,
 		return nil, NewVulkanError(result, "CreateQueryPool", "failed to create query pool")
 	}
 
+	trackResource("QueryPool", unsafe.Pointer(queryPool))
 	return QueryPool(queryPool), nil
 }
 
@@ -84,36 +85,54 @@ func DestroyQueryPool(device Device, queryPool QueryPool) {
 		return
 	}
 	C.vkDestroyQueryPool(C.VkDevice(device), C.VkQueryPool(queryPool), nil)
+	untrackResource("QueryPool", unsafe.Pointer(queryPool))
 }
 
-// GetQueryPoolResults retrieves results from a query pool as a byte slice, or an error if the operation fails
-// Use QueryResult64Bit flag for 64-bit results, otherwise 32-bit results are returned.
-func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, flags QueryResultFlags) ([]byte, error) {
+// GetQueryPoolResults retrieves results from a query pool as a byte slice.
+//
+// stride is the byte distance between the results of consecutive queries.
+// A stride of 0 derives the stride from flags (4 or 8 bytes, doubled when
+// QueryResultWithAvailability is set), which is only correct for query types
+// that write a single counter per query (occlusion, timestamp). Pipeline
+// statistics queries write one counter per enabled statistic bit and must
+// pass an explicit stride of numStatistics x 4 (or x 8 with QueryResult64Bit).
+//
+// The returned Result is Success or NotReady with a nil error; without
+// QueryResultWait, NotReady means some queries had no results available and
+// the corresponding buffer entries were left unmodified. The error is
+// non-nil only for real failures.
+func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCount uint32, dataSize uint64, stride DeviceSize, flags QueryResultFlags) ([]byte, Result, error) {
 	if device == nil {
-		return nil, NewValidationError("device", "cannot be nil")
+		return nil, 0, NewValidationError("device", "cannot be nil")
 	}
 	if queryPool == nil {
-		return nil, NewValidationError("queryPool", "cannot be nil")
+		return nil, 0, NewValidationError("queryPool", "cannot be nil")
 	}
 	if queryCount == 0 {
-		return nil, NewValidationError("queryCount", "must be greater than 0")
+		return nil, 0, NewValidationError("queryCount", "must be greater than 0")
 	}
 	if dataSize == 0 {
-		return nil, NewValidationError("dataSize", "must be greater than 0")
+		return nil, 0, NewValidationError("dataSize", "must be greater than 0")
+	}
+
+	// One value is 4 or 8 bytes, doubled when availability is interleaved.
+	elemSize := uint64(4)
+	if flags&QueryResult64Bit != 0 {
+		elemSize = 8
+	}
+	if flags&QueryResultWithAvailability != 0 {
+		elemSize *= 2
+	}
+	if stride == 0 {
+		stride = DeviceSize(elemSize)
+	}
+	// The spec only requires the last query's data to fit:
+	// dataSize >= (queryCount-1)*stride + <one query's data size>.
+	if uint64(queryCount-1)*uint64(stride)+elemSize > dataSize {
+		return nil, 0, NewValidationError("dataSize", "too small for the requested queries at this stride")
 	}
 
 	data := make([]byte, dataSize)
-	var stride C.VkDeviceSize
-	if flags&QueryResult64Bit != 0 {
-		stride = 8
-	} else {
-		stride = 4
-	}
-	// Add availability if requested
-	if flags&QueryResultWithAvailability != 0 {
-		stride *= 2
-	}
-
 	result := Result(C.vkGetQueryPoolResults(
 		C.VkDevice(device),
 		C.VkQueryPool(queryPool),
@@ -121,16 +140,16 @@ func GetQueryPoolResults(device Device, queryPool QueryPool, firstQuery, queryCo
 		C.uint32_t(queryCount),
 		C.size_t(dataSize),
 		unsafe.Pointer(&data[0]),
-		stride,
+		C.VkDeviceSize(stride),
 		C.VkQueryResultFlags(flags),
 	))
 
 	// NotReady is not an error for non-wait queries
 	if result != Success && result != NotReady {
-		return nil, NewVulkanError(result, "GetQueryPoolResults", "failed to get query pool results")
+		return nil, result, NewVulkanError(result, "GetQueryPoolResults", "failed to get query pool results")
 	}
 
-	return data, nil
+	return data, result, nil
 }
 
 // validateQueryPoolResultsParams validates common parameters for query pool results
@@ -147,48 +166,55 @@ func validateQueryPoolResultsParams(device Device, queryPool QueryPool, queryCou
 	return nil
 }
 
-// GetQueryPoolResultsUint32 retrieves 32-bit query results
-func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, error) {
+// getQueryPoolResultsTyped is the shared implementation for the typed
+// query-result helpers. The stride is one element (doubled when availability
+// values are interleaved), so it is only correct for query types that write
+// a single counter per query.
+func getQueryPoolResultsTyped[T uint32 | uint64](device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags, op string) ([]T, Result, error) {
 	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	flags = flags &^ QueryResult64Bit // Mask off 64-bit flag
+	elemSize := unsafe.Sizeof(T(0))
 	resultCount := queryCount
-	stride := C.VkDeviceSize(4)
+	stride := C.VkDeviceSize(elemSize)
 	if flags&QueryResultWithAvailability != 0 {
 		resultCount = queryCount * 2
-		stride = 8
+		stride *= 2
 	}
-	results := make([]uint32, resultCount)
+	results := make([]T, resultCount)
 	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*4),
+		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(uintptr(len(results))*elemSize),
 		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
 	if result != Success && result != NotReady {
-		return nil, NewVulkanError(result, "GetQueryPoolResultsUint32", "failed to get query pool results")
+		return nil, result, NewVulkanError(result, op, "failed to get query pool results")
 	}
-	return results, nil
+	return results, result, nil
 }
 
-// GetQueryPoolResultsUint64 retrieves 64-bit query results
-func GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, error) {
-	if err := validateQueryPoolResultsParams(device, queryPool, queryCount); err != nil {
-		return nil, err
-	}
+// GetQueryPoolResultsUint32 retrieves 32-bit query results. It is a
+// convenience for query types that write a single counter per query
+// (occlusion, timestamp); use GetQueryPoolResults with an explicit stride
+// for pipeline statistics queries.
+//
+// The returned Result is Success or NotReady with a nil error; without
+// QueryResultWait, NotReady means some queries had no results available and
+// the corresponding slice entries were left as zero.
+func GetQueryPoolResultsUint32(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint32, Result, error) {
+	flags = flags &^ QueryResult64Bit // Mask off 64-bit flag
+	return getQueryPoolResultsTyped[uint32](device, queryPool, firstQuery, queryCount, flags, "GetQueryPoolResultsUint32")
+}
+
+// GetQueryPoolResultsUint64 retrieves 64-bit query results. It is a
+// convenience for query types that write a single counter per query
+// (occlusion, timestamp); use GetQueryPoolResults with an explicit stride
+// for pipeline statistics queries.
+//
+// The returned Result is Success or NotReady with a nil error; without
+// QueryResultWait, NotReady means some queries had no results available and
+// the corresponding slice entries were left as zero.
+func GetQueryPoolResultsUint64(device Device, queryPool QueryPool, firstQuery, queryCount uint32, flags QueryResultFlags) ([]uint64, Result, error) {
 	flags = flags | QueryResult64Bit // Ensure 64-bit flag is set
-	resultCount := queryCount
-	stride := C.VkDeviceSize(8)
-	if flags&QueryResultWithAvailability != 0 {
-		resultCount = queryCount * 2
-		stride = 16
-	}
-	results := make([]uint64, resultCount)
-	result := Result(C.vkGetQueryPoolResults(C.VkDevice(device), C.VkQueryPool(queryPool),
-		C.uint32_t(firstQuery), C.uint32_t(queryCount), C.size_t(len(results)*8),
-		unsafe.Pointer(&results[0]), stride, C.VkQueryResultFlags(flags)))
-	if result != Success && result != NotReady {
-		return nil, NewVulkanError(result, "GetQueryPoolResultsUint64", "failed to get query pool results")
-	}
-	return results, nil
+	return getQueryPoolResultsTyped[uint64](device, queryPool, firstQuery, queryCount, flags, "GetQueryPoolResultsUint64")
 }
 
 // ============================================================================
