@@ -123,10 +123,35 @@ func (vdf *VideoDeviceFunctions) IsLoaded() bool {
 	return vdf != nil && vdf.updateSessionParameters != nil
 }
 
-// LoadVideoFormatFunctions loads video format query functions
-// This must be called after creating a Vulkan instance
+// videoFormatOnce ensures the video format function pointer is loaded exactly
+// once, preventing a data race on the underlying C global if multiple
+// goroutines call LoadVideoFormatFunctions concurrently.
+var (
+	videoFormatOnce   sync.Once
+	videoFormatLoaded bool
+)
+
+// LoadVideoFormatFunctions loads video format query functions.
+// This must be called after creating a Vulkan instance.
+//
+// This function is thread-safe. The underlying C function pointer is loaded
+// exactly once; subsequent calls return the cached result. Only one instance
+// is supported at a time; use ResetVideoFormatFunctions to reload for a
+// different instance.
 func LoadVideoFormatFunctions(instance Instance) bool {
-	return C.loadVideoFormatFunctions(C.VkInstance(instance)) != 0
+	videoFormatOnce.Do(func() {
+		videoFormatLoaded = C.loadVideoFormatFunctions(C.VkInstance(instance)) != 0
+	})
+	return videoFormatLoaded
+}
+
+// ResetVideoFormatFunctions resets the format function loader so that
+// LoadVideoFormatFunctions can be called again with a different instance.
+// This is NOT thread-safe and must not be called concurrently with
+// LoadVideoFormatFunctions or any video format queries.
+func ResetVideoFormatFunctions() {
+	videoFormatOnce = sync.Once{}
+	videoFormatLoaded = false
 }
 
 // --------------------------------
@@ -170,6 +195,14 @@ type videoSessionHelperConfig struct {
 	QueueFamilyIndex    uint32
 	PictureFormat       Format
 	ReferenceFormat     Format
+
+	// Codec-specific profile info chained into the video profile; only the
+	// field matching the codec operation is used. When nil, the documented
+	// defaults of buildCVideoProfile apply.
+	EncodeH264Profile *VideoEncodeH264ProfileInfo
+	EncodeH265Profile *VideoEncodeH265ProfileInfo
+	DecodeH264Profile *VideoDecodeH264ProfileInfo
+	DecodeH265Profile *VideoDecodeH265ProfileInfo
 }
 
 func createVideoSessionHelper(device Device, config *videoSessionHelperConfig, codecOp VideoCodecOperationFlags) (VideoSession, error) {
@@ -182,6 +215,10 @@ func createVideoSessionHelper(device Device, config *videoSessionHelperConfig, c
 		ChromaSubsampling:   config.ChromaSubsampling,
 		LumaBitDepth:        config.LumaBitDepth,
 		ChromaBitDepth:      config.ChromaBitDepth,
+		EncodeH264:          config.EncodeH264Profile,
+		EncodeH265:          config.EncodeH265Profile,
+		DecodeH264:          config.DecodeH264Profile,
+		DecodeH265:          config.DecodeH265Profile,
 	}
 
 	sessionCreateInfo := &VideoSessionCreateInfo{
@@ -208,9 +245,13 @@ const (
 	H264ProfileBaseline H264Profile = 66
 	H264ProfileMain     H264Profile = 77
 	H264ProfileHigh     H264Profile = 100
-	H264ProfileHigh10   H264Profile = 110
-	H264ProfileHigh422  H264Profile = 122
-	H264ProfileHigh444  H264Profile = 244
+	// H264ProfileHigh10 and H264ProfileHigh422 are valid H.264 profile_idc
+	// values but are NOT defined by StdVideoH264ProfileIdc in the Vulkan
+	// video std headers; passing them to a driver results in an invalid
+	// profile. Prefer Baseline, Main, High, or High444.
+	H264ProfileHigh10  H264Profile = 110
+	H264ProfileHigh422 H264Profile = 122
+	H264ProfileHigh444 H264Profile = 244
 )
 
 // H264Level represents H.264/AVC levels
@@ -235,7 +276,10 @@ const (
 	H264Level5_2 H264Level = 52
 )
 
-// H264EncodeSessionCreateInfo contains configuration for H.264 encode session
+// H264EncodeSessionCreateInfo contains configuration for H.264 encode session.
+//
+// LIMITATION: Level and RateControl are not currently applied to the created
+// session; see https://github.com/darkace1998/Golang-Vulkan-api/issues/125.
 type H264EncodeSessionCreateInfo struct {
 	Width               uint32
 	Height              uint32
@@ -269,12 +313,9 @@ func DefaultH264EncodeSessionCreateInfo(width, height uint32) *H264EncodeSession
 	}
 }
 
-// CreateH264EncodeSession creates an H.264 encode session with the given configuration
-func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateInfo) (VideoSession, error) {
-	if createInfo == nil {
-		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
-	}
-
+// helperConfig converts the create info into the shared session helper
+// configuration, carrying the requested codec profile.
+func (createInfo *H264EncodeSessionCreateInfo) helperConfig() *videoSessionHelperConfig {
 	config := &videoSessionHelperConfig{
 		Width:               createInfo.Width,
 		Height:              createInfo.Height,
@@ -287,8 +328,19 @@ func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateI
 		PictureFormat:       createInfo.PictureFormat,
 		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
+	if createInfo.Profile != 0 {
+		config.EncodeH264Profile = &VideoEncodeH264ProfileInfo{StdProfileIdc: createInfo.Profile}
+	}
+	return config
+}
 
-	return createVideoSessionHelper(device, config, VideoCodecOperationEncodeH264Bit)
+// CreateH264EncodeSession creates an H.264 encode session with the given configuration
+func CreateH264EncodeSession(device Device, createInfo *H264EncodeSessionCreateInfo) (VideoSession, error) {
+	if createInfo == nil {
+		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
+	}
+
+	return createVideoSessionHelper(device, createInfo.helperConfig(), VideoCodecOperationEncodeH264Bit)
 }
 
 // --------------------------------
@@ -325,7 +377,10 @@ const (
 	H265Level6_2 H265Level = 186
 )
 
-// H265EncodeSessionCreateInfo contains configuration for H.265 encode session
+// H265EncodeSessionCreateInfo contains configuration for H.265 encode session.
+//
+// LIMITATION: Level and RateControl are not currently applied to the created
+// session; see https://github.com/darkace1998/Golang-Vulkan-api/issues/125.
 type H265EncodeSessionCreateInfo struct {
 	Width               uint32
 	Height              uint32
@@ -359,12 +414,9 @@ func DefaultH265EncodeSessionCreateInfo(width, height uint32) *H265EncodeSession
 	}
 }
 
-// CreateH265EncodeSession creates an H.265 encode session with the given configuration
-func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateInfo) (VideoSession, error) {
-	if createInfo == nil {
-		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
-	}
-
+// helperConfig converts the create info into the shared session helper
+// configuration, carrying the requested codec profile.
+func (createInfo *H265EncodeSessionCreateInfo) helperConfig() *videoSessionHelperConfig {
 	config := &videoSessionHelperConfig{
 		Width:               createInfo.Width,
 		Height:              createInfo.Height,
@@ -377,8 +429,19 @@ func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateI
 		PictureFormat:       createInfo.PictureFormat,
 		ReferenceFormat:     createInfo.ReferenceFormat,
 	}
+	if createInfo.Profile != 0 {
+		config.EncodeH265Profile = &VideoEncodeH265ProfileInfo{StdProfileIdc: createInfo.Profile}
+	}
+	return config
+}
 
-	return createVideoSessionHelper(device, config, VideoCodecOperationEncodeH265Bit)
+// CreateH265EncodeSession creates an H.265 encode session with the given configuration
+func CreateH265EncodeSession(device Device, createInfo *H265EncodeSessionCreateInfo) (VideoSession, error) {
+	if createInfo == nil {
+		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
+	}
+
+	return createVideoSessionHelper(device, createInfo.helperConfig(), VideoCodecOperationEncodeH265Bit)
 }
 
 // --------------------------------
@@ -448,7 +511,11 @@ func DefaultAV1EncodeSessionCreateInfo(width, height uint32) *AV1EncodeSessionCr
 	}
 }
 
-// CreateAV1EncodeSession creates an AV1 encode session with the given configuration
+// CreateAV1EncodeSession creates an AV1 encode session with the given configuration.
+//
+// LIMITATION: AV1 codec-specific profile chaining is not implemented, so this
+// function currently always returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/124.
 func CreateAV1EncodeSession(device Device, createInfo *AV1EncodeSessionCreateInfo) (VideoSession, error) {
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
@@ -605,7 +672,11 @@ func DefaultAV1DecodeSessionCreateInfo(width, height uint32) *AV1DecodeSessionCr
 	}
 }
 
-// CreateAV1DecodeSession creates an AV1 decode session with the given configuration
+// CreateAV1DecodeSession creates an AV1 decode session with the given configuration.
+//
+// LIMITATION: AV1 codec-specific profile chaining is not implemented, so this
+// function currently always returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/124.
 func CreateAV1DecodeSession(device Device, createInfo *AV1DecodeSessionCreateInfo) (VideoSession, error) {
 	if createInfo == nil {
 		return VideoSession(NullHandle), NewValidationError("createInfo", "cannot be nil")
@@ -824,9 +895,18 @@ func FindVideoEncodeQueueFamily(physicalDevice PhysicalDevice) (uint32, bool) {
 type VideoCodingControlFlags uint32
 
 const (
-	VideoCodingControlResetBit              VideoCodingControlFlags = 0x00000001
-	VideoCodingControlEncodeBit             VideoCodingControlFlags = 0x00000002
+	VideoCodingControlResetBit VideoCodingControlFlags = 0x00000001
+	// VideoCodingControlEncodeRateControlBit corresponds to
+	// VK_VIDEO_CODING_CONTROL_ENCODE_RATE_CONTROL_BIT_KHR.
+	//
+	// LIMITATION: the spec requires VkVideoEncodeRateControlInfoKHR to be
+	// chained when this bit is set, which CmdControlVideoCoding cannot do yet;
+	// see https://github.com/darkace1998/Golang-Vulkan-api/issues/125.
+	VideoCodingControlEncodeRateControlBit  VideoCodingControlFlags = 0x00000002
 	VideoCodingControlEncodeQualityLevelBit VideoCodingControlFlags = 0x00000004
+
+	// Deprecated: misleading name; use VideoCodingControlEncodeRateControlBit.
+	VideoCodingControlEncodeBit VideoCodingControlFlags = 0x00000002
 )
 
 // CmdControlVideoCodingReset issues a reset control command for video coding
@@ -1046,7 +1126,10 @@ func GetBitDepthForYUVFormat(yuvFormat YUVFormat) VideoComponentBitDepth {
 	case YUVFormatP010, YUVFormatY210, YUVFormatY410:
 		return VideoComponentBitDepth10
 	case YUVFormatP016:
-		return VideoComponentBitDepth12 // or 16
+		// P016 is a 16-bit container format; Vulkan's VideoComponentBitDepth
+		// has no 16-bit flag, so 12-bit (its deepest defined value) is
+		// reported. Check driver capabilities before relying on this.
+		return VideoComponentBitDepth12
 	default:
 		return VideoComponentBitDepth8
 	}

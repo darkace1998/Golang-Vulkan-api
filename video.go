@@ -469,6 +469,76 @@ type VideoDecodeH265Capabilities struct {
 	MaxLevelIdc int32
 }
 
+// VideoEncodeCapabilityFlags represents video encode capability flags
+// (VkVideoEncodeCapabilityFlagsKHR).
+type VideoEncodeCapabilityFlags uint32
+
+const (
+	VideoEncodeCapabilityPrecedingExternallyEncodedBytesBit           VideoEncodeCapabilityFlags = 0x00000001
+	VideoEncodeCapabilityInsufficientBitstreamBufferRangeDetectionBit VideoEncodeCapabilityFlags = 0x00000002
+)
+
+// VideoEncodeFeedbackFlags represents video encode feedback query flags
+// (VkVideoEncodeFeedbackFlagsKHR).
+type VideoEncodeFeedbackFlags uint32
+
+const (
+	VideoEncodeFeedbackBitstreamBufferOffsetBit VideoEncodeFeedbackFlags = 0x00000001
+	VideoEncodeFeedbackBitstreamBytesWrittenBit VideoEncodeFeedbackFlags = 0x00000002
+	VideoEncodeFeedbackBitstreamHasOverridesBit VideoEncodeFeedbackFlags = 0x00000004
+)
+
+// VideoEncodeCapabilities holds the encode-specific capabilities
+// (VkVideoEncodeCapabilitiesKHR).
+type VideoEncodeCapabilities struct {
+	Flags                         VideoEncodeCapabilityFlags
+	RateControlModes              VideoEncodeRateControlMode
+	MaxRateControlLayers          uint32
+	MaxBitrate                    uint64
+	MaxQualityLevels              uint32
+	EncodeInputPictureGranularity Extent2D
+	SupportedEncodeFeedbackFlags  VideoEncodeFeedbackFlags
+}
+
+// VideoEncodeH264Capabilities holds H.264 encode capabilities
+// (VkVideoEncodeH264CapabilitiesKHR).
+type VideoEncodeH264Capabilities struct {
+	Flags                            uint32
+	MaxLevelIdc                      int32
+	MaxSliceCount                    uint32
+	MaxPPictureL0ReferenceCount      uint32
+	MaxBPictureL0ReferenceCount      uint32
+	MaxL1ReferenceCount              uint32
+	MaxTemporalLayerCount            uint32
+	ExpectDyadicTemporalLayerPattern bool
+	MinQp                            int32
+	MaxQp                            int32
+	PrefersGopRemainingFrames        bool
+	RequiresGopRemainingFrames       bool
+	StdSyntaxFlags                   uint32
+}
+
+// VideoEncodeH265Capabilities holds H.265 encode capabilities
+// (VkVideoEncodeH265CapabilitiesKHR).
+type VideoEncodeH265Capabilities struct {
+	Flags                               uint32
+	MaxLevelIdc                         int32
+	MaxSliceSegmentCount                uint32
+	MaxTiles                            Extent2D
+	CtbSizes                            uint32
+	TransformBlockSizes                 uint32
+	MaxPPictureL0ReferenceCount         uint32
+	MaxBPictureL0ReferenceCount         uint32
+	MaxL1ReferenceCount                 uint32
+	MaxSubLayerCount                    uint32
+	ExpectDyadicTemporalSubLayerPattern bool
+	MinQp                               int32
+	MaxQp                               int32
+	PrefersGopRemainingFrames           bool
+	RequiresGopRemainingFrames          bool
+	StdSyntaxFlags                      uint32
+}
+
 // VideoCapabilities represents video codec capabilities. The codec-specific
 // sub-capabilities are populated according to the profile's codec operation.
 type VideoCapabilities struct {
@@ -485,6 +555,11 @@ type VideoCapabilities struct {
 	Decode     *VideoDecodeCapabilities
 	DecodeH264 *VideoDecodeH264Capabilities
 	DecodeH265 *VideoDecodeH265Capabilities
+
+	// Populated for encode profiles.
+	Encode     *VideoEncodeCapabilities
+	EncodeH264 *VideoEncodeH264Capabilities
+	EncodeH265 *VideoEncodeH265Capabilities
 }
 
 // VideoSessionCreateInfo contains parameters for video session creation
@@ -555,7 +630,11 @@ type VideoPictureResource struct {
 	BaseArrayLayer uint32
 }
 
-// VideoDecodeInfo contains parameters for video decode operations
+// VideoDecodeInfo contains parameters for video decode operations.
+//
+// LIMITATION: ReferenceSlots is not yet implemented and is currently
+// ignored by CmdDecodeVideo; supplying reference slots returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/122.
 type VideoDecodeInfo struct {
 	SrcBuffer          Buffer
 	SrcBufferOffset    DeviceSize
@@ -568,7 +647,11 @@ type VideoDecodeInfo struct {
 	}
 }
 
-// VideoEncodeInfo contains parameters for video encode operations
+// VideoEncodeInfo contains parameters for video encode operations.
+//
+// LIMITATION: ReferenceSlots is not yet implemented and is currently
+// ignored by CmdEncodeVideo; supplying reference slots returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/122.
 type VideoEncodeInfo struct {
 	SrcPictureResource VideoPictureResource
 	DstBuffer          Buffer
@@ -657,10 +740,14 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 	cCaps.pNext = nil
 
 	// Decode profiles must chain VkVideoDecodeCapabilitiesKHR plus the codec
-	// capabilities struct; both live on the Go heap and are pinned.
+	// capabilities struct; encode profiles must chain VkVideoEncodeCapabilitiesKHR
+	// plus the codec capabilities struct. All live on the Go heap and are pinned.
 	var cDecodeCaps *C.VkVideoDecodeCapabilitiesKHR
 	var cDecodeH264Caps *C.VkVideoDecodeH264CapabilitiesKHR
 	var cDecodeH265Caps *C.VkVideoDecodeH265CapabilitiesKHR
+	var cEncodeCaps *C.VkVideoEncodeCapabilitiesKHR
+	var cEncodeH264Caps *C.VkVideoEncodeH264CapabilitiesKHR
+	var cEncodeH265Caps *C.VkVideoEncodeH265CapabilitiesKHR
 	switch videoProfile.VideoCodecOperation {
 	case VideoCodecOperationDecodeH264Bit:
 		cDecodeH264Caps = new(C.VkVideoDecodeH264CapabilitiesKHR)
@@ -682,6 +769,26 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 		cDecodeCaps.pNext = unsafe.Pointer(cDecodeH265Caps)
 		pinner.Pin(cDecodeCaps)
 		cCaps.pNext = unsafe.Pointer(cDecodeCaps)
+	case VideoCodecOperationEncodeH264Bit:
+		cEncodeH264Caps = new(C.VkVideoEncodeH264CapabilitiesKHR)
+		cEncodeH264Caps.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_CAPABILITIES_KHR
+		pinner.Pin(cEncodeH264Caps)
+
+		cEncodeCaps = new(C.VkVideoEncodeCapabilitiesKHR)
+		cEncodeCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR
+		cEncodeCaps.pNext = unsafe.Pointer(cEncodeH264Caps)
+		pinner.Pin(cEncodeCaps)
+		cCaps.pNext = unsafe.Pointer(cEncodeCaps)
+	case VideoCodecOperationEncodeH265Bit:
+		cEncodeH265Caps = new(C.VkVideoEncodeH265CapabilitiesKHR)
+		cEncodeH265Caps.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_CAPABILITIES_KHR
+		pinner.Pin(cEncodeH265Caps)
+
+		cEncodeCaps = new(C.VkVideoEncodeCapabilitiesKHR)
+		cEncodeCaps.sType = C.VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR
+		cEncodeCaps.pNext = unsafe.Pointer(cEncodeH265Caps)
+		pinner.Pin(cEncodeCaps)
+		cCaps.pNext = unsafe.Pointer(cEncodeCaps)
 	}
 
 	result := Result(C.call_vkGetPhysicalDeviceVideoCapabilitiesKHR(
@@ -728,6 +835,60 @@ func GetVideoCapabilities(physicalDevice PhysicalDevice, videoProfile *VideoProf
 	}
 	if cDecodeH265Caps != nil {
 		caps.DecodeH265 = &VideoDecodeH265Capabilities{MaxLevelIdc: int32(cDecodeH265Caps.maxLevelIdc)}
+	}
+	if cEncodeCaps != nil {
+		caps.Encode = &VideoEncodeCapabilities{
+			Flags:                VideoEncodeCapabilityFlags(cEncodeCaps.flags),
+			RateControlModes:     VideoEncodeRateControlMode(cEncodeCaps.rateControlModes),
+			MaxRateControlLayers: uint32(cEncodeCaps.maxRateControlLayers),
+			MaxBitrate:           uint64(cEncodeCaps.maxBitrate),
+			MaxQualityLevels:     uint32(cEncodeCaps.maxQualityLevels),
+			EncodeInputPictureGranularity: Extent2D{
+				Width:  uint32(cEncodeCaps.encodeInputPictureGranularity.width),
+				Height: uint32(cEncodeCaps.encodeInputPictureGranularity.height),
+			},
+			SupportedEncodeFeedbackFlags: VideoEncodeFeedbackFlags(cEncodeCaps.supportedEncodeFeedbackFlags),
+		}
+	}
+	if cEncodeH264Caps != nil {
+		caps.EncodeH264 = &VideoEncodeH264Capabilities{
+			Flags:                            uint32(cEncodeH264Caps.flags),
+			MaxLevelIdc:                      int32(cEncodeH264Caps.maxLevelIdc),
+			MaxSliceCount:                    uint32(cEncodeH264Caps.maxSliceCount),
+			MaxPPictureL0ReferenceCount:      uint32(cEncodeH264Caps.maxPPictureL0ReferenceCount),
+			MaxBPictureL0ReferenceCount:      uint32(cEncodeH264Caps.maxBPictureL0ReferenceCount),
+			MaxL1ReferenceCount:              uint32(cEncodeH264Caps.maxL1ReferenceCount),
+			MaxTemporalLayerCount:            uint32(cEncodeH264Caps.maxTemporalLayerCount),
+			ExpectDyadicTemporalLayerPattern: cEncodeH264Caps.expectDyadicTemporalLayerPattern != 0,
+			MinQp:                            int32(cEncodeH264Caps.minQp),
+			MaxQp:                            int32(cEncodeH264Caps.maxQp),
+			PrefersGopRemainingFrames:        cEncodeH264Caps.prefersGopRemainingFrames != 0,
+			RequiresGopRemainingFrames:       cEncodeH264Caps.requiresGopRemainingFrames != 0,
+			StdSyntaxFlags:                   uint32(cEncodeH264Caps.stdSyntaxFlags),
+		}
+	}
+	if cEncodeH265Caps != nil {
+		caps.EncodeH265 = &VideoEncodeH265Capabilities{
+			Flags:                uint32(cEncodeH265Caps.flags),
+			MaxLevelIdc:          int32(cEncodeH265Caps.maxLevelIdc),
+			MaxSliceSegmentCount: uint32(cEncodeH265Caps.maxSliceSegmentCount),
+			MaxTiles: Extent2D{
+				Width:  uint32(cEncodeH265Caps.maxTiles.width),
+				Height: uint32(cEncodeH265Caps.maxTiles.height),
+			},
+			CtbSizes:                            uint32(cEncodeH265Caps.ctbSizes),
+			TransformBlockSizes:                 uint32(cEncodeH265Caps.transformBlockSizes),
+			MaxPPictureL0ReferenceCount:         uint32(cEncodeH265Caps.maxPPictureL0ReferenceCount),
+			MaxBPictureL0ReferenceCount:         uint32(cEncodeH265Caps.maxBPictureL0ReferenceCount),
+			MaxL1ReferenceCount:                 uint32(cEncodeH265Caps.maxL1ReferenceCount),
+			MaxSubLayerCount:                    uint32(cEncodeH265Caps.maxSubLayerCount),
+			ExpectDyadicTemporalSubLayerPattern: cEncodeH265Caps.expectDyadicTemporalSubLayerPattern != 0,
+			MinQp:                               int32(cEncodeH265Caps.minQp),
+			MaxQp:                               int32(cEncodeH265Caps.maxQp),
+			PrefersGopRemainingFrames:           cEncodeH265Caps.prefersGopRemainingFrames != 0,
+			RequiresGopRemainingFrames:          cEncodeH265Caps.requiresGopRemainingFrames != 0,
+			StdSyntaxFlags:                      uint32(cEncodeH265Caps.stdSyntaxFlags),
+		}
 	}
 
 	return caps, nil
@@ -803,8 +964,35 @@ func DestroyVideoSession(device Device, videoSession VideoSession) {
 	C.call_vkDestroyVideoSessionKHR(C.VkDevice(device), C.VkVideoSessionKHR(videoSession), nil)
 }
 
-// GetVideoSessionMemoryRequirements gets memory requirements for a video session
+// VideoSessionMemoryRequirements pairs a video session memory binding index
+// with its memory requirements (VkVideoSessionMemoryRequirementsKHR).
+type VideoSessionMemoryRequirements struct {
+	MemoryBindIndex    uint32
+	MemoryRequirements MemoryRequirements
+}
+
+// GetVideoSessionMemoryRequirements gets memory requirements for a video session.
+//
+// Deprecated: this variant drops the memoryBindIndex reported by the driver,
+// forcing callers to assume bind indices equal slice positions, which the
+// Vulkan spec does not guarantee. Use GetVideoSessionMemoryBindRequirements
+// and pass each element's MemoryBindIndex to BindVideoSessionMemory instead.
 func GetVideoSessionMemoryRequirements(device Device, videoSession VideoSession) ([]MemoryRequirements, error) {
+	bindReqs, err := GetVideoSessionMemoryBindRequirements(device, videoSession)
+	if err != nil {
+		return nil, err
+	}
+	memReqs := make([]MemoryRequirements, len(bindReqs))
+	for i := range bindReqs {
+		memReqs[i] = bindReqs[i].MemoryRequirements
+	}
+	return memReqs, nil
+}
+
+// GetVideoSessionMemoryBindRequirements gets the memory requirements of each
+// memory binding of a video session, including the binding index that must be
+// passed back via VideoBindMemoryInfo.MemoryBindIndex when binding memory.
+func GetVideoSessionMemoryBindRequirements(device Device, videoSession VideoSession) ([]VideoSessionMemoryRequirements, error) {
 	if device == nil {
 		return nil, NewValidationError("device", "cannot be nil")
 	}
@@ -825,7 +1013,7 @@ func GetVideoSessionMemoryRequirements(device Device, videoSession VideoSession)
 	}
 
 	if memReqCount == 0 {
-		return []MemoryRequirements{}, nil
+		return []VideoSessionMemoryRequirements{}, nil
 	}
 
 	cMemReqs := make([]C.VkVideoSessionMemoryRequirementsKHR, memReqCount)
@@ -845,12 +1033,15 @@ func GetVideoSessionMemoryRequirements(device Device, videoSession VideoSession)
 		return nil, NewVulkanError(result, "GetVideoSessionMemoryRequirements", "failed to get memory requirements")
 	}
 
-	memReqs := make([]MemoryRequirements, memReqCount)
+	memReqs := make([]VideoSessionMemoryRequirements, memReqCount)
 	for i := range memReqs {
-		memReqs[i] = MemoryRequirements{
-			Size:           DeviceSize(cMemReqs[i].memoryRequirements.size),
-			Alignment:      DeviceSize(cMemReqs[i].memoryRequirements.alignment),
-			MemoryTypeBits: uint32(cMemReqs[i].memoryRequirements.memoryTypeBits),
+		memReqs[i] = VideoSessionMemoryRequirements{
+			MemoryBindIndex: uint32(cMemReqs[i].memoryBindIndex),
+			MemoryRequirements: MemoryRequirements{
+				Size:           DeviceSize(cMemReqs[i].memoryRequirements.size),
+				Alignment:      DeviceSize(cMemReqs[i].memoryRequirements.alignment),
+				MemoryTypeBits: uint32(cMemReqs[i].memoryRequirements.memoryTypeBits),
+			},
 		}
 	}
 
@@ -983,9 +1174,12 @@ type VideoCodingControlInfo struct {
 	Flags uint32
 }
 
-// CmdBeginVideoCoding executes the operation
 // CmdBeginVideoCoding begins video coding operations in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+//
+// LIMITATION: reference slots cannot be bound yet (referenceSlotCount is
+// always zero), so DPB-based decode/encode is not possible.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/122.
 func CmdBeginVideoCoding(commandBuffer CommandBuffer, beginInfo *VideoBeginCodingInfo) error {
 	if commandBuffer == nil {
 		return NewValidationError("commandBuffer", "cannot be nil")
@@ -1056,15 +1250,23 @@ func CmdControlVideoCoding(commandBuffer CommandBuffer, controlInfo *VideoCoding
 	return nil
 }
 
-// CmdDecodeVideo executes the operation
 // CmdDecodeVideo performs video decode operation in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+//
+// LIMITATION: the mandatory codec-specific picture info (e.g.
+// VkVideoDecodeH264PictureInfoKHR) and reference slots are not yet
+// implemented, so the recorded command does not satisfy Vulkan valid usage
+// for real frame decoding. Supplying ReferenceSlots returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/122.
 func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) error {
 	if commandBuffer == nil {
 		return NewValidationError("commandBuffer", "cannot be nil")
 	}
 	if decodeInfo == nil {
 		return NewValidationError("decodeInfo", "cannot be nil")
+	}
+	if len(decodeInfo.ReferenceSlots) > 0 {
+		return NewValidationError("decodeInfo.ReferenceSlots", "reference slots are not yet implemented (see issue #122)")
 	}
 
 	var cDecodeInfo C.VkVideoDecodeInfoKHR
@@ -1087,9 +1289,8 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) er
 	cDstPictureResource.imageViewBinding = C.VkImageView(decodeInfo.DstPictureResource.ImageView)
 
 	cDecodeInfo.dstPictureResource = cDstPictureResource
+	// Reference slots are rejected above until implemented (issue #122).
 	cDecodeInfo.pSetupReferenceSlot = nil
-	// Note: Reference slots are not yet implemented. Any provided decodeInfo.ReferenceSlots are ignored.
-	// Future implementation should iterate over ReferenceSlots and populate C structures.
 	cDecodeInfo.referenceSlotCount = 0
 	cDecodeInfo.pReferenceSlots = nil
 
@@ -1099,15 +1300,23 @@ func CmdDecodeVideo(commandBuffer CommandBuffer, decodeInfo *VideoDecodeInfo) er
 	return nil
 }
 
-// CmdEncodeVideo executes the operation
 // CmdEncodeVideo performs video encode operation in a command buffer.
 // Returns an error if LoadVideoDeviceFunctions was not called or video extensions are not supported.
+//
+// LIMITATION: the mandatory codec-specific picture info (e.g.
+// VkVideoEncodeH264PictureInfoKHR) and reference slots are not yet
+// implemented, so the recorded command does not satisfy Vulkan valid usage
+// for real frame encoding. Supplying ReferenceSlots returns an error.
+// See https://github.com/darkace1998/Golang-Vulkan-api/issues/122.
 func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) error {
 	if commandBuffer == nil {
 		return NewValidationError("commandBuffer", "cannot be nil")
 	}
 	if encodeInfo == nil {
 		return NewValidationError("encodeInfo", "cannot be nil")
+	}
+	if len(encodeInfo.ReferenceSlots) > 0 {
+		return NewValidationError("encodeInfo.ReferenceSlots", "reference slots are not yet implemented (see issue #122)")
 	}
 
 	var cEncodeInfo C.VkVideoEncodeInfoKHR
@@ -1127,9 +1336,8 @@ func CmdEncodeVideo(commandBuffer CommandBuffer, encodeInfo *VideoEncodeInfo) er
 	cSrcPictureResource.imageViewBinding = C.VkImageView(encodeInfo.SrcPictureResource.ImageView)
 
 	cEncodeInfo.srcPictureResource = cSrcPictureResource
+	// Reference slots are rejected above until implemented (issue #122).
 	cEncodeInfo.pSetupReferenceSlot = nil
-	// Note: Reference slots are not yet implemented. Any provided encodeInfo.ReferenceSlots are ignored.
-	// Future implementation should iterate over ReferenceSlots and populate C structures.
 	cEncodeInfo.referenceSlotCount = 0
 	cEncodeInfo.pReferenceSlots = nil
 	cEncodeInfo.dstBuffer = C.VkBuffer(encodeInfo.DstBuffer)
