@@ -17,9 +17,10 @@ To build and test the project, you need the following installed:
 
 *   **Go**: 1.22 or later.
 *   **Vulkan SDK or development libraries**: (e.g., `libvulkan-dev` on Linux).
+*   **Windowing headers (Linux, default build)**: `libx11-dev` and `libwayland-dev`. Not needed when building with `-tags vk_headless` (or `vk_no_xlib`/`vk_no_wayland` to skip a single backend).
 *   **pkg-config**
 *   **CGO** must be enabled (`CGO_ENABLED=1`).
-*   **Additional libraries for test execution (Linux)**: `mesa-vulkan-drivers`, `vulkan-tools`, `libwayland-dev`, and `libx11-dev`.
+*   **Additional libraries for test execution (Linux)**: `mesa-vulkan-drivers` and `vulkan-tools`.
 
 See the [main README](README.md#platform-specific-setup) for platform-specific setup instructions.
 

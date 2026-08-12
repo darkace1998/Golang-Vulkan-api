@@ -26,18 +26,27 @@ The library uses Go build tags to provide platform-specific CGO directives:
 ## Platform-Specific Notes
 
 ### Linux
-Verified on Linux with `libvulkan-dev` installed. `pkg-config` is still used when available:
+Verified on Linux with `libvulkan-dev`, `libx11-dev`, and `libwayland-dev` installed. `pkg-config` is still used when available:
 ```bash
-# Install required packages
-sudo apt-get install libvulkan-dev pkg-config
+# Install required packages (X11/Wayland headers are needed by the default build)
+sudo apt-get install libvulkan-dev pkg-config libx11-dev libwayland-dev
 # Or for other distributions:
-sudo yum install vulkan-devel pkgconf-pkg-config
-sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config
+sudo yum install vulkan-devel pkgconf-pkg-config libX11-devel wayland-devel
+sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config libx11 wayland
 
 # Build and test
 go build ./...
 go test ./...
 go test -race ./...
+```
+
+Headless machines (servers, CI, slim containers) can build without any
+display-server headers — only `libvulkan-dev` is required:
+
+```bash
+go build -tags vk_headless ./...    # no X11/Wayland surface support
+go build -tags vk_no_xlib ./...     # skip only the X11 backend
+go build -tags vk_no_wayland ./...  # skip only the Wayland backend
 ```
 
 ### Windows

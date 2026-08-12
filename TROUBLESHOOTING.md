@@ -23,6 +23,14 @@ This document lists common issues you might encounter when working with the `gol
 - Arch Linux: `sudo pacman -S vulkan-headers`
 - Windows/macOS: Install the Vulkan SDK from LunarG.
 
+### `fatal error: X11/Xlib.h: No such file or directory` or `fatal error: wayland-client.h: No such file or directory`
+**Symptom:** Linux build fails complaining about missing X11 or Wayland headers.
+**Cause:** The default Linux build compiles the X11 and Wayland surface backends, which need the display-server development headers.
+**Solution:** Either install the headers or exclude the surface backends with a build tag.
+- Install headers (Ubuntu/Debian): `sudo apt-get install libx11-dev libwayland-dev`
+- Headless build (servers, CI, containers — no windowing headers required): `go build -tags vk_headless ./...`
+- Skip a single backend: `go build -tags vk_no_xlib ./...` or `go build -tags vk_no_wayland ./...`
+
 ### `pkg-config: command not found` or package `vulkan` not found
 **Symptom:** Build errors referencing `pkg-config`.
 **Cause:** The Linux/macOS build relies on `pkg-config` to locate the Vulkan libraries.

@@ -8,7 +8,7 @@ This library provides a type-safe Go interface to the Vulkan APIs used by the pr
 
 ## Verified status
 
-- `libvulkan-dev` is installed on Linux
+- `libvulkan-dev`, `libx11-dev`, and `libwayland-dev` are installed on Linux (only `libvulkan-dev` is needed when building with `-tags vk_headless`)
 - `go build ./...` passes
 - `go test ./...` passes
 - `go test -race ./...` passes
@@ -154,7 +154,7 @@ imageMemReqs := vulkan.GetDeviceImageMemoryRequirements(device, &vulkan.ImageCre
 - Go 1.22 or later
 - CGO enabled
 - Vulkan SDK or development libraries installed (Linux: `libvulkan-dev`)
-  - Linux: `libvulkan-dev` package. Testing requires `mesa-vulkan-drivers vulkan-tools libwayland-dev libx11-dev`.
+  - Linux: `libvulkan-dev` package. Default builds also need `libx11-dev` and `libwayland-dev` for the X11/Wayland surface support; headless builds (`-tags vk_headless`) need only `libvulkan-dev`. Testing requires `mesa-vulkan-drivers vulkan-tools libwayland-dev libx11-dev`.
   - Windows: Vulkan SDK from LunarG
   - macOS: Vulkan SDK with MoltenVK
 
@@ -503,12 +503,28 @@ The library automatically configures build settings for your platform using Go b
 
 ### Linux
 ```bash
-# Install Vulkan development libraries
-sudo apt-get install libvulkan-dev pkg-config
+# Install Vulkan development libraries plus the X11/Wayland headers
+# used by the default (windowed) build
+sudo apt-get install libvulkan-dev pkg-config libx11-dev libwayland-dev
 
 # Or on other distributions
-sudo yum install vulkan-devel pkgconf-pkg-config
-sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config
+sudo yum install vulkan-devel pkgconf-pkg-config libX11-devel wayland-devel
+sudo pacman -S vulkan-headers vulkan-validation-layers pkg-config libx11 wayland
+```
+
+#### Headless / server builds
+
+The X11 and Wayland surface entry points are behind build tags. On a machine
+without display-server headers (servers, CI, slim containers), only
+`libvulkan-dev` is required:
+
+```bash
+# No windowing headers needed
+go build -tags vk_headless ./...
+
+# Or disable just one backend:
+go build -tags vk_no_xlib ./...     # skip X11 (CreateXlibSurfaceKHR unavailable)
+go build -tags vk_no_wayland ./...  # skip Wayland (CreateWaylandSurfaceKHR unavailable)
 ```
 
 ### Windows
