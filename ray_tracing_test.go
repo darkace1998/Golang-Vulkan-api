@@ -12,8 +12,8 @@ func TestCreateRayTracingPipelinesKHR_Validation(t *testing.T) {
 			t.Fatal("expected error, got nil")
 		}
 		var valErr *ValidationError
-		if !errors.As(err, &valErr) || valErr.Field != "Device" {
-			t.Errorf("expected ValidationError for Device, got %v", err)
+		if !errors.As(err, &valErr) || valErr.Field != "device" {
+			t.Errorf("expected ValidationError for device, got %v", err)
 		}
 	})
 

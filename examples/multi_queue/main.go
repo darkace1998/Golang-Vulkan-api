@@ -44,8 +44,8 @@ func main() {
 	// 4. Find Queue Families
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(gpu)
 
-	var graphicsFamilyIndex uint32 = ^uint32(0)
-	var transferFamilyIndex uint32 = ^uint32(0)
+	graphicsFamilyIndex := ^uint32(0)
+	transferFamilyIndex := ^uint32(0)
 
 	// Find separate graphics and transfer queues if possible
 	for i, qf := range queueFamilies {

@@ -78,7 +78,7 @@ type AccelerationStructureBuildGeometryInfoKHR struct{}
 // CreateAccelerationStructureKHR creates a new acceleration structure.
 func CreateAccelerationStructureKHR(device Device, createInfo *AccelerationStructureCreateInfoKHR) (AccelerationStructureKHR, error) {
 	if device == nil {
-		return nil, &ValidationError{Field: "Device", Reason: "cannot be nil"}
+		return nil, NewValidationError("device", "cannot be nil")
 	}
 	if createInfo == nil {
 		return nil, &ValidationError{Field: "createInfo", Reason: "cannot be nil"}

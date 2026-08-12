@@ -39,7 +39,7 @@ func main() {
 	physicalDevice := physicalDevices[0]
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(physicalDevice)
 
-	var graphicsQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
 	for i, family := range queueFamilies {
 		if family.QueueFlags&vulkan.QueueGraphicsBit != 0 {
 			graphicsQueueFamily = uint32(i)

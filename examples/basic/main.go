@@ -112,7 +112,7 @@ func main() {
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(selectedDevice)
 	fmt.Printf("Found %d queue families:\n", len(queueFamilies))
 
-	var graphicsQueueFamily uint32 = ^uint32(0) // Invalid index
+	graphicsQueueFamily := ^uint32(0) // Invalid index
 	for i, qf := range queueFamilies {
 		fmt.Printf("  Queue family %d: %d queues, flags: %d\n", i, qf.QueueCount, qf.QueueFlags)
 		if qf.QueueFlags&vulkan.QueueGraphicsBit != 0 && graphicsQueueFamily == ^uint32(0) {

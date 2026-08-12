@@ -72,8 +72,8 @@ func main() {
 	fmt.Println("\n5. Creating logical device...")
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(physicalDevice)
 
-	var graphicsQueueFamily uint32 = ^uint32(0)
-	var computeQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
+	computeQueueFamily := ^uint32(0)
 
 	for i, queueFamily := range queueFamilies {
 		if queueFamily.QueueFlags&vulkan.QueueGraphicsBit != 0 {

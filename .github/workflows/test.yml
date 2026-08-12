@@ -22,10 +22,13 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install Vulkan SDK and Mesa Drivers
+      - name: Install Vulkan SDK, Mesa Drivers, and windowing headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvulkan-dev mesa-vulkan-drivers vulkan-tools
+          sudo apt-get install -y libvulkan-dev mesa-vulkan-drivers vulkan-tools pkg-config libx11-dev libwayland-dev
+
+      - name: Build headless (only libvulkan-dev required)
+        run: go build -tags vk_headless ./...
 
       - name: Verify Lavapipe Configuration
         run: |

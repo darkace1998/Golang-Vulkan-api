@@ -79,8 +79,6 @@ type BenchmarkApp struct {
 	nvmlInitialized   bool
 	monitoringEnabled bool
 	statsHistory      []GPUStats
-	powerHistory      []float64
-	fanSpeedHistory   []uint32
 
 	// Error detection
 	artifactDetection bool
@@ -461,7 +459,7 @@ func (app *BenchmarkApp) initVulkan() error {
 func (app *BenchmarkApp) createLogicalDevice() error {
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(app.physicalDevice)
 
-	var graphicsQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
 	for i, queueFamily := range queueFamilies {
 		if queueFamily.QueueFlags&vulkan.QueueGraphicsBit != 0 {
 			graphicsQueueFamily = uint32(i)
@@ -498,7 +496,7 @@ func (app *BenchmarkApp) createLogicalDevice() error {
 func (app *BenchmarkApp) createCommandPool() error {
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(app.physicalDevice)
 
-	var graphicsQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
 	for i, queueFamily := range queueFamilies {
 		if queueFamily.QueueFlags&vulkan.QueueGraphicsBit != 0 {
 			graphicsQueueFamily = uint32(i)
@@ -532,7 +530,9 @@ func (app *BenchmarkApp) initGPUMonitoring() {
 
 func (app *BenchmarkApp) cleanupGPUMonitoring() {
 	if app.nvmlInitialized {
-		nvml.Shutdown()
+		if ret := nvml.Shutdown(); ret != nvml.SUCCESS {
+			log.Printf("NVML shutdown failed: %v", ret)
+		}
 	}
 }
 
@@ -882,22 +882,19 @@ func (app *BenchmarkApp) runStressTest() {
 	ticker := time.NewTicker(frameInterval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			app.performAdvancedRender()
-			app.updatePerformanceMetrics()
+	for range ticker.C {
+		app.performAdvancedRender()
+		app.updatePerformanceMetrics()
 
-			// Check for exit conditions
-			if app.shouldExit() {
-				return
-			}
+		// Check for exit conditions
+		if app.shouldExit() {
+			return
+		}
 
-			// Display stats every second
-			if time.Since(app.lastFrameTime) >= time.Second {
-				app.displayLiveStats()
-				app.lastFrameTime = time.Now()
-			}
+		// Display stats every second
+		if time.Since(app.lastFrameTime) >= time.Second {
+			app.displayLiveStats()
+			app.lastFrameTime = time.Now()
 		}
 	}
 }
@@ -920,20 +917,17 @@ func (app *BenchmarkApp) runSimulation() {
 	ticker := time.NewTicker(frameInterval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			app.simulateAdvancedWorkload()
-			app.updatePerformanceMetrics()
+	for range ticker.C {
+		app.simulateAdvancedWorkload()
+		app.updatePerformanceMetrics()
 
-			if app.shouldExit() {
-				return
-			}
+		if app.shouldExit() {
+			return
+		}
 
-			if time.Since(app.lastFrameTime) >= time.Second {
-				app.displayLiveStats()
-				app.lastFrameTime = time.Now()
-			}
+		if time.Since(app.lastFrameTime) >= time.Second {
+			app.displayLiveStats()
+			app.lastFrameTime = time.Now()
 		}
 	}
 }
@@ -1274,13 +1268,10 @@ func (app *BenchmarkApp) monitoringLoop() {
 	ticker := time.NewTicker(500 * time.Millisecond) // Monitor every 500ms
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			if app.monitoringEnabled {
-				app.collectPerformanceData()
-				app.detectArtifacts()
-			}
+	for range ticker.C {
+		if app.monitoringEnabled {
+			app.collectPerformanceData()
+			app.detectArtifacts()
 		}
 	}
 }
@@ -1747,7 +1738,11 @@ func (app *BenchmarkApp) exportToCSV(outputDir string) {
 		log.Printf("Failed to create CSV file: %v", err)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("Failed to close CSV file: %v", err)
+		}
+	}()
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
@@ -1757,7 +1752,10 @@ func (app *BenchmarkApp) exportToCSV(outputDir string) {
 		"Timestamp", "FPS", "FrameTime_ms", "GPU_Temp_C",
 		"Power_W", "Memory_MB", "GPU_Clock_MHz", "Memory_Clock_MHz",
 	}
-	writer.Write(header)
+	if err := writer.Write(header); err != nil {
+		log.Printf("Failed to write CSV header: %v", err)
+		return
+	}
 
 	// Write performance data
 	for _, data := range app.performanceLog {
@@ -1771,7 +1769,10 @@ func (app *BenchmarkApp) exportToCSV(outputDir string) {
 			"", // GPU Clock - would need to be added to PerformanceData
 			"", // Memory Clock - would need to be added to PerformanceData
 		}
-		writer.Write(record)
+		if err := writer.Write(record); err != nil {
+			log.Printf("Failed to write CSV record: %v", err)
+			return
+		}
 	}
 
 	fmt.Printf("📄 Performance data exported to: %s\n", filename)

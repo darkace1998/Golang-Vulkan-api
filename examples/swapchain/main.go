@@ -56,7 +56,7 @@ func main() {
 	fmt.Printf("   ✓ Using device: %s\n", props.DeviceName)
 
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(physicalDevice)
-	var graphicsQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
 	for i, qf := range queueFamilies {
 		if qf.QueueFlags&vulkan.QueueGraphicsBit != 0 {
 			graphicsQueueFamily = uint32(i)

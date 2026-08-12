@@ -186,7 +186,7 @@ type StridedDeviceAddressRegionKHR struct {
 // for the device are loaded on first use (per device).
 func CreateRayTracingPipelinesKHR(device Device, pipelineCache PipelineCache, createInfos []RayTracingPipelineCreateInfoKHR) ([]Pipeline, error) {
 	if device == nil {
-		return nil, &ValidationError{Field: "Device", Reason: "cannot be nil"}
+		return nil, NewValidationError("device", "cannot be nil")
 	}
 	if len(createInfos) == 0 {
 		return nil, &ValidationError{Field: "createInfos", Reason: "cannot be empty"}

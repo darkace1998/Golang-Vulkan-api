@@ -62,7 +62,7 @@ func main() {
 
 	// Find compute queue family
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(physicalDevice)
-	var computeQueueFamily uint32 = ^uint32(0) // Invalid index
+	computeQueueFamily := ^uint32(0) // Invalid index
 
 	for i, family := range queueFamilies {
 		if family.QueueFlags&vulkan.QueueComputeBit != 0 {

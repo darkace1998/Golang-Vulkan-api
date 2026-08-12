@@ -140,7 +140,7 @@ func main() {
 	// -----------------------------------------------------------------------
 	fmt.Println("\n3. Finding graphics queue family...")
 	queueFamilies := vulkan.GetPhysicalDeviceQueueFamilyProperties(physicalDevice)
-	var graphicsQueueFamily uint32 = ^uint32(0)
+	graphicsQueueFamily := ^uint32(0)
 	for i, qf := range queueFamilies {
 		if qf.QueueFlags&vulkan.QueueGraphicsBit != 0 {
 			graphicsQueueFamily = uint32(i)

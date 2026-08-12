@@ -78,10 +78,10 @@ func ReportLeaks() string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Detected %d potential resource leaks:\n", len(globalTracker.resources)))
+	fmt.Fprintf(&sb, "Detected %d potential resource leaks:\n", len(globalTracker.resources))
 
 	for key, stack := range globalTracker.resources {
-		sb.WriteString(fmt.Sprintf("\n--- Leak: %s ---\n", key))
+		fmt.Fprintf(&sb, "\n--- Leak: %s ---\n", key)
 		sb.WriteString(stack)
 	}
 

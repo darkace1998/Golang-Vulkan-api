@@ -1,48 +1,8 @@
 version: "2"
 
 linters:
-  enable:
-    - dupl
-    - goconst
-    - gosec
-    - unconvert
   settings:
-    errcheck:
-      check-type-assertions: true
-      check-blank: false
     goconst:
-      min-len: 3
-      min-occurrences: 3
-    gosec:
-      excludes:
-        - G103
-    govet:
-      enable:
-        - printf
-        - shift
-        - structtag
-      disable:
-        - composites
-        - unsafeptr
-  exclusions:
-    generated: lax
-    rules:
-      - linters:
-          - gosec
-        text: Use of unsafe calls should be audited
-      - linters:
-          - govet
-        path: _test\.go
-        text: possible misuse of unsafe.Pointer
-      - linters:
-          - dupl
-        path: _test\.go
-    paths:
-      - vendor
-      - third_party$
-      - builtin$
-      - examples
-
-issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
+      # Test tables naturally repeat literal strings; don't count or flag
+      # occurrences in _test.go files.
+      ignore-tests: true

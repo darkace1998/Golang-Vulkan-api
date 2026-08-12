@@ -22,10 +22,10 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Install Vulkan SDK
+      - name: Install Vulkan SDK and windowing headers
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvulkan-dev
+          sudo apt-get install -y libvulkan-dev pkg-config libx11-dev libwayland-dev
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
